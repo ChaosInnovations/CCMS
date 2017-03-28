@@ -3,6 +3,8 @@
 include "assets/server/pagegen.php";
 include "assets/server/secure.php";
 include "assets/server/mail.php";
+include "assets/server/templates.php";
+
 if (isset($_GET["p"])) {
 	$pageid = $_GET["p"];
 } else {
