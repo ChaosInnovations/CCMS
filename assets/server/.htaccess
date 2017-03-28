@@ -1,0 +1,9 @@
+<Files "db-config.json">
+Order Allow,Deny
+Deny from all
+</Files>
+
+<Files "mail-config.json">
+Order Allow,Deny
+Deny from all
+</Files>

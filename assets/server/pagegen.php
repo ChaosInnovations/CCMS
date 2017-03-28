@@ -1,0 +1,374 @@
+<?php
+
+if (substr($_SERVER["PHP_SELF"], -strlen("pagegen.php")) == "pagegen.php") {
+	global $conn, $sqlstat, $sqlerr;
+	
+	include "secure.php";
+	load_jsons();
+	$conn = null;
+	$sqlstat = true;
+	$sqlerr = "";
+	try {
+		$conn = new PDO("mysql:host=" . $db_config->host . ";dbname=" . $db_config->database, $db_config->user, $db_config->pass);
+		$conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+	} catch(PDOException $e) {
+		$sqlstat = false;
+		$sqlerr = $e;
+	}
+	if (isset($_POST["token"]) and validToken($_POST["token"])) {
+		$authuser = new AuthUser($_POST["token"]);
+	} else {
+		setcookie("token", "0", 1);
+		$authuser = new AuthUser(null);
+	}
+	if (isset($_GET["edit"]) and isset($_POST["pageid"]) and isset($_POST["title"]) and isset($_POST["head"]) and isset($_POST["body"])) {
+		if (!invalidPage($_GET["edit"])) {
+			$page = new Page($_GET["edit"]);
+			if ($authuser->permissions->owner or (((!$page->secure and $authuser->permissions->page_edit) or ($page->secure and $authuser->permissions->page_editsecure and !in_array($page->pageid, $authuser->permissions->page_viewblacklist))) and !in_array($page->pageid, $authuser->permissions->page_editblacklist))) {
+				$newpageid = $_POST["pageid"];
+				if ($newpageid == $page->pageid or ($page->pageid != "home" and $page->pageid != "notfound" and $page->pageid != "secureaccess")) {
+					if ($newpageid == $page->pageid or (invalidPage($newpageid) and $newpageid != "TRUE" and $newpageid !="FALSE")) {
+						if ($sqlstat) {
+							$now = date("Y-m-d");
+							$stmt = $conn->prepare("UPDATE content_pages SET pageid=:pageid, title=:title, head=:head, body=:body, revision=:now WHERE pageid=:oldpid;");
+							$stmt->bindParam(":pageid", $newpageid);
+							$stmt->bindParam(":oldpid", $page->pageid);
+							$stmt->bindParam(":title", $_POST["title"]);
+							$stmt->bindParam(":head", $_POST["head"]);
+							$stmt->bindParam(":body", $_POST["body"]);
+							$stmt->bindParam(":now", $now);
+							$stmt->execute();
+							if ($newpageid == $page->pageid) {
+								echo "TRUE";
+							} else {
+								echo $newpageid;
+							}
+						} else {
+							echo "FALSE";
+						}
+					} else {
+						echo "FALSE";
+					}
+				} else {
+					echo "FALSE";
+				}
+			} else {
+				echo "FALSE";
+			}
+		} else {
+			echo "FALSE";
+		}
+	} else if (isset($_GET["checkpid"]) and isset($_GET["check"])) {
+		if ($_GET["check"] == $_GET["checkpid"] or invalidPage($_GET["check"])) {
+			if ($_GET["check"] == $_GET["checkpid"] or ($_GET["checkpid"] != "home" and $_GET["checkpid"] != "notfound" and $_GET["checkpid"] != "secureaccess")) {
+				echo "TRUE";
+			} else {
+				echo "FALSE";
+			}
+		} else {
+			echo "FALSE";
+		}
+	} else if (isset($_GET["newpage"])) {
+		if ((!isset($_POST["s"]) and $authuser->permissions->page_create) or (isset($_POST["s"]) and $authuser->permissions->page_createsecure)) {
+			for ($c=0;$c>-1;$c++) {
+				if ($c == 0) {
+					if (isset($_POST["s"])) {
+						$npid = "secure/emptypage";
+					} else {
+						$npid = "emptypage";
+					}
+				} else {
+					if (isset($_POST["s"])) {
+						$npid = "secure/emptypage" . $c;
+					} else {
+						$npid = "emptypage" . $c;
+					}
+				}
+				if (invalidPage($npid)) {
+					break;
+				}
+			}
+			if ($sqlstat) {
+				if (isset($_POST["s"])) {
+					$secure = "1";
+				} else {
+					$secure = "0";
+				}
+				$now = date("Y-m-d");
+				$title = getconfig("defaulttitle");
+				$head = getconfig("defaulthead");
+				$body = getconfig("defaultbody");
+				$stmt = $conn->prepare("INSERT INTO content_pages (pageid, title, head, body, revision, secure) VALUES (:pageid, :title, :head, :body, :now, :secure);");
+				$stmt->bindParam(":pageid", $npid);
+				$stmt->bindParam(":title", $title);
+				$stmt->bindParam(":head", $head);
+				$stmt->bindParam(":body", $body);
+				$stmt->bindParam(":now", $now);
+				$stmt->bindParam(":secure", $secure);
+				$stmt->execute();
+				echo $npid;
+			} else {
+				echo "FALSE";
+			}
+		} else {
+			echo "FALSE";
+		}
+	} else {
+		echo "FALSE";
+	}
+}
+
+class Page {
+	
+	public $pageid = "";
+	public $queryerr = "";
+	public $rawtitle = "Empty%20Page";
+	public $title = "Empty Page";
+	public $rawhead = "";
+	public $head = "";
+	public $rawbody = "%3Ch1%3EEmpty%20Page!%3C%2Fh1%3E";
+	public $body = "<h1>Empty Page!</h1>";
+	public $navmod = "";
+	public $nav = "";
+	public $footmod = "";
+	public $foot = "";
+	public $secure = false;
+	public $revision = "";
+	
+	function __construct($pid=null) {
+		global $queryerr;
+		global $conn, $sqlstat, $sqlerr;
+		if ($pid != null) {
+			$pageid = $pid;
+		} else {
+			global $pageid;
+		}
+		$this->pageid = $pageid;
+		$this->queryerr = $queryerr;
+		
+		if ($sqlstat) {
+			$stmt = $conn->prepare("SELECT * FROM content_pages WHERE pageid=:pid;");
+			$stmt->bindParam(":pid", $pageid);
+			$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
+			$pdatas = $stmt->fetchAll();
+			if (count($pdatas) == 1) {
+				$pdata = $pdatas[0];
+				$this->rawtitle = urlencode($pdata["title"]);
+				$this->title = urldecode($pdata["title"]);
+				$this->rawhead = urlencode($pdata["head"]);
+				$this->head = urldecode($pdata["head"]);
+				$this->rawbody = urlencode($pdata["body"]);
+				$this->body = urldecode($pdata["body"]);
+				$this->navmod = urldecode($pdata["navmod"]);
+				$this->footmod = urldecode($pdata["footmod"]);
+				$this->secure = urldecode($pdata["secure"]);
+				$this->revision = date("l, F j, Y", strtotime($pdata["revision"]));
+			} else {					
+				$this->title = $pageid;
+				$this->body = "<div class='container-fluid'><div class='row'><div class='col-xs-12'><h1>Something got messy on our server</h1></div></div></div>";
+			}
+		} else {
+			$this->title = $pageid;
+			$this->body = "<div class='container-fluid'><div class='row'><div class='col-xs-12'><h1>Something got messy on our server</h1></div></div></div>";
+		}
+	}
+	
+	function getHeader() {
+		global $authuser, $modules;
+		global $conn, $sqlstat, $sqlerr;
+		global $ccms_info;
+		
+		$securepages = [];
+		if ($sqlstat) {
+			$stmt = $conn->prepare("SELECT pageid FROM content_pages WHERE secure=1;");
+			$stmt->execute();
+			$stmt->setFetchMode(PDO::FETCH_ASSOC);
+			$ps = $stmt->fetchAll();
+			foreach ($ps as $p) {
+				array_push($securepages, $p["pageid"]);
+			}
+		}
+		
+		$secure = "";
+		$modals = "<div id=\"modals\">";
+
+		if ($authuser->permissions->toolbar) {
+			$secure .= urldecode("%3Cnav%20class%3D%22navbar%20navbar-inverse%20fixed-top%20secure-nav%22%3E%0A%3Cdiv%20class%3D%22container%22%3E%0A%3Cdiv%20class%3D%22navbar-header%22%3E%0A%3Cbutton%20type%3D%22button%22%20class%3D%22navbar-toggle%20collapsed%22%20data-toggle%3D%22collapse%22%20data-target%3D%22%23snavbar-collapse%22%20aria-expanded%3D%22false%22%3E%0A%3Cspan%20class%3D%22sr-only%22%3EToggle%20Navigation%3C%2Fspan%3E%0A%3Cspan%20class%3D%22icon-bar%22%3E%3C%2Fspan%3E%0A%3Cspan%20class%3D%22icon-bar%22%3E%3C%2Fspan%3E%0A%3Cspan%20class%3D%22icon-bar%22%3E%3C%2Fspan%3E%0A%3C%2Fbutton%3E%0A%3C%2Fdiv%3E%0A%3Cdiv%20class%3D%22collapse%20navbar-collapse%22%20id%3D%22snavbar-collapse%22%3E%0A%3Cul%20class%3D%22nav%20navbar-nav%22%3E%0A%3Cli%3E%3Ca%20href%3D%22.%2F%22%20title%3D%22Home%22%3E%3Cspan%20class%3D%22glyphicon%20glyphicon-home%22%3E%3C%2Fspan%3E%3C%2Fa%3E%3C%2Fli%3E");
+			if ($authuser->permissions->owner or (($this->secure and $authuser->permissions->page_editsecure) or (!$this->secure and $authuser->permissions->page_edit)) and !in_array($this->pageid, $authuser->permissions->page_editblacklist)) {
+				$secure .= urldecode("%3Cli%3E%3Ca%20href%3D%22%23%22%20title%3D%22Edit%20Page%22%20onclick%3D%22showDialog(%27edit%27)%3B%22%3E%3Cspan%20class%3D%22glyphicon%20glyphicon-pencil%22%3E%3C%2Fspan%3E%3C%2Fa%3E%3C%2Fli%3E");
+				$modals .= urldecode("%3Cdiv%20class%3D%22modal%20fade%22%20id%3D%22dialog_edit%22%20tabindex%3D%22-1%22%20role%3D%22dialog%22%20aria-labelledby%3D%22dialog_edit_title%22%3E%0A%3Cdiv%20class%3D%22modal-dialog%20modal-lg%22%20role%3D%22document%22%3E%0A%3Cdiv%20class%3D%22modal-content%22%3E%0A%3Cdiv%20class%3D%22modal-header%22%3E%0A%3Cbutton%20type%3D%22button%22%20class%3D%22close%22%20data-dismiss%3D%22modal%22%20aria-label%3D%22Close%22%3E%3Cspan%20aria-hidden%3D%22true%22%3E%26times%3B%3C%2Fspan%3E%3C%2Fbutton%3E%0A%3Ch4%20class%3D%22modal-title%22%20id%3D%22dialog_edit_title%22%3EEdit%20Page%3C%2Fh4%3E%0A%3C%2Fdiv%3E%0A%3Cdiv%20class%3D%22modal-body%22%3E%0A%3Cform%20class%3D%22form-horizontal%22%20role%3D%22edit%22%20onsubmit%3D%22dialog_edit_save()%3Breturn%20false%3B%22%3E%0A%3Cdiv%20class%3D%22form-group%22%3E%0A%3Cdiv%20class%3D%22col-md-offset-2%20col-sm-offset-3%20col-md-10%20col-sm-9%22%3E%0A%3Cinput%20type%3D%22submit%22%20class%3D%22btn%20btn-info%22%20title%3D%22Save%22%20value%3D%22Save%22%3E%0A%3Cspan%20class%3D%22dialog_edit_formfeedback_saved%20hidden%22%3ESaved!%3C%2Fspan%3E%0A%3Cspan%20class%3D%22dialog_edit_formfeedback_notsaved%20hidden%22%3EThere%20was%20an%20error%20saving.%20Check%20your%20connection.%3C%2Fspan%3E%0A%3C%2Fdiv%3E%0A%3C%2Fdiv%3E%0A%3Cdiv%20class%3D%22form-group%20has-feedback%22%3E%0A%3Clabel%20class%3D%22control-label%20col-sm-3%20col-md-2%22%20for%3D%22editname%22%3EPage%20ID%3A%3C%2Flabel%3E%0A%3Cdiv%20class%3D%22col-sm-9%20col-md-10%22%3E%0A%3Cinput%20type%3D%22text%22%20id%3D%22dialog_edit_pageid%22%20name%3D%22pageid%22%20class%3D%22form-control%22%20title%3D%22Page%20ID%22%20placeholder%3D%22Page%20ID%22%20oninput%3D%22dialog_edit_check_pageid()%3B%22%3E%0A%3Cspan%20class%3D%22glyphicon%20glyphicon-remove%20form-control-feedback%20hidden%22%3E%3C%2Fspan%3E%0A%3Cspan%20class%3D%22glyphicon%20glyphicon-ok%20form-control-feedback%20hidden%22%3E%3C%2Fspan%3E%0A%3C%2Fdiv%3E%0A%3C%2Fdiv%3E%0A%3Cdiv%20class%3D%22form-group%22%3E%0A%3Clabel%20class%3D%22control-label%20col-sm-3%20col-md-2%22%20for%3D%22editshort-desc%22%3EPage%20Title%3A%3C%2Flabel%3E%0A%3Cdiv%20class%3D%22col-sm-9%20col-md-10%22%3E%0A%3Cinput%20type%3D%22text%22%20id%3D%22dialog_edit_pagetitle%22%20name%3D%22pagetitle%22%20class%3D%22form-control%22%20title%3D%22Page%20Title%22%20placeholder%3D%22Page%20Title%22%3E%0A%3C%2Fdiv%3E%0A%3C%2Fdiv%3E%0A%3Cdiv%20class%3D%22form-group%22%3E%0A%3Clabel%20class%3D%22control-label%20col-sm-3%20col-md-2%22%20for%3D%22editlong-desc%22%3E%3Ccode%3E%26lt%3Bhead%26gt%3B%3C%2Fcode%3E%3A%3C%2Flabel%3E%0A%3Cdiv%20class%3D%22col-sm-9%20col-md-10%22%3E%0A%3Ctextarea%20id%3D%22dialog_edit_head%22%20name%3D%22head%22%20class%3D%22form-control%20monospace%22%20title%3D%22Page%20Head%22%20placeholder%3D%22Page%20Head%22%20rows%3D%228%22%3E%3C%2Ftextarea%3E%0A%3C%2Fdiv%3E%0A%3C%2Fdiv%3E%0A%3Cdiv%20class%3D%22form-group%22%3E%0A%3Clabel%20class%3D%22control-label%20col-sm-3%20col-md-2%22%20for%3D%22editcontact%22%3E%3Ccode%3E%26lt%3Bbody%26gt%3B%3C%2Fcode%3E%3A%3C%2Flabel%3E%0A%3Cdiv%20class%3D%22col-sm-9%20col-md-10%22%3E%0A%3Ctextarea%20id%3D%22dialog_edit_body%22%20name%3D%22body%22%20class%3D%22form-control%20monospace%22%20title%3D%22Page%20Body%22%20placeholder%3D%22Page%20Body%22%20rows%3D%2232%22%3E%3C%2Ftextarea%3E%0A%3C%2Fdiv%3E%0A%3C%2Fdiv%3E%0A%3C%2Fform%3E%0A%3C%2Fdiv%3E%0A%3Cdiv%20class%3D%22modal-footer%22%3E%0A%3Cspan%20class%3D%22dialog_edit_formfeedback_saved%20hidden%22%3ESaved!%3C%2Fspan%3E%0A%3Cspan%20class%3D%22dialog_edit_formfeedback_notsaved%20hidden%22%3EThere%20was%20an%20error%20saving.%20Check%20your%20connection.%3C%2Fspan%3E%0A%3Cbutton%20type%3D%22button%22%20class%3D%22btn%20btn-info%22%20onclick%3D%22dialog_edit_save()%3B%22%3ESave%20changes%3C%2Fbutton%3E%0A%3Cbutton%20type%3D%22button%22%20class%3D%22btn%20btn-danger%22%20onclick%3D%22dialog_edit_reset()%3B%22%3EReset%20Changes%3C%2Fbutton%3E%0A%3Cbutton%20type%3D%22button%22%20class%3D%22btn%20btn-default%22%20data-dismiss%3D%22modal%22%3EClose%3C%2Fbutton%3E%0A%3C%2Fdiv%3E%0A%3C%2Fdiv%3E%0A%3C%2Fdiv%3E%0A%3C%2Fdiv%3E%0A%3Cscript%3E%0Avar%20pageid%20%3D%20%22{$this->pageid}%22%3B%0Avar%20pagetitle%20%3D%20decodeURIComponent(%22{$this->rawtitle}%22)%3B%0Avar%20head%20%3D%20decodeURIComponent(%22{$this->rawhead}%22)%3B%0Avar%20body%20%3D%20decodeURIComponent(%22{$this->rawbody}%22)%3B%0A%24(%22%23dialog_edit_pageid%22).val(pageid)%3B%0Aif%20(pageid%20%3D%3D%20%22home%22%20%7C%7C%20pageid%20%3D%3D%20%22notfound%22%20%7C%7C%20pageid%20%3D%3D%20%22secureaccess%22)%20%7B%0A%09%24(%22%23dialog_edit_pageid%22).attr(%22disabled%22%2C%20%22disabled%22)%3B%0A%7D%0A%24(%22%23dialog_edit_pagetitle%22).val(pagetitle)%3B%0A%24(%22%23dialog_edit_head%22).val(head)%3B%0A%24(%22%23dialog_edit_body%22).val(body)%3B%0A%3C%2Fscript%3E");
+			}
+			if ($authuser->permissions->page_create) {
+				$secure .= urldecode("%3Cli%3E%3Ca%20href%3D%22%23%22%20title%3D%22New%20Page%22%20onclick%3D%22createPage()%3B%22%3E%3Cspan%20class%3D%22glyphicon%20glyphicon-plus%22%3E%3C%2Fspan%3E%3C%2Fa%3E%3C%2Fli%3E");
+			}
+			if ($authuser->permissions->page_viewsecure) {
+				$secure .= urldecode("%3Cli%20class%3D%22dropdown%22%3E%0A%3Ca%20href%3D%22%22%20class%3D%22dropdown-toggle%22%20data-toggle%3D%22dropdown%22%20role%3D%22button%22%20aria-haspopup%3D%22true%22%20aria-expanded%3D%22false%22%3ESecure%20Pages%20%3Cspan%20class%3D%22caret%22%3E%3C%2Fspan%3E%3C%2Fa%3E%0A%3Cul%20class%3D%22dropdown-menu%22%3E");
+				foreach ($securepages as $sp) {
+					$spd = new Page($sp);
+					if (!in_array($sp, $authuser->permissions->page_viewblacklist)) {
+						$secure .= "<li><a href=\"?p={$sp}\">{$spd->title}</a></li>";
+					}
+				}
+				if ($authuser->permissions->page_createsecure) {
+					$secure .= urldecode("%3Cli%20role%3D%22separator%22%20class%3D%22divider%22%3E%3C%2Fli%3E%0A%3Cli%3E%3Ca%20href%3D%22%23%22%20onclick%3D%22createSecurePage()%3B%22%3ECreate%20Secure%20Page%3C%2Fa%3E%3C%2Fli%3E");
+				}
+				$secure .= urldecode("%3C%2Ful%3E%3C%2Fli%3E");
+			}
+			if ($authuser->permissions->admin_managesite and count($modules) > 1) {
+				$secure .= urldecode("%3Cli%20role%3D%22separator%22%20class%3D%22divider%22%3E%3Cli%20class%3D%22dropdown%22%3E%0A%3Ca%20href%3D%22%22%20class%3D%22dropdown-toggle%22%20data-toggle%3D%22dropdown%22%20role%3D%22button%22%20aria-haspopup%3D%22true%22%20aria-expanded%3D%22false%22%3EModules%20%3Cspan%20class%3D%22caret%22%3E%3C%2Fspan%3E%3C%2Fa%3E%0A%3Cul%20class%3D%22dropdown-menu%22%3E");
+				$secure .= urldecode("%3C%2Ful%3E%3C%2Fli%3E");
+			}
+			if ($authuser->permissions->admin_managepages) {
+				$secure .= urldecode("%3Cli%20class%3D%22dropdown%22%3E%0A%3Ca%20href%3D%22%22%20class%3D%22dropdown-toggle%22%20data-toggle%3D%22dropdown%22%20role%3D%22button%22%20aria-haspopup%3D%22true%22%20aria-expanded%3D%22false%22%3EAdministration%20%3Cspan%20class%3D%22caret%22%3E%3C%2Fspan%3E%3C%2Fa%3E%0A%3Cul%20class%3D%22dropdown-menu%22%3E");
+				if ($authuser->permissions->admin_managepages) {
+					$secure .= urldecode("%3Cli%3E%3Ca%20href%3D%22%23%22%20onclick%3D%22showDialog(%27managepages%27)%3B%22%3EPage%20Manager%3C%2Fa%3E%3C%2Fli%3E");
+					$modals .= urldecode("%3Cdiv%20class%3D%22modal%20fade%22%20id%3D%22dialog_managepages%22%20tabindex%3D%22-1%22%20role%3D%22dialog%22%20aria-labelledby%3D%22dialog_managepages_title%22%3E%0A%3Cdiv%20class%3D%22modal-dialog%20modal-lg%22%20role%3D%22document%22%3E%0A%3Cdiv%20class%3D%22modal-content%22%3E%0A%3Cdiv%20class%3D%22modal-header%22%3E%0A%3Cbutton%20type%3D%22button%22%20class%3D%22close%22%20data-dismiss%3D%22modal%22%20aria-label%3D%22Close%22%3E%3Cspan%20aria-hidden%3D%22true%22%3E%26times%3B%3C%2Fspan%3E%3C%2Fbutton%3E%0A%3Ch4%20class%3D%22modal-title%22%20id%3D%22dialog_managepages_title%22%3EPage%20Manager%3C%2Fh4%3E%0A%3C%2Fdiv%3E%0A%3Cdiv%20class%3D%22modal-body%22%3E%0A%3Ch4%3EThis%20feature%20will%20be%20available%20in%20an%20upcoming%20version%20of%20Chaos%20CMS.%3C%2Fh4%3E%0A%3C%2Fdiv%3E%0A%3Cdiv%20class%3D%22modal-footer%22%3E%0A%3Cbutton%20type%3D%22button%22%20class%3D%22btn%20btn-default%22%20data-dismiss%3D%22modal%22%3EClose%3C%2Fbutton%3E%0A%3C%2Fdiv%3E%0A%3C%2Fdiv%3E%0A%3C%2Fdiv%3E%0A%3C%2Fdiv%3E");
+				}
+				if ($authuser->permissions->admin_managesite) {
+					$secure .= urldecode("%3Cli%3E%3Ca%20href%3D%22%23%22%20onclick%3D%22showDialog(%27managesite%27)%3B%22%3ESite%20Manager%3C%2Fa%3E%3C%2Fli%3E");
+					$config_websitetitle = getconfig("websitetitle");
+					$config_primaryemail = getconfig("primaryemail");
+					$config_secondaryemail = getconfig("secondaryemail");
+					$config_defaulttitle = urlencode(getconfig("defaulttitle"));
+					$config_defaulthead = urlencode(getconfig("defaulthead"));
+					$config_defaultbody = urlencode(getconfig("defaultbody"));
+					$config_defaultnav = urlencode(getconfig("defaultnav"));
+					$config_defaultfoot = urlencode(getconfig("defaultfoot"));
+					$modals .= urldecode("%3Cdiv%20class%3D%22modal%20fade%22%20id%3D%22dialog_managesite%22%20tabindex%3D%22-1%22%20role%3D%22dialog%22%20aria-labelledby%3D%22dialog_managesite_title%22%3E%0A%3Cdiv%20class%3D%22modal-dialog%20modal-lg%22%20role%3D%22document%22%3E%0A%3Cdiv%20class%3D%22modal-content%22%3E%0A%3Cdiv%20class%3D%22modal-header%22%3E%0A%3Cbutton%20type%3D%22button%22%20class%3D%22close%22%20data-dismiss%3D%22modal%22%20aria-label%3D%22Close%22%3E%3Cspan%20aria-hidden%3D%22true%22%3E%26times%3B%3C%2Fspan%3E%3C%2Fbutton%3E%0A%3Ch4%20class%3D%22modal-title%22%20id%3D%22dialog_managesite_title%22%3ESite%20Manager%3C%2Fh4%3E%0A%3C%2Fdiv%3E%0A%3Cdiv%20class%3D%22modal-body%22%3E%0A%3Ch4%3ESite%20Settings%3C%2Fh4%3E%0A%3Cform%20class%3D%22form-horizontal%22%20onsubmit%3D%22dialog_managesite_save()%3Breturn%20false%3B%22%3E%0A%3Cdiv%20class%3D%22form-group%22%3E%0A%3Cdiv%20class%3D%22col-sm-offset-3%20col-md-offset-2%20col-sm-9%20col-md-10%22%3E%0A%3Cinput%20type%3D%22submit%22%20class%3D%22btn%20btn-info%22%20title%3D%22Save%22%20value%3D%22Save%22%3E%0A%3C%2Fdiv%3E%0A%3C%2Fdiv%3E%0A%3Cdiv%20class%3D%22form-group%22%3E%0A%3Clabel%20class%3D%22control-label%20col-sm-3%20col-md-2%22%20for%3D%22dialog_managesite_websitetitle%22%3EWebsite%20Title%3C%2Flabel%3E%0A%3Cdiv%20class%3D%22col-sm-9%20col-md-10%22%3E%0A%3Cinput%20type%3D%22text%22%20id%3D%22dialog_managesite_websitetitle%22%20name%3D%22websitetitle%22%20class%3D%22form-control%22%20title%3D%22Website%20Title%22%20placeholder%3D%22Website%20Title%22%20value%3D%22{$config_websitetitle}%22%3E%0A%3C%2Fdiv%3E%0A%3C%2Fdiv%3E%0A%3Cdiv%20class%3D%22form-group%22%3E%0A%3Clabel%20class%3D%22control-label%20col-sm-3%20col-md-2%22%20for%3D%22dialog_managesite_primaryemail%22%3EPrimary%20Email%3C%2Flabel%3E%0A%3Cdiv%20class%3D%22col-sm-9%20col-md-10%22%3E%0A%3Cinput%20type%3D%22text%22%20id%3D%22dialog_managesite_primaryemail%22%20name%3D%22primaryemail%22%20class%3D%22form-control%22%20title%3D%22Primary%20Email%22%20placeholder%3D%22Primary%20Email%22%20value%3D%22{$config_primaryemail}%22%3E%0A%3C%2Fdiv%3E%0A%3C%2Fdiv%3E%0A%3Cdiv%20class%3D%22form-group%22%3E%0A%3Clabel%20class%3D%22control-label%20col-sm-3%20col-md-2%22%20for%3D%22dialog_managesite_secondaryemail%22%3ESecondary%20Email%3C%2Flabel%3E%0A%3Cdiv%20class%3D%22col-sm-9%20col-md-10%22%3E%0A%3Cinput%20type%3D%22text%22%20id%3D%22dialog_managesite_secondaryemail%22%20name%3D%22secondaryemail%22%20class%3D%22form-control%22%20title%3D%22Secondary%20Email%22%20placeholder%3D%22Secondary%20Email%22%20value%3D%22{$config_secondaryemail}%22%3E%0A%3C%2Fdiv%3E%0A%3C%2Fdiv%3E%0A%3Ch4%3EPage%20Defaults%3C%2Fh4%3E%0A%3Cdiv%20class%3D%22form-group%22%3E%0A%3Clabel%20class%3D%22control-label%20col-sm-3%20col-md-2%22%20for%3D%22dialog_managesite_defaulttitle%22%3EDefault%20Page%20Title%3C%2Fcode%3E%3C%2Flabel%3E%0A%3Cdiv%20class%3D%22col-sm-9%20col-md-10%22%3E%0A%3Cinput%20type%3D%22text%22%20id%3D%22dialog_managesite_defaulttitle%22%20name%3D%22defaulttitle%22%20class%3D%22form-control%22%20title%3D%22Default%20Page%20Title%22%20placeholder%3D%22Default%20Page%20Title%22%20value%3D%3E%0A%3C%2Fdiv%3E%0A%3C%2Fdiv%3E%0A%3Cdiv%20class%3D%22form-group%22%3E%0A%3Clabel%20class%3D%22control-label%20col-sm-3%20col-md-2%22%20for%3D%22dialog_managesite_defaulthead%22%3EDefault%20Page%20%3Ccode%3E%26lt%3Bhead%26gt%3B%3C%2Fcode%3E%3C%2Flabel%3E%0A%3Cdiv%20class%3D%22col-sm-9%20col-md-10%22%3E%0A%3Ctextarea%20id%3D%22dialog_managesite_defaulthead%22%20name%3D%22defaulthead%22%20class%3D%22form-control%20monospace%22%20title%3D%22Default%20Page%20Head%22%20placeholder%3D%22Default%20Page%20Head%22%20rows%3D%228%22%3E%3C%2Ftextarea%3E%0A%3C%2Fdiv%3E%0A%3C%2Fdiv%3E%0A%3Cdiv%20class%3D%22form-group%22%3E%0A%3Clabel%20class%3D%22control-label%20col-sm-3%20col-md-2%22%20for%3D%22dialog_managesite_defaultbody%22%3EDefault%20Page%20%3Ccode%3E%26lt%3Bbody%26gt%3B%3C%2Fcode%3E%3C%2Flabel%3E%0A%3Cdiv%20class%3D%22col-sm-9%20col-md-10%22%3E%0A%3Ctextarea%20id%3D%22dialog_managesite_defaultbody%22%20name%3D%22defaultbody%22%20class%3D%22form-control%20monospace%22%20title%3D%22Default%20Page%20Body%22%20placeholder%3D%22Default%20Page%20Body%22%20rows%3D%2216%22%3E%3C%2Ftextarea%3E%0A%3C%2Fdiv%3E%0A%3C%2Fdiv%3E%0A%3Cdiv%20class%3D%22form-group%22%3E%0A%3Clabel%20class%3D%22control-label%20col-sm-3%20col-md-2%22%20for%3D%22dialog_managesite_defaultnav%22%3EDefault%20Navigation%20Header%3C%2Fcode%3E%3C%2Flabel%3E%0A%3Cdiv%20class%3D%22col-sm-9%20col-md-10%22%3E%0A%3Ctextarea%20id%3D%22dialog_managesite_defaultnav%22%20name%3D%22defaultnav%22%20class%3D%22form-control%20monospace%22%20title%3D%22Default%20Navigation%20Header%22%20placeholder%3D%22Default%20Navigation%20Header%22%20rows%3D%2216%22%3E%3C%2Ftextarea%3E%0A%3C%2Fdiv%3E%0A%3C%2Fdiv%3E%0A%3Cdiv%20class%3D%22form-group%22%3E%0A%3Clabel%20class%3D%22control-label%20col-sm-3%20col-md-2%22%20for%3D%22dialog_managesite_defaultfoot%22%3EDefault%20Footer%3C%2Fcode%3E%3C%2Flabel%3E%0A%3Cdiv%20class%3D%22col-sm-9%20col-md-10%22%3E%0A%3Ctextarea%20id%3D%22dialog_managesite_defaultfoot%22%20name%3D%22defaultfoot%22%20class%3D%22form-control%20monospace%22%20title%3D%22Default%20Footer%22%20placeholder%3D%22Default%20Footer%22%20rows%3D%2216%22%3E%3C%2Ftextarea%3E%0A%3C%2Fdiv%3E%0A%3C%2Fdiv%3E%0A%3Cdiv%20class%3D%22form-group%22%3E%0A%3Cdiv%20class%3D%22col-sm-offset-3%20col-md-offset-2%20col-sm-9%20col-md-10%22%3E%0A%3Cinput%20type%3D%22submit%22%20class%3D%22btn%20btn-info%22%20title%3D%22Save%22%20value%3D%22Save%22%3E%0A%3C%2Fdiv%3E%0A%3C%2Fdiv%3E%0A%3C%2Fform%3E%0A%3C%2Fdiv%3E%0A%3Cdiv%20class%3D%22modal-footer%22%3E%0A%3Cbutton%20type%3D%22button%22%20class%3D%22btn%20btn-default%22%20data-dismiss%3D%22modal%22%3EClose%3C%2Fbutton%3E%0A%3C%2Fdiv%3E%0A%3C%2Fdiv%3E%0A%3C%2Fdiv%3E%0A%3C%2Fdiv%3E");
+					$modals .= urldecode("%3Cscript%3Evar%20defaulttitle%20%3D%20decodeURIComponent(%22{$config_defaulttitle}%22)%3Bvar%20defaulthead%20%3D%20decodeURIComponent(%22{$config_defaulthead}%22)%3B%0Avar%20defaultbody%20%3D%20decodeURIComponent(%22{$config_defaultbody}%22)%3Bvar%20defaultnav%20%3D%20decodeURIComponent(%22{$config_defaultnav}%22)%3B%0Avar%20defaultfoot%20%3D%20decodeURIComponent(%22{$config_defaultfoot}%22)%3B%24(%22%23dialog_managesite_defaulttitle%22).val(defaulttitle)%3B%0A%24(%22%23dialog_managesite_defaulthead%22).val(defaulthead)%3B%24(%22%23dialog_managesite_defaultbody%22).val(defaultbody)%3B%0A%24(%22%23dialog_managesite_defaultnav%22).val(defaultnav)%3B%24(%22%23dialog_managesite_defaultfoot%22).val(defaultfoot)%3B%3C%2Fscript%3E");
+				}
+				if ($authuser->permissions->owner) {
+					$permissions = "<p>owner;</p><p></p><p></p>";
+					$tools = "<button class=\"btn btn-default\" title=\"Delete Account\" onclick=\"dialog_users_delete('{$authuser->uid}');\"><span class=\"glyphicon glyphicon-trash\"></span></button>";
+					$tools .= "<button class=\"btn btn-default\" title=\"Reset Password\" onclick=\"dialog_users_reset('{$authuser->uid}');\"><span class=\"glyphicon glyphicon-refresh\"></span></button>";
+					$tools .= "<a class=\"btn btn-default\" href=\"mailto:{$authuser->email}\" title=\"Send Email\"><span class=\"glyphicon glyphicon-envelope\"></span></a>";
+					$userlist = "<tr class=\"success\"><td>{$authuser->name}</td><td>{$authuser->email}</td><td>{$permissions}</td><td>{$authuser->registerdate}</td><td>{$tools}</td></tr>";
+					$stmt = $conn->prepare("SELECT * FROM users WHERE uid!=:uid;");
+					$stmt->bindParam(":uid", $authuser->uid);
+					$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
+					$users = $stmt->fetchAll();
+					foreach ($users as $user) {
+						$date = date("l, F j, Y", strtotime($user["registered"]));
+						$permissions = "<button class=\"btn btn-default\" type=\"button\" data-toggle=\"collapse\" data-target=\"#dialog_users_{$user["uid"]}_perms\" aria-expanded=\"false\" aria-controls=\"dialog_users_{$user["uid"]}_perms\">Show/Hide</button>";
+						$permissions .= "<div class=\"collapse\" id=\"dialog_users_{$user["uid"]}_perms\"><div class=\"well\"><form class=\"form\" onsubmit=\"dialog_users_update('{$user["uid"]}');return false;\">";
+						$permissions .= "<div class=\"form-group\"><label class=\"control-label\" for=\"dialog_users_{$user["uid"]}_perms_p\">Permissions</label>";
+						$permissions .= "<textarea id=\"dialog_users_{$user["uid"]}_perms_p\" name=\"perm\" class=\"form-control monospace\" title=\"Permissions\" placeholder=\"No Permissions\" rows=\"4\">{$user["permissions"]}</textarea>";
+						$permissions .= "</div><div class=\"form-group\"><label class=\"control-label\" for=\"dialog_users_{$user["uid"]}_perms_v\">View Blacklist</label>";
+						$permissions .= "<textarea id=\"dialog_users_{$user["uid"]}_perms_v\" name=\"view\" class=\"form-control monospace\" title=\"View Blacklist\" placeholder=\"No Restrictions\" rows=\"4\">{$user["permviewbl"]}</textarea>";
+						$permissions .= "</div><div class=\"form-group\"><label class=\"control-label\" for=\"dialog_users_{$user["uid"]}_perms_e\">Edit Blacklist</label>";
+						$permissions .= "<textarea id=\"dialog_users_{$user["uid"]}_perms_e\" name=\"edit\" class=\"form-control monospace\" title=\"Edit Blacklist\" placeholder=\"No Restrictions\" rows=\"4\">{$user["permeditbl"]}</textarea>";
+						$permissions .= "</div><input type=\"submit\" class=\"btn btn-default\" title=\"Update\" value=\"Update\"></form></div></div>";
+						//<p>{$user["permissions"]}</p><p>{$user["permviewbl"]}</p><p>{$user["permeditbl"]}</p>";
+						$tools = "<button class=\"btn btn-default\" title=\"Delete Account\" onclick=\"dialog_users_delete('{$user["uid"]}');\"><span class=\"glyphicon glyphicon-trash\"></span></button>";
+						$tools .= "<button class=\"btn btn-default\" title=\"Reset Password\" onclick=\"dialog_users_reset('{$user["uid"]}');\"><span class=\"glyphicon glyphicon-refresh\"></span></button>";
+						$tools .= "<a class=\"btn btn-default\" href=\"mailto:{$user["email"]}\" title=\"Send Email\"><span class=\"glyphicon glyphicon-envelope\"></span></a>";
+						$userlist .= "<tr><td>{$user["name"]}</td><td>{$user["email"]}</td><td>{$permissions}</td><td>{$date}</td><td>{$tools}</td></tr>";
+					}
+					$secure .= urldecode("%3Cli%3E%3Ca%20href%3D%22%23%22%20onclick%3D%22showDialog(%27users%27)%3B%22%3EUsers%3C%2Fa%3E%3C%2Fli%3E");
+					$modals .= urldecode("%3Cdiv%20class%3D%22modal%20fade%22%20id%3D%22dialog_users%22%20tabindex%3D%22-1%22%20role%3D%22dialog%22%20aria-labelledby%3D%22dialog_users_title%22%3E%0A%3Cdiv%20class%3D%22modal-dialog%20modal-lg%22%20role%3D%22document%22%3E%0A%3Cdiv%20class%3D%22modal-content%22%3E%0A%3Cdiv%20class%3D%22modal-header%22%3E%0A%3Cbutton%20type%3D%22button%22%20class%3D%22close%22%20data-dismiss%3D%22modal%22%20aria-label%3D%22Close%22%3E%3Cspan%20aria-hidden%3D%22true%22%3E%26times%3B%3C%2Fspan%3E%3C%2Fbutton%3E%0A%3Ch4%20class%3D%22modal-title%22%20id%3D%22dialog_users_title%22%3EUser%20Accounts%3C%2Fh4%3E%0A%3C%2Fdiv%3E%0A%3Cdiv%20class%3D%22modal-body%22%3E%0A%3Ch4%3ENew%20User%3C%2Fh4%3E%0A%3Cform%20class%3D%22form-horizontal%22%20role%3D%22edit%22%20onsubmit%3D%22dialog_users_new()%3Breturn%20false%3B%22%3E%0A%3Cdiv%20class%3D%22form-group%22%3E%0A%3Cdiv%20class%3D%22col-md-offset-2%20col-sm-offset-3%20col-md-10%20col-sm-9%22%3E%0A%3Cinput%20type%3D%22submit%22%20class%3D%22btn%20btn-info%22%20title%3D%22Create%22%20value%3D%22Create%22%3E%0A%3Cspan%20class%3D%22dialog_users_formfeedback_added%20hidden%22%3EUser%20Created!%3C%2Fspan%3E%0A%3Cspan%20class%3D%22dialog_users_formfeedback_notadded%20hidden%22%3EThere%20was%20an%20error.%20Check%20your%20connection.%3C%2Fspan%3E%0A%3C%2Fdiv%3E%0A%3C%2Fdiv%3E%0A%3Cdiv%20class%3D%22form-group%20has-feedback%22%3E%0A%3Clabel%20class%3D%22control-label%20col-sm-3%20col-md-2%22%20for%3D%22useremail%22%3EEmail%3A%3C%2Flabel%3E%0A%3Cdiv%20class%3D%22col-sm-9%20col-md-10%22%3E%0A%3Cinput%20type%3D%22text%22%20id%3D%22dialog_users_newemail%22%20name%3D%22email%22%20class%3D%22form-control%22%20title%3D%22Email%22%20placeholder%3D%22Email%22%20oninput%3D%22dialog_users_check_email()%3B%22%3E%0A%3Cspan%20class%3D%22glyphicon%20glyphicon-remove%20form-control-feedback%20hidden%22%3E%3C%2Fspan%3E%0A%3Cspan%20class%3D%22glyphicon%20glyphicon-ok%20form-control-feedback%20hidden%22%3E%3C%2Fspan%3E%0A%3C%2Fdiv%3E%0A%3C%2Fdiv%3E%0A%3Cdiv%20class%3D%22form-group%22%3E%0A%3Clabel%20class%3D%22control-label%20col-sm-3%20col-md-2%22%20for%3D%22username%22%3EName%3A%3C%2Flabel%3E%0A%3Cdiv%20class%3D%22col-sm-9%20col-md-10%22%3E%0A%3Cinput%20type%3D%22text%22%20id%3D%22dialog_users_newname%22%20name%3D%22name%22%20class%3D%22form-control%22%20title%3D%22Name%22%20placeholder%3D%22Name%22%3E%0A%3C%2Fdiv%3E%0A%3C%2Fdiv%3E%0A%3Ch5%3EPermissions%3C%2Fh5%3E%0A%3Cdiv%20class%3D%22form-group%22%3E%0A%3Cdiv%20class%3D%22checkbox%20col-sm-10%20col-sm-offset-1%22%3E%0A%3Clabel%3E%0A%3Cinput%20type%3D%22checkbox%22%20id%3D%22dialog_users_permission_owner%22%20value%3D%22%22%3E%0AOwner%0A%3C%2Flabel%3E%0A%3C%2Fdiv%3E%0A%3Cdiv%20class%3D%22checkbox%20col-sm-10%20col-sm-offset-1%22%3E%0A%3Clabel%3E%0A%3Cinput%20type%3D%22checkbox%22%20id%3D%22dialog_users_permission_admin_managepages%22%20value%3D%22%22%3E%0AManage%20Pages%0A%3C%2Flabel%3E%0A%3Clabel%3E%0A%3Cinput%20type%3D%22checkbox%22%20id%3D%22dialog_users_permission_admin_managesite%22%20value%3D%22%22%3E%0AManage%20Site%0A%3C%2Flabel%3E%0A%3C%2Fdiv%3E%0A%3Cdiv%20class%3D%22checkbox%20col-sm-10%20col-sm-offset-1%22%3E%0A%3Clabel%3E%0A%3Cinput%20type%3D%22checkbox%22%20id%3D%22dialog_users_permission_page_viewsecure%22%20value%3D%22%22%3E%0AView%20Secure%20Pages%0A%3C%2Flabel%3E%0A%3Clabel%3E%0A%3Cinput%20type%3D%22checkbox%22%20id%3D%22dialog_users_permission_page_editsecure%22%20value%3D%22%22%3E%0AEdit%20Secure%20Pages%0A%3C%2Flabel%3E%0A%3Clabel%3E%0A%3Cinput%20type%3D%22checkbox%22%20id%3D%22dialog_users_permission_page_createsecure%22%20value%3D%22%22%3E%0ACreate%20Secure%20Pages%0A%3C%2Flabel%3E%0A%3Clabel%3E%0A%3Cinput%20type%3D%22checkbox%22%20id%3D%22dialog_users_permission_page_deletesecure%22%20value%3D%22%22%3E%0ADelete%20Secure%20Pages%0A%3C%2Flabel%3E%0A%3C%2Fdiv%3E%0A%3Cdiv%20class%3D%22checkbox%20col-sm-10%20col-sm-offset-1%22%3E%0A%3Clabel%3E%0A%3Cinput%20type%3D%22checkbox%22%20id%3D%22dialog_users_permission_page_edit%22%20value%3D%22%22%3E%0AEdit%20Pages%0A%3C%2Flabel%3E%0A%3Clabel%3E%0A%3Cinput%20type%3D%22checkbox%22%20id%3D%22dialog_users_permission_page_create%22%20value%3D%22%22%3E%0ACreate%20Pages%0A%3C%2Flabel%3E%0A%3Clabel%3E%0A%3Cinput%20type%3D%22checkbox%22%20id%3D%22dialog_users_permission_page_delete%22%20value%3D%22%22%3E%0ADelete%20Pages%0A%3C%2Flabel%3E%0A%3C%2Fdiv%3E%0A%3Cdiv%20class%3D%22checkbox%20col-sm-10%20col-sm-offset-1%22%3E%0A%3Clabel%3E%0A%3Cinput%20type%3D%22checkbox%22%20id%3D%22dialog_users_permission_toolbar%22%20value%3D%22%22%3E%0AToolbar%0A%3C%2Flabel%3E%0A%3C%2Fdiv%3E%0A%3C%2Fdiv%3E%0A%3Cdiv%20class%3D%22form-group%22%3E%0A%3Cdiv%20class%3D%22col-md-offset-2%20col-sm-offset-3%20col-md-10%20col-sm-9%22%3E%0A%3Cinput%20type%3D%22submit%22%20class%3D%22btn%20btn-info%22%20title%3D%22Create%22%20value%3D%22Create%22%3E%0A%3Cspan%20class%3D%22dialog_users_formfeedback_added%20hidden%22%3EUser%20Created!%3C%2Fspan%3E%0A%3Cspan%20class%3D%22dialog_users_formfeedback_notadded%20hidden%22%3EThere%20was%20an%20error.%20Check%20your%20connection.%3C%2Fspan%3E%0A%3C%2Fdiv%3E%0A%3C%2Fdiv%3E%0A%3C%2Fform%3E%0A%3Chr%20width%3D%2290%25%22%20%2F%3E%0A%3Ch4%3ECurrent%20Users%3C%2Fh4%3E%0A%3Ctable%20class%3D%22table%20table-striped%22%3E%0A%3Cthead%3E%0A%3Ctr%3E%0A%3Cth%3EName%3C%2Fth%3E%3Cth%3EEmail%3C%2Fth%3E%3Cth%3EPermissions%3C%2Fth%3E%3Cth%3ERegistered%20On%3C%2Fth%3E%3Cth%3ETools%3C%2Fth%3E%0A%3C%2Ftr%3E%0A%3C%2Fthead%3E%0A%3Ctbody%3E%0A{$userlist}%0A%3C%2Ftbody%3E%0A%3C%2Ftable%3E%0A%3C%2Fdiv%3E%0A%3Cdiv%20class%3D%22modal-footer%22%3E%0A%3Cbutton%20type%3D%22button%22%20class%3D%22btn%20btn-default%22%20data-dismiss%3D%22modal%22%3EClose%3C%2Fbutton%3E%0A%3C%2Fdiv%3E%0A%3C%2Fdiv%3E%0A%3C%2Fdiv%3E%0A%3C%2Fdiv%3E");
+				}
+				$secure .= urldecode("%3C%2Ful%3E%3C%2Fli%3E");
+			}
+			$secure .= urldecode("%3Cli%20class%3D%22dropdown%22%3E%0A%3Ca%20href%3D%22%23%22%20class%3D%22dropdown-toggle%22%20data-toggle%3D%22dropdown%22%20role%3D%22button%22%20aria-haspopup%3D%22true%22%20aria-expanded%3D%22false%22%3EAccount%20%3Cspan%20class%3D%22caret%22%3E%3C%2Fspan%3E%3C%2Fa%3E%0A%3Cul%20class%3D%22dropdown-menu%22%3E%0A%3Cli%3E%3Ca%20href%3D%22%23%22%20onclick%3D%22showDialog(%27account%27)%3B%22%3EDetails%3C%2Fa%3E%3C%2Fli%3E%3Cli%20role%3D%22separator%22%20class%3D%22divider%22%3E%3C%2Fli%3E%3Cli%3E%3Ca%20href%3D%22%23%22%20onclick%3D%22logout()%3B%22%3ELog%20Out%3C%2Fa%3E%3C%2Fli%3E%3C%2Ful%3E%3C%2Fli%3E%3Cli%3E%3Ca%20href%3D%22%23%22%20title%3D%22About%22%20onclick%3D%22showDialog(%27about%27)%3B%22%3EAbout%3C%2Fa%3E%3C%2Fli%3E%3C%2Ful%3E%3Cp%20class%3D%22navbar-text%20navbar-right%22%3E%3Ca%20href%3D%22%23%22%20class%3D%22navbar-link%22%3E{$authuser->name}%3C%2Fa%3E%3C%2Fp%3E%3C%2Fdiv%3E%3C%2Fdiv%3E%3C%2Fnav%3E");
+			$modals .= urldecode("%3Cdiv%20class%3D%22modal%20fade%22%20id%3D%22dialog_account%22%20tabindex%3D%22-1%22%20role%3D%22dialog%22%20aria-labelledby%3D%22dialog_users_title%22%3E%0A%3Cdiv%20class%3D%22modal-dialog%20modal-lg%22%20role%3D%22document%22%3E%0A%3Cdiv%20class%3D%22modal-content%22%3E%0A%3Cdiv%20class%3D%22modal-header%22%3E%0A%3Cbutton%20type%3D%22button%22%20class%3D%22close%22%20data-dismiss%3D%22modal%22%20aria-label%3D%22Close%22%3E%3Cspan%20aria-hidden%3D%22true%22%3E%26times%3B%3C%2Fspan%3E%3C%2Fbutton%3E%0A%3Ch4%20class%3D%22modal-title%22%20id%3D%22dialog_users_title%22%3EAccount%20Details%3C%2Fh4%3E%0A%3C%2Fdiv%3E%0A%3Cdiv%20class%3D%22modal-body%22%3E%0A%3Ch4%3EYour%20Profile%3C%2Fh4%3E%0A%3Cform%20class%3D%22form-horizontal%22%20role%3D%22edit%22%20onsubmit%3D%22dialog_account_save()%3Breturn%20false%3B%22%3E%0A%3Cdiv%20class%3D%22form-group%22%3E%0A%3Clabel%20class%3D%22contol-label%20col-sm-3%20col-md-2%22%20for%3D%22dialog_account_name%22%3EName%3A%3C%2Flabel%3E%0A%3Cdiv%20class%3D%22col-sm-9%20col-md-10%22%3E%0A%3Cinput%20name%3D%22name%22%20title%3D%22Name%22%20class%3D%22form-control%22%20id%3D%22dialog_account_name%22%20type%3D%22text%22%20placeholder%3D%22Name%22%20value%3D%22{$authuser->name}%22%20%2F%3E%0A%3C%2Fdiv%3E%0A%3C%2Fdiv%3E%0A%3Cdiv%20class%3D%22form-group%22%3E%0A%3Cdiv%20class%3D%22col-sm-offset-3%20col-md-offset-2%20col-sm-9%20col-md-10%22%3E%0A%3Cbutton%20class%3D%22btn%20btn-default%22%20type%3D%22submit%22%3ESave%3C%2Fbutton%3E%0A%3Cspan%20class%3D%22dialog_account_formfeedback_saved%20hidden%22%3ESaved!%3C%2Fspan%3E%0A%3Cspan%20class%3D%22dialog_account_formfeedback_notsaved%20hidden%22%3ECouldn%27t%20save!%20Check%20your%20connection.%3C%2Fspan%3E%0A%3C%2Fdiv%3E%0A%3C%2Fdiv%3E%0A%3Cdiv%20class%3D%22form-group%22%3E%0A%3Clabel%20class%3D%22contol-label%20col-sm-3%20col-md-2%22%20for%3D%22dialog_account_email%22%3EEmail%3A%3C%2Flabel%3E%0A%3Cdiv%20class%3D%22col-sm-9%20col-md-10%22%3E%0A%3Cp%20class%3D%22form-control-static%22%20id%3D%22dialog_account_email%22%3E{$authuser->email}%3C%2Fp%3E%0A%3C%2Fdiv%3E%0A%3C%2Fdiv%3E%0A%3Cdiv%20class%3D%22form-group%22%3E%0A%3Clabel%20class%3D%22contol-label%20col-sm-3%20col-md-2%22%20for%3D%22dialog_account_regdate%22%3ERegistered%20on%3A%3C%2Flabel%3E%0A%3Cdiv%20class%3D%22col-sm-9%20col-md-10%22%3E%0A%3Cp%20class%3D%22form-control-static%22%20id%3D%22dialog_account_regdate%22%3E{$authuser->registerdate}%3C%2Fp%3E%0A%3C%2Fdiv%3E%0A%3C%2Fdiv%3E%0A%3Cdiv%20class%3D%22form-group%22%3E%0A%3Clabel%20class%3D%22contol-label%20col-sm-3%20col-md-2%22%20for%3D%22dialog_account_perms%22%3EPermissions%3A%3C%2Flabel%3E%0A%3Cdiv%20class%3D%22col-sm-9%20col-md-10%22%3E%0A%3Cp%20class%3D%22form-control-static%22%20id%3D%22dialog_account_perms%22%3E{$authuser->rawperms}%3C%2Fp%3E%0A%3C%2Fdiv%3E%0A%3C%2Fdiv%3E%0A%3C%2Fform%3E%0A%3Ch4%3EChange%20your%20Password%3C%2Fh4%3E%0A%3Cform%20class%3D%22form-horizontal%22%20role%3D%22edit%22%20onsubmit%3D%22dialog_account_changepass()%3Breturn%20false%3B%22%3E%0A%3Cdiv%20class%3D%22form-group%20has-feedback%22%3E%0A%3Clabel%20class%3D%22contol-label%20col-sm-3%20col-md-2%22%20for%3D%22dialog_account_cpwd%22%3ECurrent%20Password%3A%3C%2Flabel%3E%0A%3Cdiv%20class%3D%22col-sm-9%20col-md-10%22%3E%0A%3Cinput%20name%3D%22cpwd%22%20title%3D%22Current%20Password%22%20class%3D%22form-control%22%20id%3D%22dialog_account_cpwd%22%20type%3D%22password%22%20placeholder%3D%22Current%20Password%22%20oninput%3D%22dialog_account_check_cpwd()%3B%22%20%2F%3E%0A%3Cspan%20class%3D%22glyphicon%20glyphicon-remove%20form-control-feedback%20hidden%22%3E%3C%2Fspan%3E%0A%3Cspan%20class%3D%22glyphicon%20glyphicon-ok%20form-control-feedback%20hidden%22%3E%3C%2Fspan%3E%0A%3C%2Fdiv%3E%0A%3C%2Fdiv%3E%0A%3Cdiv%20class%3D%22form-group%22%3E%0A%3Clabel%20class%3D%22contol-label%20col-sm-3%20col-md-2%22%20for%3D%22dialog_account_npwd%22%3ENew%20Password%3A%3C%2Flabel%3E%0A%3Cdiv%20class%3D%22col-sm-9%20col-md-10%22%3E%0A%3Cdiv%20class%3D%22input-group%22%3E%0A%3Cinput%20name%3D%22npwd%22%20title%3D%22New%20Password%22%20class%3D%22form-control%22%20id%3D%22dialog_account_npwd%22%20type%3D%22password%22%20placeholder%3D%22New%20Password%22%20oninput%3D%22dialog_account_check_npwd()%3B%22%20%2F%3E%0A%3Cspan%20class%3D%22input-group-btn%22%3E%0A%3Cbutton%20class%3D%22btn%20btn-default%22%20type%3D%22button%22%20onclick%3D%22dialog_account_toggleshownpwd()%3B%22%3E%3Cspan%20id%3D%22dialog_account_toggleshownpwd_symbol%22%20class%3D%22glyphicon%20glyphicon-eye-open%22%3E%3C%2Fspan%3E%3C%2Fbutton%3E%0A%3C%2Fspan%3E%0A%3C%2Fdiv%3E%0A%3Cspan%20class%3D%22dialog_account_formfeedback_badnpwd%20hidden%22%3EYour%20password%20must%20contain%20at%20least%208%20characters.%3C%2Fspan%3E%0A%3C%2Fdiv%3E%0A%3C%2Fdiv%3E%0A%3Cdiv%20class%3D%22form-group%22%3E%0A%3Cdiv%20class%3D%22col-sm-offset-3%20col-md-offset-2%20col-sm-9%20col-md-10%22%3E%0A%3Cbutton%20class%3D%22btn%20btn-default%22%20type%3D%22submit%22%3EChange%20Password%3C%2Fbutton%3E%0A%3C%2Fdiv%3E%0A%3C%2Fdiv%3E%0A%3C%2Fform%3E%0A%3Ch4%3EDelete%20your%20Account%3C%2Fh4%3E%0A%3Cdiv%20class%3D%22col-sm-offset-3%20col-md-offset-2%20col-sm-9%20col-md-10%22%3E%0A%3Cbutton%20class%3D%22btn%20btn-danger%22%20onclick%3D%22dialog_users_delete(%27{$authuser->uid}%27)%3B%22%3EDelete%20Account%3C%2Fbutton%3E%0A%3C%2Fdiv%3E%0A%3C%2Fdiv%3E%0A%3Cdiv%20class%3D%22modal-footer%22%3E%0A%3Cbutton%20type%3D%22button%22%20class%3D%22btn%20btn-default%22%20data-dismiss%3D%22modal%22%3EClose%3C%2Fbutton%3E%0A%3C%2Fdiv%3E%0A%3C%2Fdiv%3E%0A%3C%2Fdiv%3E%0A%3C%2Fdiv%3E");
+			$authorlink = "<a href=\"mailto:{$ccms_info->a_email}\" title=\"{$ccms_info->a_email}\">{$ccms_info->author}</a>";
+			$websitelink = "<a href=\"{$ccms_info->website}\" title=\"Chaos CMS Website\">{$ccms_info->website}</a>";
+			$releasedate = date("l, F j, Y", strtotime($ccms_info->release));
+			$creationdate = date("l, F j, Y", strtotime(getconfig("creationdate")));
+			$modals .= urldecode("%3Cdiv%20class%3D%22modal%20fade%22%20id%3D%22dialog_about%22%20tabindex%3D%22-1%22%20role%3D%22dialog%22%20aria-labelledby%3D%22dialog_about_title%22%3E%0A%3Cdiv%20class%3D%22modal-dialog%22%20role%3D%22document%22%3E%0A%3Cdiv%20class%3D%22modal-content%22%3E%0A%3Cdiv%20class%3D%22modal-header%22%3E%0A%3Cbutton%20type%3D%22button%22%20class%3D%22close%22%20data-dismiss%3D%22modal%22%20aria-label%3D%22Close%22%3E%3Cspan%20aria-hidden%3D%22true%22%3E%26times%3B%3C%2Fspan%3E%3C%2Fbutton%3E%0A%3Ch4%20class%3D%22modal-title%22%20id%3D%22dialog_about_title%22%3EAbout%3C%2Fh4%3E%0A%3C%2Fdiv%3E%0A%3Cdiv%20class%3D%22modal-body%22%3E%0A%3Ch4%3EAbout%20Chaos%20CMS%3C%2Fh4%3E%0A%3Cdl%20class%3D%22dl-horizontal%22%3E%0A%3Cdt%3EVersion%3A%3C%2Fdt%3E%3Cdd%3E{$ccms_info->version}%3C%2Fdd%3E%0A%3Cdt%3ERelease%20Date%3A%3C%2Fdt%3E%3Cdd%3E{$releasedate}%3C%2Fdd%3E%0A%3Cdt%3EAuthor%3A%3C%2Fdt%3E%3Cdd%3E{$authorlink}%3C%2Fdd%3E%0A%3Cdt%3ECCMS%20Website%3A%3C%2Fdt%3E%3Cdd%3E{$websitelink}%3C%2Fdd%3E%0A%3Cdt%3EWebsite%20created%3A%3C%2Fdt%3E%3Cdd%3E{$creationdate}%3C%2Fdd%3E%0A%3C%2Fdl%3E%0A%3C%2Fdiv%3E%0A%3Cdiv%20class%3D%22modal-footer%22%3E%0A%3Cbutton%20type%3D%22button%22%20class%3D%22btn%20btn-default%22%20data-dismiss%3D%22modal%22%3EClose%3C%2Fbutton%3E%0A%3C%2Fdiv%3E%0A%3C%2Fdiv%3E%0A%3C%2Fdiv%3E%0A%3C%2Fdiv%3E");
+		}
+		
+		$modals .= "</div>";
+		
+		$base = urldecode(getconfig("defaultnav"));
+		$header = $secure . $base . $modals;
+		return $header;
+	}
+
+	function getFooter() {
+		$footer = urldecode(getconfig("defaultfoot"));
+		return $footer;
+	}
+	
+	function resolvePlaceholders() {
+		global $authuser;
+		global $availablemodules, $modules;
+		
+		if ($this->navmod != "") {
+			$this->nav = urldecode($this->navmod);
+		} else {
+			$this->nav = $this->getHeader();
+		}
+		if ($this->footmod != "") {
+			$this->foot = urldecode($this->footmod);
+		} else {
+			$this->foot = $this->getFooter();
+		}
+		
+		$this->body = $this->nav . $this->body . $this->foot;
+		
+		$placeholders = [];
+		
+		preg_match_all("/\{\{.+\}\}/", $this->body, $placeholders);
+		
+		foreach ($placeholders[0] as $pcode) {
+			if ($pcode != null and $pcode != "") {
+				$pcode_trim = trim($pcode, "{}");
+				$placeparts = explode(">", $pcode_trim, 2);
+				if (count($placeparts) == 2) {
+					$mod = $placeparts[0];
+					$func = $placeparts[1];
+				} else {
+					$mod = "builtin";
+					$func = $placeparts[0];
+				}
+				if (in_array($mod, $availablemodules)) {
+					if (method_exists($modules[$mod], $func)) {
+						$content = $modules[$mod]->$func();
+					} else {
+						$content = "<script>console.warn('No function \'{$func}\' in module \'{$mod}\'!');</script>";
+					}
+				} else {
+					$content = "<script>console.warn('No such module \'{$mod}\'!');</script>";
+				}
+				$this->body = str_replace($pcode, $content, $this->body);
+			}
+		}
+	}
+	
+	function insertHead() {
+		$sitetitle = getconfig("websitetitle");
+		echo "<title>{$this->title} | {$sitetitle}</title>{$this->head}";		
+	}
+	
+	function insertBody() {
+		echo $this->body;
+	}
+	
+}
+
+function invalidPage($pid=null) {
+	global $conn, $sqlstat, $sqlerr;
+	
+	if ($pid != null) {
+		$pageid = $pid;
+	} else {
+		global $pageid;
+	}
+	
+	$pages = [];
+	
+	if ($sqlstat) {
+		$stmt = $conn->prepare("SELECT pageid FROM content_pages;");
+		$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
+		$ps = $stmt->fetchAll();
+		foreach ($ps as $p) {
+			array_push($pages, $p["pageid"]);
+		}
+	} else {
+		$pages = ["home", "notfound", "secureaccess"];
+	}
+	return !in_array($pageid, $pages);
+}
+
+?>
