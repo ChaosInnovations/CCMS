@@ -70,53 +70,6 @@ function createSecurePage() {
 	});
 }
 
-/*
-function dialog_edit_check_pageid() {
-	module_ajax("ajax_checkpid", {pageid: pageid,
-								  check: $("#dialog_edit_pageid").val(),
-								  token: Cookies.get("token")}, function(data){
-		var fieldparent = $("#dialog_edit_pageid").parent();
-		if (data == "TRUE") {
-			fieldparent.removeClass("has-error");
-			fieldparent.addClass("has-success");
-			fieldparent.find(".glyphicon-remove").addClass("hidden");
-			fieldparent.find(".glyphicon-ok").removeClass("hidden");
-		} else {
-			fieldparent.removeClass("has-success");
-			fieldparent.addClass("has-error");
-			fieldparent.find(".glyphicon-ok").addClass("hidden");
-			fieldparent.find(".glyphicon-remove").removeClass("hidden");
-		}
-	});
-}
-
-function dialog_edit_reset() {
-	$("#dialog_edit_pageid").val(pageid);
-	$("#dialog_edit_pagetitle").val(pagetitle);
-	$("#dialog_edit_head").val(head);
-	$("#dialog_edit_body").val(body);
-}
-
-function dialog_edit_save() {
-	module_ajax("ajax_editpage", {pageid: pageid,
-								  newpageid: $("#dialog_edit_pageid").val(),
-	                              title: encodeURIComponent($("#dialog_edit_pagetitle").val()),
-								  head: encodeURIComponent($("#dialog_edit_head").val()),
-								  body: encodeURIComponent($("#dialog_edit_body").val()),
-								  token: Cookies.get("token")}, function(data){
-		if (data == "FALSE") {
-			$(".dialog_edit_formfeedback_notsaved").removeClass("hidden");
-			setTimeout(function(){$(".dialog_edit_formfeedback_notsaved").addClass("hidden");}, 1500);
-		} else if (data == "TRUE") {
-			$(".dialog_edit_formfeedback_saved").removeClass("hidden");
-			setTimeout(function(){$(".dialog_edit_formfeedback_saved").addClass("hidden");window.location.reload();}, 800);
-		} else {
-			window.location = "?p="+data;
-		}
-	});
-}
-*/
-
 function dialog_managesite_save() {
 	module_ajax("ajax_setconfig", {websitetitle: $("#dialog_managesite_websitetitle").val(),
 	                               primaryemail: $("#dialog_managesite_primaryemail").val(),

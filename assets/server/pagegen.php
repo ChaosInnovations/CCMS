@@ -21,17 +21,7 @@ if (substr($_SERVER["PHP_SELF"], -strlen("pagegen.php")) == "pagegen.php") {
 		setcookie("token", "0", 1);
 		$authuser = new AuthUser(null);
 	}
-	if (isset($_GET["checkpid"]) and isset($_GET["check"])) {
-		if ($_GET["check"] == $_GET["checkpid"] or invalidPage($_GET["check"])) {
-			if ($_GET["check"] == $_GET["checkpid"] or ($_GET["checkpid"] != "home" and $_GET["checkpid"] != "notfound" and $_GET["checkpid"] != "secureaccess")) {
-				echo "TRUE";
-			} else {
-				echo "FALSE";
-			}
-		} else {
-			echo "FALSE";
-		}
-	} else if (isset($_GET["newpage"])) {
+	if (isset($_GET["newpage"])) {
 		if ((!isset($_POST["s"]) and $authuser->permissions->page_create) or (isset($_POST["s"]) and $authuser->permissions->page_createsecure)) {
 			for ($c=0;$c>-1;$c++) {
 				if ($c == 0) {
@@ -227,7 +217,7 @@ class Page {
 			
 			if ($authuser->permissions->owner or (($this->secure and $authuser->permissions->page_editsecure) or (!$this->secure and $authuser->permissions->page_edit)) and !in_array($this->pageid, $authuser->permissions->page_editblacklist)) {
 				$secure .= $TEMPLATES["secure-navbar-button-edit"];
-				$modals .= $TEMPLATES["secure-modal-start"]("dialog_edit", "Edit Page");
+				$modals .= $TEMPLATES["secure-modal-start"]("dialog_edit", "Edit Page", "lg");
 				$modals .= $TEMPLATES["secure-modal-edit-bodyfoot"];
 				$modals .= $TEMPLATES["secure-modal-end"];
 				$modals .= $TEMPLATES["secure-modal-edit-script"]($this->pageid, $this->rawtitle, $this->rawhead, $this->rawbody);
@@ -258,10 +248,9 @@ class Page {
 				$secure .= $TEMPLATES["secure-navbar-dropdown-admin-start"];
 				if ($authuser->permissions->admin_managepages) {
 					$secure .= $TEMPLATES["secure-navbar-dropdown-admin-button-pages"];
-					$modals .= $TEMPLATES["secure-modal-start"]("dialog_managepages", "Page Manager");
+					$modals .= $TEMPLATES["secure-modal-start"]("dialog_managepages", "Page Manager", "lg");
 					$modals .= $TEMPLATES["secure-modal-pages-bodyfoot"];
 					$modals .= $TEMPLATES["secure-modal-end"];
-					//$modals .= urldecode("%3Cdiv%20class%3D%22modal%20fade%22%20id%3D%22dialog_managepages%22%20tabindex%3D%22-1%22%20role%3D%22dialog%22%20aria-labelledby%3D%22dialog_managepages_title%22%3E%0A%3Cdiv%20class%3D%22modal-dialog%20modal-lg%22%20role%3D%22document%22%3E%0A%3Cdiv%20class%3D%22modal-content%22%3E%0A%3Cdiv%20class%3D%22modal-header%22%3E%0A%3Cbutton%20type%3D%22button%22%20class%3D%22close%22%20data-dismiss%3D%22modal%22%20aria-label%3D%22Close%22%3E%3Cspan%20aria-hidden%3D%22true%22%3E%26times%3B%3C%2Fspan%3E%3C%2Fbutton%3E%0A%3Ch4%20class%3D%22modal-title%22%20id%3D%22dialog_managepages_title%22%3EPage%20Manager%3C%2Fh4%3E%0A%3C%2Fdiv%3E%0A%3Cdiv%20class%3D%22modal-body%22%3E%0A%3Ch4%3EThis%20feature%20will%20be%20available%20in%20an%20upcoming%20version%20of%20Chaos%20CMS.%3C%2Fh4%3E%0A%3C%2Fdiv%3E%0A%3Cdiv%20class%3D%22modal-footer%22%3E%0A%3Cbutton%20type%3D%22button%22%20class%3D%22btn%20btn-default%22%20data-dismiss%3D%22modal%22%3EClose%3C%2Fbutton%3E%0A%3C%2Fdiv%3E%0A%3C%2Fdiv%3E%0A%3C%2Fdiv%3E%0A%3C%2Fdiv%3E");
 				}
 				if ($authuser->permissions->admin_managesite) {
 					$secure .= $TEMPLATES["secure-navbar-dropdown-admin-button-site"];
@@ -317,11 +306,10 @@ class Page {
 			$secure .= "<p class=\"navbar-text navbar-right\"><a href=\"#\" class=\"navbar-link\">{$authuser->name}</a></p>";
 			$secure .= $TEMPLATES["secure-navbar-end"];
 			$modals .= urldecode("%3Cdiv%20class%3D%22modal%20fade%22%20id%3D%22dialog_account%22%20tabindex%3D%22-1%22%20role%3D%22dialog%22%20aria-labelledby%3D%22dialog_users_title%22%3E%0A%3Cdiv%20class%3D%22modal-dialog%20modal-lg%22%20role%3D%22document%22%3E%0A%3Cdiv%20class%3D%22modal-content%22%3E%0A%3Cdiv%20class%3D%22modal-header%22%3E%0A%3Cbutton%20type%3D%22button%22%20class%3D%22close%22%20data-dismiss%3D%22modal%22%20aria-label%3D%22Close%22%3E%3Cspan%20aria-hidden%3D%22true%22%3E%26times%3B%3C%2Fspan%3E%3C%2Fbutton%3E%0A%3Ch4%20class%3D%22modal-title%22%20id%3D%22dialog_users_title%22%3EAccount%20Details%3C%2Fh4%3E%0A%3C%2Fdiv%3E%0A%3Cdiv%20class%3D%22modal-body%22%3E%0A%3Ch4%3EYour%20Profile%3C%2Fh4%3E%0A%3Cform%20class%3D%22form-horizontal%22%20role%3D%22edit%22%20onsubmit%3D%22dialog_account_save()%3Breturn%20false%3B%22%3E%0A%3Cdiv%20class%3D%22form-group%22%3E%0A%3Clabel%20class%3D%22contol-label%20col-sm-3%20col-md-2%22%20for%3D%22dialog_account_name%22%3EName%3A%3C%2Flabel%3E%0A%3Cdiv%20class%3D%22col-sm-9%20col-md-10%22%3E%0A%3Cinput%20name%3D%22name%22%20title%3D%22Name%22%20class%3D%22form-control%22%20id%3D%22dialog_account_name%22%20type%3D%22text%22%20placeholder%3D%22Name%22%20value%3D%22{$authuser->name}%22%20%2F%3E%0A%3C%2Fdiv%3E%0A%3C%2Fdiv%3E%0A%3Cdiv%20class%3D%22form-group%22%3E%0A%3Cdiv%20class%3D%22col-sm-offset-3%20col-md-offset-2%20col-sm-9%20col-md-10%22%3E%0A%3Cbutton%20class%3D%22btn%20btn-default%22%20type%3D%22submit%22%3ESave%3C%2Fbutton%3E%0A%3Cspan%20class%3D%22dialog_account_formfeedback_saved%20hidden%22%3ESaved!%3C%2Fspan%3E%0A%3Cspan%20class%3D%22dialog_account_formfeedback_notsaved%20hidden%22%3ECouldn%27t%20save!%20Check%20your%20connection.%3C%2Fspan%3E%0A%3C%2Fdiv%3E%0A%3C%2Fdiv%3E%0A%3Cdiv%20class%3D%22form-group%22%3E%0A%3Clabel%20class%3D%22contol-label%20col-sm-3%20col-md-2%22%20for%3D%22dialog_account_email%22%3EEmail%3A%3C%2Flabel%3E%0A%3Cdiv%20class%3D%22col-sm-9%20col-md-10%22%3E%0A%3Cp%20class%3D%22form-control-static%22%20id%3D%22dialog_account_email%22%3E{$authuser->email}%3C%2Fp%3E%0A%3C%2Fdiv%3E%0A%3C%2Fdiv%3E%0A%3Cdiv%20class%3D%22form-group%22%3E%0A%3Clabel%20class%3D%22contol-label%20col-sm-3%20col-md-2%22%20for%3D%22dialog_account_regdate%22%3ERegistered%20on%3A%3C%2Flabel%3E%0A%3Cdiv%20class%3D%22col-sm-9%20col-md-10%22%3E%0A%3Cp%20class%3D%22form-control-static%22%20id%3D%22dialog_account_regdate%22%3E{$authuser->registerdate}%3C%2Fp%3E%0A%3C%2Fdiv%3E%0A%3C%2Fdiv%3E%0A%3Cdiv%20class%3D%22form-group%22%3E%0A%3Clabel%20class%3D%22contol-label%20col-sm-3%20col-md-2%22%20for%3D%22dialog_account_perms%22%3EPermissions%3A%3C%2Flabel%3E%0A%3Cdiv%20class%3D%22col-sm-9%20col-md-10%22%3E%0A%3Cp%20class%3D%22form-control-static%22%20id%3D%22dialog_account_perms%22%3E{$authuser->rawperms}%3C%2Fp%3E%0A%3C%2Fdiv%3E%0A%3C%2Fdiv%3E%0A%3C%2Fform%3E%0A%3Ch4%3EChange%20your%20Password%3C%2Fh4%3E%0A%3Cform%20class%3D%22form-horizontal%22%20role%3D%22edit%22%20onsubmit%3D%22dialog_account_changepass()%3Breturn%20false%3B%22%3E%0A%3Cdiv%20class%3D%22form-group%20has-feedback%22%3E%0A%3Clabel%20class%3D%22contol-label%20col-sm-3%20col-md-2%22%20for%3D%22dialog_account_cpwd%22%3ECurrent%20Password%3A%3C%2Flabel%3E%0A%3Cdiv%20class%3D%22col-sm-9%20col-md-10%22%3E%0A%3Cinput%20name%3D%22cpwd%22%20title%3D%22Current%20Password%22%20class%3D%22form-control%22%20id%3D%22dialog_account_cpwd%22%20type%3D%22password%22%20placeholder%3D%22Current%20Password%22%20oninput%3D%22dialog_account_check_cpwd()%3B%22%20%2F%3E%0A%3Cspan%20class%3D%22glyphicon%20glyphicon-remove%20form-control-feedback%20hidden%22%3E%3C%2Fspan%3E%0A%3Cspan%20class%3D%22glyphicon%20glyphicon-ok%20form-control-feedback%20hidden%22%3E%3C%2Fspan%3E%0A%3C%2Fdiv%3E%0A%3C%2Fdiv%3E%0A%3Cdiv%20class%3D%22form-group%22%3E%0A%3Clabel%20class%3D%22contol-label%20col-sm-3%20col-md-2%22%20for%3D%22dialog_account_npwd%22%3ENew%20Password%3A%3C%2Flabel%3E%0A%3Cdiv%20class%3D%22col-sm-9%20col-md-10%22%3E%0A%3Cdiv%20class%3D%22input-group%22%3E%0A%3Cinput%20name%3D%22npwd%22%20title%3D%22New%20Password%22%20class%3D%22form-control%22%20id%3D%22dialog_account_npwd%22%20type%3D%22password%22%20placeholder%3D%22New%20Password%22%20oninput%3D%22dialog_account_check_npwd()%3B%22%20%2F%3E%0A%3Cspan%20class%3D%22input-group-btn%22%3E%0A%3Cbutton%20class%3D%22btn%20btn-default%22%20type%3D%22button%22%20onclick%3D%22dialog_account_toggleshownpwd()%3B%22%3E%3Cspan%20id%3D%22dialog_account_toggleshownpwd_symbol%22%20class%3D%22glyphicon%20glyphicon-eye-open%22%3E%3C%2Fspan%3E%3C%2Fbutton%3E%0A%3C%2Fspan%3E%0A%3C%2Fdiv%3E%0A%3Cspan%20class%3D%22dialog_account_formfeedback_badnpwd%20hidden%22%3EYour%20password%20must%20contain%20at%20least%208%20characters.%3C%2Fspan%3E%0A%3C%2Fdiv%3E%0A%3C%2Fdiv%3E%0A%3Cdiv%20class%3D%22form-group%22%3E%0A%3Cdiv%20class%3D%22col-sm-offset-3%20col-md-offset-2%20col-sm-9%20col-md-10%22%3E%0A%3Cbutton%20class%3D%22btn%20btn-default%22%20type%3D%22submit%22%3EChange%20Password%3C%2Fbutton%3E%0A%3C%2Fdiv%3E%0A%3C%2Fdiv%3E%0A%3C%2Fform%3E%0A%3Ch4%3EDelete%20your%20Account%3C%2Fh4%3E%0A%3Cdiv%20class%3D%22col-sm-offset-3%20col-md-offset-2%20col-sm-9%20col-md-10%22%3E%0A%3Cbutton%20class%3D%22btn%20btn-danger%22%20onclick%3D%22dialog_users_delete(%27{$authuser->uid}%27)%3B%22%3EDelete%20Account%3C%2Fbutton%3E%0A%3C%2Fdiv%3E%0A%3C%2Fdiv%3E%0A%3Cdiv%20class%3D%22modal-footer%22%3E%0A%3Cbutton%20type%3D%22button%22%20class%3D%22btn%20btn-default%22%20data-dismiss%3D%22modal%22%3EClose%3C%2Fbutton%3E%0A%3C%2Fdiv%3E%0A%3C%2Fdiv%3E%0A%3C%2Fdiv%3E%0A%3C%2Fdiv%3E");
-			$authorlink = "<a href=\"mailto:{$ccms_info->a_email}\" title=\"{$ccms_info->a_email}\">{$ccms_info->author}</a>";
-			$websitelink = "<a href=\"{$ccms_info->website}\" title=\"Chaos CMS Website\">{$ccms_info->website}</a>";
-			$releasedate = date("l, F j, Y", strtotime($ccms_info->release));
-			$creationdate = date("l, F j, Y", strtotime(getconfig("creationdate")));
-			$modals .= urldecode("%3Cdiv%20class%3D%22modal%20fade%22%20id%3D%22dialog_about%22%20tabindex%3D%22-1%22%20role%3D%22dialog%22%20aria-labelledby%3D%22dialog_about_title%22%3E%0A%3Cdiv%20class%3D%22modal-dialog%22%20role%3D%22document%22%3E%0A%3Cdiv%20class%3D%22modal-content%22%3E%0A%3Cdiv%20class%3D%22modal-header%22%3E%0A%3Cbutton%20type%3D%22button%22%20class%3D%22close%22%20data-dismiss%3D%22modal%22%20aria-label%3D%22Close%22%3E%3Cspan%20aria-hidden%3D%22true%22%3E%26times%3B%3C%2Fspan%3E%3C%2Fbutton%3E%0A%3Ch4%20class%3D%22modal-title%22%20id%3D%22dialog_about_title%22%3EAbout%3C%2Fh4%3E%0A%3C%2Fdiv%3E%0A%3Cdiv%20class%3D%22modal-body%22%3E%0A%3Ch4%3EAbout%20Chaos%20CMS%3C%2Fh4%3E%0A%3Cdl%20class%3D%22dl-horizontal%22%3E%0A%3Cdt%3EVersion%3A%3C%2Fdt%3E%3Cdd%3E{$ccms_info->version}%3C%2Fdd%3E%0A%3Cdt%3ERelease%20Date%3A%3C%2Fdt%3E%3Cdd%3E{$releasedate}%3C%2Fdd%3E%0A%3Cdt%3EAuthor%3A%3C%2Fdt%3E%3Cdd%3E{$authorlink}%3C%2Fdd%3E%0A%3Cdt%3ECCMS%20Website%3A%3C%2Fdt%3E%3Cdd%3E{$websitelink}%3C%2Fdd%3E%0A%3Cdt%3EWebsite%20created%3A%3C%2Fdt%3E%3Cdd%3E{$creationdate}%3C%2Fdd%3E%0A%3C%2Fdl%3E%0A%3C%2Fdiv%3E%0A%3Cdiv%20class%3D%22modal-footer%22%3E%0A%3Cbutton%20type%3D%22button%22%20class%3D%22btn%20btn-default%22%20data-dismiss%3D%22modal%22%3EClose%3C%2Fbutton%3E%0A%3C%2Fdiv%3E%0A%3C%2Fdiv%3E%0A%3C%2Fdiv%3E%0A%3C%2Fdiv%3E");
+			$modals .= $TEMPLATES["secure-modal-start"]("dialog_about", "About", "md");
+			$modals .= $TEMPLATES["secure-modal-about-body"]($ccms_info->version, $ccms_info->release, $ccms_info->a_email, $ccms_info->author, $ccms_info->website, getconfig("creationdate"));
+			$modals .= $TEMPLATES["secure-modal-about-foot"];
+			$modals .= $TEMPLATES["secure-modal-end"];
 		}
 		
 		$modals .= "</div>";

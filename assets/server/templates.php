@@ -124,10 +124,10 @@ $TEMPLATES = [
 
 // Modal Start
 
-"secure-modal-start" => function ($id, $title) {
+"secure-modal-start" => function ($id, $title, $size) {
 	return '
 <div class="modal fade" id="' . $id . '" tabindex="-1" role="dialog" aria-labelledby="' . $id . '_title">
-<div class="modal-dialog modal-lg" role="document">
+<div class="modal-dialog modal-' . $size . '" role="document">
 <div class="modal-content">
 <div class="modal-header">
 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
@@ -267,6 +267,42 @@ function dialog_edit_save() {
 <h4>This feature will be available in an upcoming version of Chaos CMS.</h4>
 </div>' .
 // Foot
+'
+<div class="modal-footer">
+<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+</div>',
+
+// Site Manager Modal
+//====================
+
+// Users Modal
+//=============
+
+// Account Modal
+//===============
+
+// About Modal
+//=============
+
+// Body
+"secure-modal-about-body" => function ($version, $release, $aemail, $author, $website, $creation){
+	$releasedate = date("l, F j, Y", strtotime($release));
+	$creationdate = date("l, F j, Y", strtotime($creation));
+	return '
+<div class="modal-body">
+<h4>About Chaos CMS</h4>
+<dl class="dl-horizontal">
+<dt>Version:</dt><dd>' . $version .'</dd>
+<dt>Release Date:</dt><dd>' . $releasedate . '</dd>
+<dt>Author:</dt><dd><a href="mailto:' . $aemail .'" title="' . $aemail .'">' . $author .'</a></dd>
+<dt>CCMS Website:</dt><dd><a href="' . $website .'" title="Chaos CMS Website">' . $website .'</a></dd>
+<dt>Website created:</dt><dd>' . $creationdate .'</dd>
+</dl>
+</div>';
+},
+
+// Foot
+"secure-modal-about-foot" =>
 '
 <div class="modal-footer">
 <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
