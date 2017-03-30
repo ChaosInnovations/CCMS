@@ -21,44 +21,7 @@ if (substr($_SERVER["PHP_SELF"], -strlen("pagegen.php")) == "pagegen.php") {
 		setcookie("token", "0", 1);
 		$authuser = new AuthUser(null);
 	}
-	if (isset($_GET["edit"]) and isset($_POST["pageid"]) and isset($_POST["title"]) and isset($_POST["head"]) and isset($_POST["body"])) {
-		if (!invalidPage($_GET["edit"])) {
-			$page = new Page($_GET["edit"]);
-			if ($authuser->permissions->owner or (((!$page->secure and $authuser->permissions->page_edit) or ($page->secure and $authuser->permissions->page_editsecure and !in_array($page->pageid, $authuser->permissions->page_viewblacklist))) and !in_array($page->pageid, $authuser->permissions->page_editblacklist))) {
-				$newpageid = $_POST["pageid"];
-				if ($newpageid == $page->pageid or ($page->pageid != "home" and $page->pageid != "notfound" and $page->pageid != "secureaccess")) {
-					if ($newpageid == $page->pageid or (invalidPage($newpageid) and $newpageid != "TRUE" and $newpageid !="FALSE")) {
-						if ($sqlstat) {
-							$now = date("Y-m-d");
-							$stmt = $conn->prepare("UPDATE content_pages SET pageid=:pageid, title=:title, head=:head, body=:body, revision=:now WHERE pageid=:oldpid;");
-							$stmt->bindParam(":pageid", $newpageid);
-							$stmt->bindParam(":oldpid", $page->pageid);
-							$stmt->bindParam(":title", $_POST["title"]);
-							$stmt->bindParam(":head", $_POST["head"]);
-							$stmt->bindParam(":body", $_POST["body"]);
-							$stmt->bindParam(":now", $now);
-							$stmt->execute();
-							if ($newpageid == $page->pageid) {
-								echo "TRUE";
-							} else {
-								echo $newpageid;
-							}
-						} else {
-							echo "FALSE";
-						}
-					} else {
-						echo "FALSE";
-					}
-				} else {
-					echo "FALSE";
-				}
-			} else {
-				echo "FALSE";
-			}
-		} else {
-			echo "FALSE";
-		}
-	} else if (isset($_GET["checkpid"]) and isset($_GET["check"])) {
+	if (isset($_GET["checkpid"]) and isset($_GET["check"])) {
 		if ($_GET["check"] == $_GET["checkpid"] or invalidPage($_GET["check"])) {
 			if ($_GET["check"] == $_GET["checkpid"] or ($_GET["checkpid"] != "home" and $_GET["checkpid"] != "notfound" and $_GET["checkpid"] != "secureaccess")) {
 				echo "TRUE";
@@ -118,6 +81,66 @@ if (substr($_SERVER["PHP_SELF"], -strlen("pagegen.php")) == "pagegen.php") {
 	}
 }
 
+function ajax_checkpid() {
+	if (isset($_POST["pageid"]) and isset($_POST["check"])) {
+		if ($_POST["check"] == $_POST["pageid"] or invalidPage($_POST["check"])) {
+			if ($_POST["check"] == $_POST["pageid"] or ($_POST["pageid"] != "home" and $_POST["pageid"] != "notfound" and $_POST["pageid"] != "secureaccess")) {
+				echo "TRUE";
+			} else {
+				echo "FALSE";
+			}
+		} else {
+			echo "FALSE";
+		}
+	}
+}
+
+function ajax_editpage() {
+	global $conn, $sqlstat, $sqlerr;
+	global $authuser;
+	
+	if (isset($_POST["pageid"]) and isset($_POST["newpageid"]) and isset($_POST["title"]) and isset($_POST["head"]) and isset($_POST["body"])) {
+		if (!invalidPage($_POST["pageid"])) {
+			$page = new Page($_POST["pageid"]);
+			if ($authuser->permissions->owner or (((!$page->secure and $authuser->permissions->page_edit) or ($page->secure and $authuser->permissions->page_editsecure and !in_array($page->pageid, $authuser->permissions->page_viewblacklist))) and !in_array($page->pageid, $authuser->permissions->page_editblacklist))) {
+				$newpageid = $_POST["newpageid"];
+				if ($newpageid == $page->pageid or ($page->pageid != "home" and $page->pageid != "notfound" and $page->pageid != "secureaccess")) {
+					if ($newpageid == $page->pageid or (invalidPage($newpageid) and $newpageid != "TRUE" and $newpageid !="FALSE")) {
+						if ($sqlstat) {
+							$now = date("Y-m-d");
+							$stmt = $conn->prepare("UPDATE content_pages SET pageid=:pageid, title=:title, head=:head, body=:body, revision=:now WHERE pageid=:oldpid;");
+							$stmt->bindParam(":pageid", $newpageid);
+							$stmt->bindParam(":oldpid", $page->pageid);
+							$stmt->bindParam(":title", $_POST["title"]);
+							$stmt->bindParam(":head", $_POST["head"]);
+							$stmt->bindParam(":body", $_POST["body"]);
+							$stmt->bindParam(":now", $now);
+							$stmt->execute();
+							if ($newpageid == $page->pageid) {
+								return "TRUE";
+							} else {
+								return $newpageid;
+							}
+						} else {
+							return "FALSE";
+						}
+					} else {
+						return "FALSE";
+					}
+				} else {
+					return "FALSE";
+				}
+			} else {
+				return "FALSE";
+			}
+		} else {
+			return "FALSE";
+		}
+	} else {
+		return "FALSE";
+	}
+}
+
 class Page {
 	
 	public $pageid = "";
@@ -128,8 +151,10 @@ class Page {
 	public $head = "";
 	public $rawbody = "%3Ch1%3EEmpty%20Page!%3C%2Fh1%3E";
 	public $body = "<h1>Empty Page!</h1>";
+	public $rawnavmod = "";
 	public $navmod = "";
 	public $nav = "";
+	public $rawfootmod = "";
 	public $footmod = "";
 	public $foot = "";
 	public $secure = false;
@@ -153,15 +178,17 @@ class Page {
 			$pdatas = $stmt->fetchAll();
 			if (count($pdatas) == 1) {
 				$pdata = $pdatas[0];
-				$this->rawtitle = urlencode($pdata["title"]);
-				$this->title = urldecode($pdata["title"]);
-				$this->rawhead = urlencode($pdata["head"]);
-				$this->head = urldecode($pdata["head"]);
-				$this->rawbody = urlencode($pdata["body"]);
-				$this->body = urldecode($pdata["body"]);
-				$this->navmod = urldecode($pdata["navmod"]);
-				$this->footmod = urldecode($pdata["footmod"]);
-				$this->secure = urldecode($pdata["secure"]);
+				$this->rawtitle = $pdata["title"];
+				$this->rawhead = $pdata["head"];
+				$this->rawbody = $pdata["body"];
+				$this->rawnavmod = $pdata["navmod"];
+				$this->rawfootmod = $pdata["footmod"];
+				$this->title = urldecode($this->rawtitle);
+				$this->head = urldecode($this->rawhead);
+				$this->body = urldecode($this->rawbody);
+				$this->navmod = urldecode($this->rawnavmod);
+				$this->footmod = urldecode($this->rawfootmod);
+				$this->secure = $pdata["secure"];
 				$this->revision = date("l, F j, Y", strtotime($pdata["revision"]));
 			} else {					
 				$this->title = $pageid;
@@ -200,7 +227,10 @@ class Page {
 			
 			if ($authuser->permissions->owner or (($this->secure and $authuser->permissions->page_editsecure) or (!$this->secure and $authuser->permissions->page_edit)) and !in_array($this->pageid, $authuser->permissions->page_editblacklist)) {
 				$secure .= $TEMPLATES["secure-navbar-button-edit"];
-				$modals .= urldecode("%3Cdiv%20class%3D%22modal%20fade%22%20id%3D%22dialog_edit%22%20tabindex%3D%22-1%22%20role%3D%22dialog%22%20aria-labelledby%3D%22dialog_edit_title%22%3E%0A%3Cdiv%20class%3D%22modal-dialog%20modal-lg%22%20role%3D%22document%22%3E%0A%3Cdiv%20class%3D%22modal-content%22%3E%0A%3Cdiv%20class%3D%22modal-header%22%3E%0A%3Cbutton%20type%3D%22button%22%20class%3D%22close%22%20data-dismiss%3D%22modal%22%20aria-label%3D%22Close%22%3E%3Cspan%20aria-hidden%3D%22true%22%3E%26times%3B%3C%2Fspan%3E%3C%2Fbutton%3E%0A%3Ch4%20class%3D%22modal-title%22%20id%3D%22dialog_edit_title%22%3EEdit%20Page%3C%2Fh4%3E%0A%3C%2Fdiv%3E%0A%3Cdiv%20class%3D%22modal-body%22%3E%0A%3Cform%20class%3D%22form-horizontal%22%20role%3D%22edit%22%20onsubmit%3D%22dialog_edit_save()%3Breturn%20false%3B%22%3E%0A%3Cdiv%20class%3D%22form-group%22%3E%0A%3Cdiv%20class%3D%22col-md-offset-2%20col-sm-offset-3%20col-md-10%20col-sm-9%22%3E%0A%3Cinput%20type%3D%22submit%22%20class%3D%22btn%20btn-info%22%20title%3D%22Save%22%20value%3D%22Save%22%3E%0A%3Cspan%20class%3D%22dialog_edit_formfeedback_saved%20hidden%22%3ESaved!%3C%2Fspan%3E%0A%3Cspan%20class%3D%22dialog_edit_formfeedback_notsaved%20hidden%22%3EThere%20was%20an%20error%20saving.%20Check%20your%20connection.%3C%2Fspan%3E%0A%3C%2Fdiv%3E%0A%3C%2Fdiv%3E%0A%3Cdiv%20class%3D%22form-group%20has-feedback%22%3E%0A%3Clabel%20class%3D%22control-label%20col-sm-3%20col-md-2%22%20for%3D%22editname%22%3EPage%20ID%3A%3C%2Flabel%3E%0A%3Cdiv%20class%3D%22col-sm-9%20col-md-10%22%3E%0A%3Cinput%20type%3D%22text%22%20id%3D%22dialog_edit_pageid%22%20name%3D%22pageid%22%20class%3D%22form-control%22%20title%3D%22Page%20ID%22%20placeholder%3D%22Page%20ID%22%20oninput%3D%22dialog_edit_check_pageid()%3B%22%3E%0A%3Cspan%20class%3D%22glyphicon%20glyphicon-remove%20form-control-feedback%20hidden%22%3E%3C%2Fspan%3E%0A%3Cspan%20class%3D%22glyphicon%20glyphicon-ok%20form-control-feedback%20hidden%22%3E%3C%2Fspan%3E%0A%3C%2Fdiv%3E%0A%3C%2Fdiv%3E%0A%3Cdiv%20class%3D%22form-group%22%3E%0A%3Clabel%20class%3D%22control-label%20col-sm-3%20col-md-2%22%20for%3D%22editshort-desc%22%3EPage%20Title%3A%3C%2Flabel%3E%0A%3Cdiv%20class%3D%22col-sm-9%20col-md-10%22%3E%0A%3Cinput%20type%3D%22text%22%20id%3D%22dialog_edit_pagetitle%22%20name%3D%22pagetitle%22%20class%3D%22form-control%22%20title%3D%22Page%20Title%22%20placeholder%3D%22Page%20Title%22%3E%0A%3C%2Fdiv%3E%0A%3C%2Fdiv%3E%0A%3Cdiv%20class%3D%22form-group%22%3E%0A%3Clabel%20class%3D%22control-label%20col-sm-3%20col-md-2%22%20for%3D%22editlong-desc%22%3E%3Ccode%3E%26lt%3Bhead%26gt%3B%3C%2Fcode%3E%3A%3C%2Flabel%3E%0A%3Cdiv%20class%3D%22col-sm-9%20col-md-10%22%3E%0A%3Ctextarea%20id%3D%22dialog_edit_head%22%20name%3D%22head%22%20class%3D%22form-control%20monospace%22%20title%3D%22Page%20Head%22%20placeholder%3D%22Page%20Head%22%20rows%3D%228%22%3E%3C%2Ftextarea%3E%0A%3C%2Fdiv%3E%0A%3C%2Fdiv%3E%0A%3Cdiv%20class%3D%22form-group%22%3E%0A%3Clabel%20class%3D%22control-label%20col-sm-3%20col-md-2%22%20for%3D%22editcontact%22%3E%3Ccode%3E%26lt%3Bbody%26gt%3B%3C%2Fcode%3E%3A%3C%2Flabel%3E%0A%3Cdiv%20class%3D%22col-sm-9%20col-md-10%22%3E%0A%3Ctextarea%20id%3D%22dialog_edit_body%22%20name%3D%22body%22%20class%3D%22form-control%20monospace%22%20title%3D%22Page%20Body%22%20placeholder%3D%22Page%20Body%22%20rows%3D%2232%22%3E%3C%2Ftextarea%3E%0A%3C%2Fdiv%3E%0A%3C%2Fdiv%3E%0A%3C%2Fform%3E%0A%3C%2Fdiv%3E%0A%3Cdiv%20class%3D%22modal-footer%22%3E%0A%3Cspan%20class%3D%22dialog_edit_formfeedback_saved%20hidden%22%3ESaved!%3C%2Fspan%3E%0A%3Cspan%20class%3D%22dialog_edit_formfeedback_notsaved%20hidden%22%3EThere%20was%20an%20error%20saving.%20Check%20your%20connection.%3C%2Fspan%3E%0A%3Cbutton%20type%3D%22button%22%20class%3D%22btn%20btn-info%22%20onclick%3D%22dialog_edit_save()%3B%22%3ESave%20changes%3C%2Fbutton%3E%0A%3Cbutton%20type%3D%22button%22%20class%3D%22btn%20btn-danger%22%20onclick%3D%22dialog_edit_reset()%3B%22%3EReset%20Changes%3C%2Fbutton%3E%0A%3Cbutton%20type%3D%22button%22%20class%3D%22btn%20btn-default%22%20data-dismiss%3D%22modal%22%3EClose%3C%2Fbutton%3E%0A%3C%2Fdiv%3E%0A%3C%2Fdiv%3E%0A%3C%2Fdiv%3E%0A%3C%2Fdiv%3E%0A%3Cscript%3E%0Avar%20pageid%20%3D%20%22{$this->pageid}%22%3B%0Avar%20pagetitle%20%3D%20decodeURIComponent(%22{$this->rawtitle}%22)%3B%0Avar%20head%20%3D%20decodeURIComponent(%22{$this->rawhead}%22)%3B%0Avar%20body%20%3D%20decodeURIComponent(%22{$this->rawbody}%22)%3B%0A%24(%22%23dialog_edit_pageid%22).val(pageid)%3B%0Aif%20(pageid%20%3D%3D%20%22home%22%20%7C%7C%20pageid%20%3D%3D%20%22notfound%22%20%7C%7C%20pageid%20%3D%3D%20%22secureaccess%22)%20%7B%0A%09%24(%22%23dialog_edit_pageid%22).attr(%22disabled%22%2C%20%22disabled%22)%3B%0A%7D%0A%24(%22%23dialog_edit_pagetitle%22).val(pagetitle)%3B%0A%24(%22%23dialog_edit_head%22).val(head)%3B%0A%24(%22%23dialog_edit_body%22).val(body)%3B%0A%3C%2Fscript%3E");
+				$modals .= $TEMPLATES["secure-modal-start"]("dialog_edit", "Edit Page");
+				$modals .= $TEMPLATES["secure-modal-edit-bodyfoot"];
+				$modals .= $TEMPLATES["secure-modal-end"];
+				$modals .= $TEMPLATES["secure-modal-edit-script"]($this->pageid, $this->rawtitle, $this->rawhead, $this->rawbody);
 			}
 			if ($authuser->permissions->page_create) {
 				$secure .= $TEMPLATES["secure-navbar-button-create"];

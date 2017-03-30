@@ -70,8 +70,11 @@ function createSecurePage() {
 	});
 }
 
+/*
 function dialog_edit_check_pageid() {
-	$.get("assets/server/pagegen.php?checkpid="+pageid+"&check="+$("#dialog_edit_pageid").val(), function (data) {
+	module_ajax("ajax_checkpid", {pageid: pageid,
+								  check: $("#dialog_edit_pageid").val(),
+								  token: Cookies.get("token")}, function(data){
 		var fieldparent = $("#dialog_edit_pageid").parent();
 		if (data == "TRUE") {
 			fieldparent.removeClass("has-error");
@@ -95,28 +98,24 @@ function dialog_edit_reset() {
 }
 
 function dialog_edit_save() {
-	// Use POST for this. Should a token be submitted from here or is it accessable from the server?
-	var newpageid = $("#dialog_edit_pageid").val();
-	var newtitle = $("#dialog_edit_pagetitle").val();
-	var newhead = $("#dialog_edit_head").val();
-	var newbody = $("#dialog_edit_body").val();
-	$.post("assets/server/pagegen.php?edit="+pageid, {
-		token: Cookies.get("token"),
-		pageid: newpageid,
-		title: encodeURIComponent(newtitle),
-		head: encodeURIComponent(newhead),
-		body: encodeURIComponent(newbody)}, function (data) {
-			if (data == "FALSE") {
-				$(".dialog_edit_formfeedback_notsaved").removeClass("hidden");
-				setTimeout(function(){$(".dialog_edit_formfeedback_notsaved").addClass("hidden");}, 1500);
-			} else if (data == "TRUE") {
-				$(".dialog_edit_formfeedback_saved").removeClass("hidden");
-				setTimeout(function(){$(".dialog_edit_formfeedback_saved").addClass("hidden");window.location.reload();}, 800);
-			} else {
-				window.location = "?p="+data;
-			}
-		});
+	module_ajax("ajax_editpage", {pageid: pageid,
+								  newpageid: $("#dialog_edit_pageid").val(),
+	                              title: encodeURIComponent($("#dialog_edit_pagetitle").val()),
+								  head: encodeURIComponent($("#dialog_edit_head").val()),
+								  body: encodeURIComponent($("#dialog_edit_body").val()),
+								  token: Cookies.get("token")}, function(data){
+		if (data == "FALSE") {
+			$(".dialog_edit_formfeedback_notsaved").removeClass("hidden");
+			setTimeout(function(){$(".dialog_edit_formfeedback_notsaved").addClass("hidden");}, 1500);
+		} else if (data == "TRUE") {
+			$(".dialog_edit_formfeedback_saved").removeClass("hidden");
+			setTimeout(function(){$(".dialog_edit_formfeedback_saved").addClass("hidden");window.location.reload();}, 800);
+		} else {
+			window.location = "?p="+data;
+		}
+	});
 }
+*/
 
 function dialog_managesite_save() {
 	module_ajax("ajax_setconfig", {websitetitle: $("#dialog_managesite_websitetitle").val(),
