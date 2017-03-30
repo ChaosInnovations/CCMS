@@ -132,15 +132,14 @@ $TEMPLATES = [
 <div class="modal-header">
 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
 <h4 class="modal-title" id="' . $id . '_title">Edit Page</h4>
-</div>
-<div class="modal-body">';
+</div>';
 },
 
 // Modal End
 
 "secure-modal-end" =>
 '
-</div></div></nav>',
+</div></div></div>',
 
 // Edit Modal
 //============
@@ -148,6 +147,7 @@ $TEMPLATES = [
 // Body
 "secure-modal-edit-bodyfoot" =>
 '
+<div class="modal-body">
 <form class="form-horizontal" role="edit" onsubmit="dialog_edit_save();return false;">
 <div class="form-group">
 <div class="col-md-offset-2 col-sm-offset-3 col-md-10 col-sm-9">
@@ -260,6 +260,17 @@ function dialog_edit_save() {
 // Page Manager Modal
 //====================
 
+// Body
+"secure-modal-pages-bodyfoot" =>
+'
+<div class="modal-body">
+<h4>This feature will be available in an upcoming version of Chaos CMS.</h4>
+</div>' .
+// Foot
+'
+<div class="modal-footer">
+<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+</div>'
 
 ];
 
