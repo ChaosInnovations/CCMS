@@ -21,12 +21,14 @@ load_jsons();
 $conn = null;
 $sqlstat = true;
 $sqlerr = "";
+$msgs = [];
 try {
 	$conn = new PDO("mysql:host=" . $db_config->host . ";dbname=" . $db_config->database, $db_config->user, $db_config->pass);
 	$conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 } catch(PDOException $e) {
 	$sqlstat = false;
 	$sqlerr = $e;
+	array_push($msgs, $e);
 }
 // Is the website set up already?
 if ($sqlstat) {
@@ -78,13 +80,22 @@ foreach (scandir($modulepath) as $path) {
 		}
 	}
 }
+foreach ($availablemodules as $m) {
+	foreach ($modules[$m]->dependencies as $d) {
+		if (!in_array($d, $availablemodules)) {
+			array_splice($availablemodules, array_search($m, $availablemodules), 1);
+			unset($modules[$m]);
+			array_push($msgs, "Missing dependency for module ".$m.": ".$d.".");
+			break;
+		}
+	}
+}
 $page->resolvePlaceholders();
 ?>
 <!DOCTYPE html>
 <html>
 	<head>
 		<meta charset="utf-8" />
-		<meta name="viewport" content="width=device-width; initial-scale=1" />
 		<link rel="stylesheet" href="assets/site/bootstrap-3.3.6/css/bootstrap.css">
 		<link rel="stylesheet" href="assets/site/css/theme.default.css">
 		<script src="assets/site/js/jquery-1.12.4.min.js"></script>
@@ -114,5 +125,12 @@ $page->insertHead();
 		<?php
 $page->InsertBody();
 		?>
+		<script>
+			<?php
+foreach ($msgs as $m) {
+	echo 'console.warn("'.$m.'");';
+}
+			?>
+		</script>
 	</body>
 </html>

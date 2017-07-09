@@ -26,6 +26,16 @@ if (isset($_GET["func"])) {
 		}
 	}
 	
+	foreach ($availablemodules as $m) {
+		foreach ($modules[$m]->dependencies as $d) {
+			if (!in_array($d, $availablemodules)) {
+				array_splice($availablemodules, array_search($m, $availablemodules), 1);
+				unset($modules[$m]);
+				break;
+			}
+		}
+	}
+	
 	load_jsons();
 
 	$conn = null;
@@ -50,13 +60,14 @@ if (isset($_GET["func"])) {
 	$mailer->password = $mail_config->pass;
 	$mailer->from = $mail_config->from;
 	
-	if (in_array($_GET["func"], get_defined_functions()["user"])) {
-		echo $_GET["func"]();
+	if (in_array("ajax_" . $_GET["func"], get_defined_functions()["user"])) {
+		$func = "ajax_".$_GET["func"];
+		echo $func();
 	} else {
 		$funcparts = explode("|", $_GET["func"], 2);
 		if (count($funcparts) == 2) {
 			$mod = $funcparts[0];
-			$func = $funcparts[1];
+			$func = "ajax_" . $funcparts[1];
 		} else {
 			$mod = "builtin";
 			$func = "ajax_" . $funcparts[0];

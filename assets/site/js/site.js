@@ -71,7 +71,7 @@ function createSecurePage() {
 }
 
 function dialog_managesite_save() {
-	module_ajax("ajax_setconfig", {websitetitle: $("#dialog_managesite_websitetitle").val(),
+	module_ajax("setconfig", {websitetitle: $("#dialog_managesite_websitetitle").val(),
 	                               primaryemail: $("#dialog_managesite_primaryemail").val(),
 								   secondaryemail: $("#dialog_managesite_secondaryemail").val(),
 								   defaulttitle: encodeURIComponent($("#dialog_managesite_defaulttitle").val()),
@@ -115,6 +115,7 @@ function dialog_users_new() {
 				window.location.reload(true);
 			} else {
 				window.alert("Couldn't create account. Is "+email+" already in use?");
+				console.error(data);
 			}
 		}
 	);

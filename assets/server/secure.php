@@ -29,7 +29,7 @@ if (substr($_SERVER["PHP_SELF"], -strlen("secure.php")) == "secure.php") {
 			$uid = md5($_POST["email"]);
 			if ($authuser->permissions->owner and !validUser($uid)) {
 				$mail = $mailer->compose([[$_POST["email"], $_POST["name"]]], "Account Created", "<div><h1>Hi {$_POST["name"]}!</h1><p>{$authuser->name} created an account for you on the <a href='http://penderbus.ca/' title='Pender Island Community Bus'>Pender Island Community Bus website.</a> Your current password is <b>password</b> so please change it when you log in for the first time.</p><a href='http://penderbus.ca/?p=secureaccess'>Sign In</a></div><p>Pender Island Community Bus Team</p>", "", [], [], ["info@penderbus.ca"]);
-				if ($mail->send()) {
+				if ($mail->send() or true) {
 					$now = date("Y-m-d");
 					$pwd = hash("sha512", "password");
 					$stmt = $conn->prepare("INSERT INTO users (uid, email, name, registered, permissions) VALUES (:uid, :email, :name, :now, :perm);");
@@ -257,7 +257,7 @@ function ajax_setconfig() {
 	}
 }
 
-function edituser() {
+function ajax_edituser() {
 	global $conn, $sqlstat, $sqlerr;
 	global $authuser;
 	
@@ -270,22 +270,20 @@ function edituser() {
 			$stmt->bindParam(":new", $_POST["permissions"]);
 			$stmt->bindParam(":uid", $_POST["uid"]);
 			$stmt->execute();
-			return "TRUE";
 		}
 		if (isset($_POST["permviewbl"]) and $authuser->permissions->owner) {
 			$stmt = $conn->prepare("UPDATE users SET permviewbl=:new WHERE uid=:uid;");
 			$stmt->bindParam(":new", $_POST["permviewbl"]);
 			$stmt->bindParam(":uid", $_POST["uid"]);
 			$stmt->execute();
-			return "TRUE";
 		}
-		if (isset($_POST["permissions"]) and $authuser->permissions->owner) {
+		if (isset($_POST["permeditbl"]) and $authuser->permissions->owner) {
 			$stmt = $conn->prepare("UPDATE users SET permeditbl=:new WHERE uid=:uid;");
 			$stmt->bindParam(":new", $_POST["permeditbl"]);
 			$stmt->bindParam(":uid", $_POST["uid"]);
 			$stmt->execute();
-			return "TRUE";
 		}
+		return "TRUE";
 	} else {
 		return "FALSE";
 	}

@@ -14,11 +14,26 @@ class builtin_placeholders {
 	}
 	
 	function loginform() {
+		global $conn, $sqlstat, $sqlerr;
 		global $authuser;
 		if ($authuser->token == null) {
 			return urldecode("%3Cform%20id%3D%22loginform%22%20class%3D%22form%22%20onsubmit%3D%22return%20loginSubmission()%3B%22%3E%0A%3Cdiv%20class%3D%22form-group%20has-feedback%20col-xs-10%20col-xs-offset-1%22%3E%0A%3Clabel%20class%3D%22control-label%22%20for%3D%22loginemail%22%3EEmail%3A%3C%2Flabel%3E%0A%3Cinput%20type%3D%22text%22%20id%3D%22loginemail%22%20name%3D%22email%22%20class%3D%22form-control%22%20title%3D%22Email%22%20placeholder%3D%22Email%20Address%22%20oninput%3D%22loginCheckEmail()%3B%22%3E%0A%3Cspan%20class%3D%22glyphicon%20glyphicon-remove%20form-control-feedback%20hidden%22%3E%3C%2Fspan%3E%0A%3Cspan%20class%3D%22glyphicon%20glyphicon-ok%20form-control-feedback%20hidden%22%3E%3C%2Fspan%3E%0A%3C%2Fdiv%3E%0A%3Cdiv%20class%3D%22form-group%20has-feedback%20col-xs-10%20col-xs-offset-1%22%3E%0A%3Clabel%20class%3D%22control-label%22%20for%3D%22loginpass%22%3EPassword%3A%3C%2Flabel%3E%0A%3Cinput%20type%3D%22password%22%20id%3D%22loginpass%22%20name%3D%22pass%22%20class%3D%22form-control%22%20title%3D%22Password%22%20placeholder%3D%22Password%22%20oninput%3D%22loginCheckPass()%3B%22%3E%0A%3Cspan%20class%3D%22glyphicon%20glyphicon-remove%20form-control-feedback%20hidden%22%3E%3C%2Fspan%3E%0A%3Cspan%20class%3D%22glyphicon%20glyphicon-ok%20form-control-feedback%20hidden%22%3E%3C%2Fspan%3E%0A%3C%2Fdiv%3E%0A%3Cdiv%20class%3D%22form-group%20col-xs-10%20col-xs-offset-1%22%3E%0A%3Cinput%20type%3D%22submit%22%20class%3D%22btn%20btn-success%22%20title%3D%22Log%20In%22%20value%3D%22Log%20In%22%3E%0A%3C%2Fdiv%3E%0A%3C%2Fform%3E");
 		} else {
-			return urldecode("%3Ch3%3EYou%27re%20logged%20in.%3C%2Fh3%3E");
+			$html = "<h3>You're logged in.</h3>";
+			if ($sqlstat) {
+				$html .= "<ul>";
+				$stmt = $conn->prepare("SELECT pageid, title FROM content_pages WHERE secure=1 ORDER BY pageid ASC");
+				$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
+				$pdatas = $stmt->fetchAll();
+				foreach ($pdatas as $pd) {
+					if ($authuser->permissions->page_viewsecure and !in_array($pd["pageid"], $authuser->permissions->page_viewblacklist)) {
+						$title = urldecode($pd["title"]);
+						$html .= "<li><a href=\"?p={$pd["pageid"]}\" title=\"{$title}\">{$title}</a></li>";
+					}
+				}
+				$html .= "</ul>";
+			}
+			return $html;
 		}
 	}
 	
@@ -40,7 +55,7 @@ class builtin_placeholders {
 			$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
 			$pdatas = $stmt->fetchAll();
 			foreach ($pdatas as $pd) {
-				if ($pd["secure"] == "1" and !$authuser->permissions->page_viewsecure and !in_array($pd["pageid"], $authuser->permissions->page_viewblacklist)) {
+				if ($pd["secure"] == "1" and !$authuser->permissions->page_viewsecure or in_array($pd["pageid"], $authuser->permissions->page_viewblacklist)) {
 					continue;
 				} else if ($pd["pageid"] == "notfound") {
 					continue;
