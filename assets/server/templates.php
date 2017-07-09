@@ -211,7 +211,7 @@ $("#dialog_edit_head").val(head);
 $("#dialog_edit_body").val(body);
 
 function dialog_edit_check_pageid() {
-	module_ajax("ajax_checkpid", {pageid: pageid,
+	module_ajax("checkpid", {pageid: pageid,
 								  check: $("#dialog_edit_pageid").val(),
 								  token: Cookies.get("token")}, function(data){
 		var fieldparent = $("#dialog_edit_pageid").parent();
@@ -237,7 +237,7 @@ function dialog_edit_reset() {
 }
 
 function dialog_edit_save() {
-	module_ajax("ajax_editpage", {pageid: pageid,
+	module_ajax("editpage", {pageid: pageid,
 								  newpageid: $("#dialog_edit_pageid").val(),
 	                              title: encodeURIComponent($("#dialog_edit_pagetitle").val()),
 								  head: encodeURIComponent($("#dialog_edit_head").val()),
