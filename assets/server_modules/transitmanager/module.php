@@ -81,7 +81,7 @@ class module_transitmanager {
 		$html .= "</div>\n";
 		$html .= "<div id=\"contentStore\" class=\"contentStore\"></div>\n";
 		$html .= "<script src=\"http://maps.googleapis.com/maps/api/js?key=AIzaSyClfDSYsOnNbzXa1dZQWhULq-sJ3AqjPpA\"></script>\n";
-		$html .= "<script src=\"/assets/site/modules/transitmanager/scheduleview.js\"></script>\n";
+		$html .= "<script src=\"assets/site/modules/transitmanager/scheduleview.js\"></script>\n";
 		return $html;
 		
 	}
@@ -139,15 +139,115 @@ class module_transitmanager {
 		return $store;
 	}
 	
+	function drivers_shiftdisplay() {
+		// Test - sends empty display but asks for the default view (Current month)
+		$html  = "<div id=\"transitmanager-drivershift-display-container\" class=\"panel panel-default\">\n";
+		$html .= "<div class=\"panel-heading\"></div>\n";
+		$html .= "<div class=\"panel-body\"></div>\n";
+		$html .= "<div class=\"panel-footer\"></div></div>\n";
+		$html .= "<script src=\"assets/site/modules/transitmanager/driver-shiftdisplay.js\"></script>\n";
+		return $html;
+	}
+	
+	function get_month_calendar($y, $m) {
+		$month = [[["date"=>"blank","size"=>6,"text"=>"June 2017","target"=>"2017-june"],
+		           ["date"=>strtotime("2017-07-01"),"shifts"=>["total"=>3,"avail"=>2]]],
+				  [["date"=>strtotime("2017-07-02"),"shifts"=>["total"=>3,"avail"=>0]],
+				   ["date"=>strtotime("2017-07-03"),"shifts"=>["total"=>0,"avail"=>0]],
+				   ["date"=>strtotime("2017-07-04"),"shifts"=>["total"=>0,"avail"=>0]],
+				   ["date"=>strtotime("2017-07-05"),"shifts"=>["total"=>0,"avail"=>0]],
+				   ["date"=>strtotime("2017-07-06"),"shifts"=>["total"=>3,"avail"=>0]],
+				   ["date"=>strtotime("2017-07-07"),"shifts"=>["total"=>3,"avail"=>0]],
+				   ["date"=>strtotime("2017-07-08"),"shifts"=>["total"=>3,"avail"=>0]]],
+				  [["date"=>strtotime("2017-07-09"),"shifts"=>["total"=>3,"avail"=>0]],
+				   ["date"=>strtotime("2017-07-10"),"shifts"=>["total"=>0,"avail"=>0]],
+				   ["date"=>strtotime("2017-07-11"),"shifts"=>["total"=>0,"avail"=>0]],
+				   ["date"=>strtotime("2017-07-12"),"shifts"=>["total"=>0,"avail"=>0]],
+				   ["date"=>strtotime("2017-07-13"),"shifts"=>["total"=>3,"avail"=>0]],
+				   ["date"=>strtotime("2017-07-14"),"shifts"=>["total"=>3,"avail"=>0]],
+				   ["date"=>strtotime("2017-07-15"),"shifts"=>["total"=>3,"avail"=>0]]],
+				  [["date"=>strtotime("2017-07-16"),"shifts"=>["total"=>3,"avail"=>0]],
+				   ["date"=>strtotime("2017-07-17"),"shifts"=>["total"=>0,"avail"=>0]],
+				   ["date"=>strtotime("2017-07-18"),"shifts"=>["total"=>0,"avail"=>0]],
+				   ["date"=>strtotime("2017-07-19"),"shifts"=>["total"=>0,"avail"=>0]],
+				   ["date"=>strtotime("2017-07-20"),"shifts"=>["total"=>3,"avail"=>0]],
+				   ["date"=>strtotime("2017-07-21"),"shifts"=>["total"=>3,"avail"=>0]],
+				   ["date"=>strtotime("2017-07-22"),"shifts"=>["total"=>3,"avail"=>0]]],
+				  [["date"=>strtotime("2017-07-23"),"shifts"=>["total"=>3,"avail"=>0]],
+				   ["date"=>strtotime("2017-07-24"),"shifts"=>["total"=>0,"avail"=>0]],
+				   ["date"=>strtotime("2017-07-25"),"shifts"=>["total"=>0,"avail"=>0]],
+				   ["date"=>strtotime("2017-07-26"),"shifts"=>["total"=>0,"avail"=>0]],
+				   ["date"=>strtotime("2017-07-27"),"shifts"=>["total"=>3,"avail"=>0]],
+				   ["date"=>strtotime("2017-07-28"),"shifts"=>["total"=>3,"avail"=>0]],
+				   ["date"=>strtotime("2017-07-29"),"shifts"=>["total"=>3,"avail"=>0]]],
+				  [["date"=>strtotime("2017-07-30"),"shifts"=>["total"=>3,"avail"=>0]],
+				   ["date"=>strtotime("2017-07-31"),"shifts"=>["total"=>0,"avail"=>0]],
+				   ["date"=>"blank","size"=>5,"text"=>"August 2017","target"=>"2017-august"]]];
+		$html = "";
+		
+		$html .= "<div class=\"table-responsive\"><table class=\"table table-bordered\"><tr><th style=\"width:14.29%;\">Sunday</th><th style=\"width:14.28%;\">Monday</th><th style=\"width:14.29%;\">Tuesday</th><th style=\"width:14.28%;\">Wednesday</th><th style=\"width:14.29%;\">Thursday</th><th style=\"width:14.28%;\">Friday</th><th style=\"width:14.29%;\">Saturday</th></tr>";
+		
+		foreach ($month as $week) {
+			$html .= "<tr>";
+			
+			foreach ($week as $day) {
+				if ($day["date"] == "blank") {
+					$html .= "<td colspan=\"{$day["size"]}\" style=\"height:60px;\">";
+					$html .= "<button class=\"btn btn-default btn-block\" title=\"{$day["text"]}\" style=\"height:100%;\" onclick=\"changeToView('month-{$day["target"]}');\">";
+					$html .= "{$day["text"]}</button></td>";
+				} else {
+					$btype = ($day["shifts"]["total"] == 0) ? "default" : (($day["shifts"]["avail"] == 0) ? "success" : "danger");
+					$btext = ($day["shifts"]["total"] == 0) ? "No shifts" : "{$day["shifts"]["avail"]}/{$day["shifts"]["total"]} shifts remaining";
+					$dnum = date("j", $day["date"]);
+					$dstr = date("F j, Y", $day["date"]);
+					$target = date("Y-F-d", $day["date"]);
+					$html .= "<td>{$dnum}<br />";
+					$html .= "<button class=\"btn btn-{$btype} btn-block\" title=\"{$dstr}\" onclick=\"changeToView('day-{$target}');\">";
+					$html .= "{$btext}</button></td>";
+				}
+			}
+			
+			$html .= "</tr>";
+		}
+		
+		$html .= "</table></div>";
+		
+		return $html;
+	}
+	
 	function ajax_drivers_display_getview() {
+		$viewName = (isset($_POST["view"])) ? $_POST["view"] : "default";
+		if ($viewName == "default") {
+			$viewName = "month-2017-july";
+		}
+		
+		$arg = explode("-", $viewName);
+		$d = $arg[0];
+		
 		$head = "";
 		$body = "";
 		$foot = "";
 		
-		// Test
+		// Test - default view 
+
+		$head .= "<div class=\"btn-group\" style=\"width:100%;\">";
+		$head .= "<button class=\"btn btn-primary col-xs-2\" title=\"June 2017\"><span class=\"glyphicon glyphicon-arrow-left\"></span></button>";
+		$head .= "<button class=\"btn btn-default col-xs-8\" title=\"Change\"><b>July 2017</b></button>";
+		$head .= "<button class=\"btn btn-primary col-xs-2\" title=\"August 2017\"><span class=\"glyphicon glyphicon-arrow-right\"></span></button></div>";
 		
+		if ($d == "month") {
+			$body = $this->get_month_calendar($arg[1], $arg[2]); // Args are year, month
+		} else {
+			$body = $viewName;
+		}
 		
-		
+		$foot .= "<div class=\"row\"><div class=\"col-xs-4 btn-group\">";
+		$foot .= "<button class=\"btn btn-success col-xs-6\" title=\"New Shift\"><span class=\"glyphicon glyphicon-plus\"></span></button>";
+		$foot .= "<button class=\"btn btn-success col-xs-6\" title=\"View Drivers\"><span class=\"glyphicon glyphicon-user\"></span></button></div>";
+		$foot .= "<div class=\"col-xs-8 btn-group\">";
+		$foot .= "<button class=\"btn btn-default col-xs-8\" title=\"View Profile\"><span class=\"glyphicon glyphicon-user\"></span>&nbsp;Thomas Boland</button>";
+		$foot .= "<button class=\"btn btn-default col-xs-4\" title=\"Shifts\">Shifts</button></div></div>";
+
 		// End test
 		
 		return $head."§§§".$body."§§§".$foot;
