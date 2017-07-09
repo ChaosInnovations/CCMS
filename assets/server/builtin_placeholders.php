@@ -21,17 +21,17 @@ class builtin_placeholders {
 		} else {
 			$html = "<h3>You're logged in.</h3>";
 			if ($sqlstat) {
-				$html .= "<ul>";
+				$html .= "<div class=\"list-group\">";
 				$stmt = $conn->prepare("SELECT pageid, title FROM content_pages WHERE secure=1 ORDER BY pageid ASC");
 				$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
 				$pdatas = $stmt->fetchAll();
 				foreach ($pdatas as $pd) {
 					if ($authuser->permissions->page_viewsecure and !in_array($pd["pageid"], $authuser->permissions->page_viewblacklist)) {
 						$title = urldecode($pd["title"]);
-						$html .= "<li><a href=\"?p={$pd["pageid"]}\" title=\"{$title}\">{$title}</a></li>";
+						$html .= "<a class=\"list-group-item\" href=\"?p={$pd["pageid"]}\" title=\"{$title}\">{$title}</a>";
 					}
 				}
-				$html .= "</ul>";
+				$html .= "</div>";
 			}
 			return $html;
 		}
@@ -50,7 +50,7 @@ class builtin_placeholders {
 		global $conn, $sqlstat, $sqlerr;
 		global $authuser;
 		if ($sqlstat) {
-			$content = "<ul>";
+			$content = "<div>";
 			$stmt = $conn->prepare("SELECT pageid, title, secure FROM content_pages ORDER BY pageid ASC;");
 			$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
 			$pdatas = $stmt->fetchAll();

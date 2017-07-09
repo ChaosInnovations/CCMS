@@ -138,6 +138,20 @@ class module_transitmanager {
 		}
 		return $store;
 	}
+	
+	function ajax_drivers_display_getview() {
+		$head = "";
+		$body = "";
+		$foot = "";
+		
+		// Test
+		
+		
+		
+		// End test
+		
+		return $head."§§§".$body."§§§".$foot;
+	}
 
 }
 
