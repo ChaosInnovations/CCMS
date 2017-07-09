@@ -215,10 +215,49 @@ class module_transitmanager {
 		return $html;
 	}
 	
+	function get_year_calendar($y) {
+		$year = [[["date"=>strtotime("{$y}-01-01"),"shifts"=>["total"=>8,"avail"=>0]],
+				  ["date"=>strtotime("{$y}-02-01"),"shifts"=>["total"=>8,"avail"=>0]],
+				  ["date"=>strtotime("{$y}-03-01"),"shifts"=>["total"=>8,"avail"=>0]],
+				  ["date"=>strtotime("{$y}-04-01"),"shifts"=>["total"=>8,"avail"=>0]]],
+				 [["date"=>strtotime("{$y}-05-01"),"shifts"=>["total"=>8,"avail"=>0]],
+				  ["date"=>strtotime("{$y}-06-01"),"shifts"=>["total"=>8,"avail"=>0]],
+				  ["date"=>strtotime("{$y}-07-01"),"shifts"=>["total"=>8,"avail"=>0]],
+				  ["date"=>strtotime("{$y}-08-01"),"shifts"=>["total"=>8,"avail"=>0]]],
+				 [["date"=>strtotime("{$y}-09-01"),"shifts"=>["total"=>8,"avail"=>0]],
+				  ["date"=>strtotime("{$y}-10-01"),"shifts"=>["total"=>8,"avail"=>0]],
+				  ["date"=>strtotime("{$y}-11-01"),"shifts"=>["total"=>8,"avail"=>0]],
+				  ["date"=>strtotime("{$y}-12-01"),"shifts"=>["total"=>8,"avail"=>0]]]];
+		$html = "";
+		
+		$html .= "<div class=\"table-responsive\"><table class=\"table table-bordered\">";
+		
+		foreach ($year as $row) {
+			$html .= "<tr>";
+			
+			foreach ($row as $month) {
+				$btype = ($month["shifts"]["total"] == 0) ? "default" : (($month["shifts"]["avail"] == 0) ? "success" : "danger");
+				$btext = ($month["shifts"]["total"] == 0) ? "No shifts" : "{$month["shifts"]["avail"]}/{$month["shifts"]["total"]} shifts remaining";
+				$dmth = date("F", $month["date"]);
+				$dstr = date("F, Y", $month["date"]);
+				$target = date("Y-F", $month["date"]);
+				$html .= "<td>{$dmth}<br />";
+				$html .= "<button class=\"btn btn-{$btype} btn-block\" title=\"{$dstr}\" onclick=\"changeToView('month-{$target}');\">";
+				$html .= "{$btext}</button></td>";
+			}
+			
+			$html .= "</tr>";
+		}
+		
+		$html .= "</table></div>";
+		
+		return $html;
+	}
+	
 	function ajax_drivers_display_getview() {
 		$viewName = (isset($_POST["view"])) ? $_POST["view"] : "default";
 		if ($viewName == "default") {
-			$viewName = "month-2017-july";
+			$viewName = "month-".date("Y-F");
 		}
 		
 		$arg = explode("-", $viewName);
@@ -229,17 +268,39 @@ class module_transitmanager {
 		$foot = "";
 		
 		// Test - default view 
-
-		$head .= "<div class=\"btn-group\" style=\"width:100%;\">";
-		$head .= "<button class=\"btn btn-primary col-xs-2\" title=\"June 2017\"><span class=\"glyphicon glyphicon-arrow-left\"></span></button>";
-		$head .= "<button class=\"btn btn-default col-xs-8\" title=\"Change\"><b>July 2017</b></button>";
-		$head .= "<button class=\"btn btn-primary col-xs-2\" title=\"August 2017\"><span class=\"glyphicon glyphicon-arrow-right\"></span></button></div>";
+		
+		$prev = "";
+		$prevTarget = "";
+		$here = "";
+		$hereTarget = "";
+		$next = "";
+		$nextTarget = "";
 		
 		if ($d == "month") {
+			$prev = "June 2017";
+			$prevTarget = "month-2017-june";
+			$here = "July 2017";
+			$hereTarget = "year-".$arg[1];
+			$next = "August 2017";
+			$nextTarget = "month-2017-august";
 			$body = $this->get_month_calendar($arg[1], $arg[2]); // Args are year, month
+		} else if ($d == "year") {
+			$prev = $arg[1]-1;
+			$prevTarget = "year-".$prev;
+			$here = $arg[1];
+			$hereTarget = "";
+			$next = $arg[1]+1;
+			$nextTarget = "year-".$next;
+			$body = $this->get_year_calendar($arg[1]); // Arg is year
 		} else {
 			$body = $viewName;
 		}
+		
+		$head .= "<div class=\"btn-group\" style=\"width:100%;\">";
+		$head .= "<button class=\"btn btn-primary col-xs-2\" title=\"{$prev}\" onclick=\"changeToView('{$prevTarget}');\"><span class=\"glyphicon glyphicon-arrow-left\"></span></button>";
+		$head .= "<button class=\"btn btn-default col-xs-8\" title=\"Change\" onclick=\"changeToView('{$hereTarget}');\"><b>{$here}</b></button>";
+		$head .= "<button class=\"btn btn-primary col-xs-2\" title=\"{$next}\" onclick=\"changeToView('{$nextTarget}');\"><span class=\"glyphicon glyphicon-arrow-right\"></span></button></div>";
+
 		
 		$foot .= "<div class=\"row\"><div class=\"col-xs-4 btn-group\">";
 		$foot .= "<button class=\"btn btn-success col-xs-6\" title=\"New Shift\"><span class=\"glyphicon glyphicon-plus\"></span></button>";
