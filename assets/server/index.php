@@ -49,7 +49,7 @@ if (isset($_GET["func"])) {
 		$sqlerr = $e;
 	}
 	if (isset($_POST["token"]) and validToken($_POST["token"])) {
-		$authuser = new AuthUser($_POST["token"]);
+		$authuser = new AuthUser(uidFromToken($_POST["token"]));
 	} else {
 		setcookie("token", "0", 1);
 		$authuser = new AuthUser(null);

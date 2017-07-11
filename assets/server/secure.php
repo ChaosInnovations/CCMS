@@ -14,7 +14,7 @@ if (substr($_SERVER["PHP_SELF"], -strlen("secure.php")) == "secure.php") {
 		$sqlerr = $e;
 	}
 	if (isset($_POST["token"]) and validToken($_POST["token"])) {
-		$authuser = new AuthUser($_POST["token"]);
+		$authuser = new AuthUser(uidFromToken($_POST["token"]));
 	} else {
 		setcookie("token", "0", 1);
 		$authuser = new AuthUser(null);
@@ -165,24 +165,7 @@ if (substr($_SERVER["PHP_SELF"], -strlen("secure.php")) == "secure.php") {
 			$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
 			$valid = count($stmt->fetchAll()) == 1;
 			if ($valid) {
-				$now = date("Y-m-d", time());
-				$end = date("Y-m-d", time()+3600*24*30);
-				while (true) {
-					$token = bin2hex(openssl_random_pseudo_bytes(16));
-					$stmt = $conn->prepare("SELECT * FROM tokens WHERE tid=:tid;");
-					$stmt->bindParam(":tid", $token);
-					$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
-					if (count($stmt->fetchAll()) == 0) {
-						break;
-					}
-				}
-				$stmt = $conn->prepare("INSERT INTO tokens (uid, tid, start, expire, forcekill) VALUES (:uid, :tid, :start, :expire, 0);");
-				$stmt->bindParam(":uid", $uid);
-				$stmt->bindParam(":tid", $token);
-				$stmt->bindParam(":start", $now);
-				$stmt->bindParam(":expire", $end);
-				$stmt->execute();
-				echo $token;
+				echo new_token($uid);
 			} else {
 				echo "FALSE";
 			}
@@ -190,6 +173,28 @@ if (substr($_SERVER["PHP_SELF"], -strlen("secure.php")) == "secure.php") {
 	} else {
 		echo "FALSE";
 	}
+}
+
+function new_token($uid) {
+	global $conn, $sqlstat, $sqlerr;
+	$now = date("Y-m-d", time());
+	$end = date("Y-m-d", time()+3600*24*30); // 30-day expiry
+	while (true) { // In case the token is already taken
+		$token = bin2hex(openssl_random_pseudo_bytes(16));
+		$stmt = $conn->prepare("SELECT * FROM tokens WHERE tid=:tid;");
+		$stmt->bindParam(":tid", $token);
+		$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
+		if (count($stmt->fetchAll()) == 0) {
+			break;
+		}
+	}
+	$stmt = $conn->prepare("INSERT INTO tokens (uid, tid, start, expire, forcekill) VALUES (:uid, :tid, :start, :expire, 0);");
+	$stmt->bindParam(":uid", $uid);
+	$stmt->bindParam(":tid", $token);
+	$stmt->bindParam(":start", $now);
+	$stmt->bindParam(":expire", $end);
+	$stmt->execute();
+	return $token;
 }
 
 function load_jsons() {
@@ -305,27 +310,35 @@ class UserPermissions {
 	public $page_editblacklist = [];
 }
 
+function uidFromToken($token) {
+	global $conn, $sqlstat, $sqlerr;
+	
+	if ($sqlstat) {
+		$stmt = $conn->prepare("SELECT * FROM tokens WHERE tid=:tid;");
+		$stmt->bindParam(":tid", $token);
+		$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
+		$tokens = $stmt->fetchAll();
+		return $tokens[0]["uid"];
+	} else {
+		return null;
+	}
+}
+
 class AuthUser {
 	
-	public $token = null;
 	public $name = "User";
 	public $email = "";
-	public $uid = "";
+	public $uid = null;
 	public $registerdate = "";
 	public $rawperms = "";
 	public $permissions = null;
 		
-	function __construct($token) {
+	function __construct($uid) {
 		global $conn, $sqlstat, $sqlerr;
 		
 		$this->permissions = new UserPermissions();
-		$this->token = $token;
-		if ($token != null and $sqlstat) {
-			$stmt = $conn->prepare("SELECT * FROM tokens WHERE tid=:tid;");
-			$stmt->bindParam(":tid", $token);
-			$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
-			$uid = $stmt->fetchAll()[0]["uid"];
-			
+		$this->uid = $uid;
+		if ($uid != null and $sqlstat) {			
 			$stmt = $conn->prepare("SELECT * FROM users WHERE uid=:uid;");
 			$stmt->bindParam(":uid", $uid);
 			$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);

@@ -51,7 +51,7 @@ if ($pageid == "") {
 	header("Location: ?p=notfound&e={$pageid}");
 }
 if (isset($_COOKIE["token"]) and validToken($_COOKIE["token"])) {
-	$authuser = new AuthUser($_COOKIE["token"]);
+	$authuser = new AuthUser(uidFromToken($_COOKIE["token"]));
 } else {
 	setcookie("token", "0", 1);
 	$authuser = new AuthUser(null);
