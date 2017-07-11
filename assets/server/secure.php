@@ -338,7 +338,7 @@ class AuthUser {
 		
 		$this->permissions = new UserPermissions();
 		$this->uid = $uid;
-		if ($uid != null and $sqlstat) {			
+		if ($uid != null and $sqlstat and validUser($uid)) {			
 			$stmt = $conn->prepare("SELECT * FROM users WHERE uid=:uid;");
 			$stmt->bindParam(":uid", $uid);
 			$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);

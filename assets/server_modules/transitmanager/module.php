@@ -197,7 +197,8 @@ class module_transitmanager {
 			$shift = new Shift($arg[1]); // Arg is shift number
 			//$prev = ???;
 			//$prevTarget = [most recent shift];
-			$here = "Shift 2: Bus Driving and Cleaning on July 9, 2017";
+			$ds = date("F j, Y", $shift->starttime);
+			$here = "Shift {$shift->id}: {$shift->name} on {$ds}";
 			$hereTarget = "day-2017-july-09";
 			//$next = ???;
 			//$nextTarget = [next soonest shift];
@@ -275,7 +276,7 @@ class module_transitmanager {
 		
 		$datestr = date("l, F j, Y", strtotime("{$y}-{$m}-{$d}"));
 		
-		$html .= "<div class=\"table-responsive\"><table class=\"table table-bordered\"><tr><th><span class=\"glyphicon glyphicon-time\"></span></th><th class=\"text-center\" colspan=\"{$num}\">{$datestr}</th></tr>";
+		$html .= "<div class=\"table-responsive\"><table class=\"table table-bordered\"><tr><th class=\"text-center\"><span class=\"glyphicon glyphicon-time\"></span></th><th class=\"text-center\" colspan=\"{$num}\">{$datestr}</th></tr>";
 		
 		if (count($day) > 0) {
 			for ($h = date("G", $start); $h <= date("G", $end); $h++) {
@@ -413,7 +414,9 @@ class module_transitmanager {
 		
 		$html .= "<h4>Tasks:</h4><ul>";
 		foreach ($s->tasks as $t) {
-			$html .= "<li>{$t}</li>";
+			if ($t != "") {
+				$html .= "<li>{$t}</li>";
+			}
 		}
 		$html .= "</ul>";
 		
@@ -563,9 +566,13 @@ class Shift {
 				$this->endtime = strtotime($s["end"]);
 				$this->volunteerable = $s["vol"] == 1;
 				$this->wage = $s["wage"];
-				$this->tasks = explode("§§§", $s["task"]);
+				$this->tasks = explode("&&&", $s["task"]);
 				$this->selected = new AuthUser(array_shift($l));
 				$this->waitlist = array_map(function($uid){return new AuthUser($uid);}, $l);
+				if ($this->selected->name == "User") {
+					$this->selected = null;
+				}
+				// TODO: should automatically remove bad users from list and save
 			}
 		}
 	}
