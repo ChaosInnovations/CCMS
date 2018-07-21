@@ -1,0 +1,2 @@
+ErrorDocument 403 /index.php?p=notfound
+ErrorDocument 404 /index.php?p=notfound

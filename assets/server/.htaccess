@@ -1,9 +1,7 @@
-<Files "db-config.json">
-Order Allow,Deny
 Deny from all
+<Files "index.php">
+Allow From All
 </Files>
-
-<Files "mail-config.json">
-Order Allow,Deny
-Deny from all
+<Files ".">
+Allow From All
 </Files>

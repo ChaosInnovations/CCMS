@@ -8,18 +8,95 @@ class builtin_placeholders {
 		global $page;
 	}
 	
-	function getMenu() {
-		$menu = "";
-		return $menu;
-	}
-	
-	function loginform() {
+	function place_loginform() {
 		global $conn, $sqlstat, $sqlerr;
 		global $authuser;
 		if ($authuser->uid == null) {
-			return urldecode("%3Cform%20id%3D%22loginform%22%20class%3D%22form%22%20onsubmit%3D%22return%20loginSubmission()%3B%22%3E%0A%3Cdiv%20class%3D%22form-group%20has-feedback%20col-xs-10%20col-xs-offset-1%22%3E%0A%3Clabel%20class%3D%22control-label%22%20for%3D%22loginemail%22%3EEmail%3A%3C%2Flabel%3E%0A%3Cinput%20type%3D%22text%22%20id%3D%22loginemail%22%20name%3D%22email%22%20class%3D%22form-control%22%20title%3D%22Email%22%20placeholder%3D%22Email%20Address%22%20oninput%3D%22loginCheckEmail()%3B%22%3E%0A%3Cspan%20class%3D%22glyphicon%20glyphicon-remove%20form-control-feedback%20hidden%22%3E%3C%2Fspan%3E%0A%3Cspan%20class%3D%22glyphicon%20glyphicon-ok%20form-control-feedback%20hidden%22%3E%3C%2Fspan%3E%0A%3C%2Fdiv%3E%0A%3Cdiv%20class%3D%22form-group%20has-feedback%20col-xs-10%20col-xs-offset-1%22%3E%0A%3Clabel%20class%3D%22control-label%22%20for%3D%22loginpass%22%3EPassword%3A%3C%2Flabel%3E%0A%3Cinput%20type%3D%22password%22%20id%3D%22loginpass%22%20name%3D%22pass%22%20class%3D%22form-control%22%20title%3D%22Password%22%20placeholder%3D%22Password%22%20oninput%3D%22loginCheckPass()%3B%22%3E%0A%3Cspan%20class%3D%22glyphicon%20glyphicon-remove%20form-control-feedback%20hidden%22%3E%3C%2Fspan%3E%0A%3Cspan%20class%3D%22glyphicon%20glyphicon-ok%20form-control-feedback%20hidden%22%3E%3C%2Fspan%3E%0A%3C%2Fdiv%3E%0A%3Cdiv%20class%3D%22form-group%20col-xs-10%20col-xs-offset-1%22%3E%0A%3Cinput%20type%3D%22submit%22%20class%3D%22btn%20btn-success%22%20title%3D%22Log%20In%22%20value%3D%22Log%20In%22%3E%0A%3C%2Fdiv%3E%0A%3C%2Fform%3E");
+			$html = '
+<form id="loginform" class="form" onsubmit="return loginSubmission();">
+	<div class="form-group">
+		<label class="col-form-label" for="loginemail">Current Password</label>
+		<div class="input-group">
+			<input type="text" id="loginemail" autocomplete="username" class="form-control border-right-0 border-secondary" title="Email" placeholder="Email Address" oninput="loginCheckEmail();">
+			<div class="input-group-append">
+				<div class="input-group-text bg-transparent border-left-0 border-secondary">
+					<i class="fas fa-times" style="display:none;"></i>
+					<i class="fas fa-check" style="display:none;"></i>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="form-group">
+		<label class="col-form-label" for="loginpass">Current Password</label>
+		<div class="input-group">
+			<input type="password" id="loginpass" autocomplete="current-password" class="form-control border-right-0 border-secondary" title="Password" placeholder="Password" oninput="loginCheckPass();">
+			<div class="input-group-append">
+				<div class="input-group-text bg-transparent border-left-0 border-secondary">
+					<i class="fas fa-times" style="display:none;"></i>
+					<i class="fas fa-check" style="display:none;"></i>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="form-group">
+		<input type="submit" class="btn btn-success" title="Log In" value="Log In">
+	</div>
+</form>
+<script>
+function loginCheckEmail() {
+	module_ajax("checkuser", {email: $("#loginemail").val()}, function (data) {
+		if (data == "TRUE") {
+			$("#loginemail").parent().removeClass("has-error");
+			$("#loginemail").parent().addClass("has-success");
+			$("#loginemail").parent().find(".fa-times").hide();
+			$("#loginemail").parent().find(".fa-check").show();
 		} else {
-			$html = "<h3>You're logged in.</h3>";
+			$("#loginemail").parent().removeClass("has-success");
+			$("#loginemail").parent().addClass("has-error");
+			$("#loginemail").parent().find(".fa-check").hide();
+			$("#loginemail").parent().find(".fa-times").show();
+		}
+	});
+	loginCheckPass();
+}
+
+function loginCheckPass() {
+	module_ajax("checkpass", {email: $("#loginemail").val(), password: $("#loginpass").val()}, function(data) {
+		if (data == "TRUE") {
+			$("#loginpass").parent().removeClass("has-error");
+			$("#loginpass").parent().addClass("has-success");
+			$("#loginpass").parent().find(".fa-times").hide();
+			$("#loginpass").parent().find(".fa-check").show();
+			loginSubmission();
+		} else {
+			$("#loginpass").parent().removeClass("has-success");
+			$("#loginpass").parent().addClass("has-error");
+			$("#loginpass").parent().find(".fa-check").addClass("hidden");
+			$("#loginpass").parent().find(".fa-times").removeClass("hidden");
+		}
+	});
+}
+
+function loginSubmission() {
+	module_ajax("newtoken", {email: $("#loginemail").val(), password: $("#loginpass").val()}, function(data) {
+		if (data != "FALSE") {
+			var d = new Date(Date.now()+(3600000*24*30));
+			document.cookie = "token="+data+"; expires="+d.toUTCString()+"; path=/";
+			if (window.location.search.indexOf("&n") == -1) {
+				window.location.reload(true);
+			} else {
+				var url = window.location.origin + window.location.pathname + "?p" + window.location.search.substr(window.location.search.indexOf("&n")+2);
+				window.location.assign(url);
+			}
+		}
+	});
+	return false;
+}
+</script>';
+			return $html;
+		} else {
+			$html = "<h5 class=\"card-title\">You're logged in.</h5>";
+			$html .= "<h6 class=\"card-subtitle mb-2 text-muted\">You now have access to these pages:</h6>";
 			if ($sqlstat) {
 				$html .= "<div class=\"list-group\">";
 				$stmt = $conn->prepare("SELECT pageid, title FROM content_pages WHERE secure=1 ORDER BY pageid ASC");
@@ -28,7 +105,7 @@ class builtin_placeholders {
 				foreach ($pdatas as $pd) {
 					if ($authuser->permissions->page_viewsecure and !in_array($pd["pageid"], $authuser->permissions->page_viewblacklist)) {
 						$title = urldecode($pd["title"]);
-						$html .= "<a class=\"list-group-item\" href=\"?p={$pd["pageid"]}\" title=\"{$title}\">{$title}</a>";
+						$html .= "<a class=\"list-group-item list-group-item-action\" href=\"?p={$pd["pageid"]}\" title=\"{$title}\">{$title}</a>";
 					}
 				}
 				$html .= "</div>";
@@ -37,16 +114,58 @@ class builtin_placeholders {
 		}
 	}
 	
-	function queryerr() {
+	function place_queryerr() {
 		global $page;
-		return $page->queryerr;
+		return ($page->queryerr != "") ? "/?p=" . $page->queryerr : $_SERVER['REQUEST_URI'];
 	}
 	
-	function contactform() {
-		return urldecode("%3Cscript%3E%0Afunction%20module_builtin_contactus_submit()%20%7B%0A%24(%22%23module_builtin_contactus_form_feedback%22).html(%22Sending...%22)%3B%0Aif%20(%24(%22%23module_builtin_contactus_form_name%22).val()%20!%3D%20%22%22%20%26%26%20%24(%22%23module_builtin_contactus_form_reply%22).val()%20!%3D%20%22%22%20%26%26%20%24(%22%23module_builtin_contactus_form_message%22).val()%20!%3D%20%22%22)%20%7B%0Amodule_ajax(%22contactform%22%2C%20%7B%0Aname%3A%20%24(%22%23module_builtin_contactus_form_name%22).val()%2C%0Areply%3A%20%24(%22%23module_builtin_contactus_form_reply%22).val()%2C%0Amessage%3A%20%24(%22%23module_builtin_contactus_form_message%22).val()%2C%0A%7D%2C%20function(data)%20%7B%0Aif%20(data%20%3D%3D%20%22TRUE%22)%20%7B%0A%24(%22%23module_builtin_contactus_form_feedback%22).html(%22Your%20message%20was%20sent.%22)%3B%0AsetTimeout(function()%7B%24(%22%23module_builtin_contactus_form_feedback%22).html(%22%22)%7D%2C%20800)%3B%0A%7D%20else%20%7B%0A%24(%22%23module_builtin_contactus_form_feedback%22).html(%22Your%20message%20couldn%27t%20be%20sent.%22)%3B%0AsetTimeout(function()%7B%24(%22%23module_builtin_contactus_form_feedback%22).html(%22%22)%7D%2C%20800)%3B%0A%7D%0A%7D)%3B%0A%7D%20else%20%7B%0A%24(%22%23module_builtin_contactus_form_feedback%22).html(%22Your%20message%20couldn%27t%20be%20sent.%20Make%20sure%20you%20have%20completed%20the%20form.%22)%3B%0AsetTimeout(function()%7B%24(%22%23module_builtin_contactus_form_feedback%22).html(%22%22)%7D%2C%20800)%3B%0A%7D%0A%7D%0A%3C%2Fscript%3E%0A%3Cform%20class%3D%22form%22%20onsubmit%3D%22module_builtin_contactus_submit()%3Breturn%20false%3B%22%3E%0A%3Cdiv%20class%3D%22form-group%20col-xs-10%20col-xs-offset-1%22%3E%0A%3Clabel%20class%3D%22control-label%22%20for%3D%22module_builtin_contactus_form_name%22%3EName%3A%3C%2Flabel%3E%0A%3Cinput%20type%3D%22text%22%20id%3D%22module_builtin_contactus_form_name%22%20name%3D%22name%22%20class%3D%22form-control%22%20title%3D%22Name%22%20placeholder%3D%22Name%22%3E%0A%3C%2Fdiv%3E%0A%3Cdiv%20class%3D%22form-group%20col-xs-10%20col-xs-offset-1%22%3E%0A%3Clabel%20class%3D%22control-label%22%20for%3D%22module_builtin_contactus_form_reply%22%3EEmail%20or%20Phone%20Number%3A%3C%2Flabel%3E%0A%3Cinput%20type%3D%22text%22%20id%3D%22module_builtin_contactus_form_reply%22%20name%3D%22reply%22%20class%3D%22form-control%22%20title%3D%22Email%20or%20Phone%20Number%22%20placeholder%3D%22Email%20or%20Phone%20Number%22%3E%0A%3C%2Fdiv%3E%0A%3Cdiv%20class%3D%22form-group%20col-xs-10%20col-xs-offset-1%22%3E%0A%3Clabel%20class%3D%22control-label%22%20for%3D%22module_builtin_contactus_form_message%22%3EMessage%3A%3C%2Flabel%3E%0A%3Ctextarea%20class%3D%22form-control%22%20name%3D%22message%22%20id%3D%22module_builtin_contactus_form_message%22%20title%3D%22Message%22%20placeholder%3D%22Message%22%20rows%3D%224%22%3E%0A%3C%2Ftextarea%3E%0A%3C%2Fdiv%3E%0A%3Cdiv%20class%3D%22form-group%20col-xs-10%20col-xs-offset-1%22%3E%0A%3Cinput%20type%3D%22submit%22%20class%3D%22btn%20btn-info%22%20title%3D%22Send%20Message%22%20value%3D%22Send%20Message%22%3E%0A%3Cp%20class%3D%22form-text%22%20id%3D%22module_builtin_contactus_form_feedback%22%3E%3C%2Fp%3E%0A%3C%2Fdiv%3E%0A%3C%2Fform%3E");
+	function place_contactform() {
+		$html = '
+<form onsubmit="module_builtin_contactus_submit();return false;">
+	<div class="row">
+	<div class="form-group col-10 offset-1">
+		<label class="control-label" for="module_builtin_contactus_form_name">Name:</label>
+		<input type="text" id="module_builtin_contactus_form_name" name="name" class="form-control" title="Name" placeholder="Name">
+	</div>
+	<div class="form-group col-10 offset-1">
+		<label class="control-label" for="module_builtin_contactus_form_reply">Email or Phone Number:</label>
+		<input type="text" id="module_builtin_contactus_form_reply" name="reply" class="form-control" title="Email or Phone Number" placeholder="Email or Phone Number">
+	</div>
+	<div class="form-group col-10 offset-1">
+		<label class="control-label" for="module_builtin_contactus_form_message">Message:</label>
+		<textarea class="form-control" name="message" id="module_builtin_contactus_form_message" title="Message" placeholder="Message" rows="4"></textarea>
+	</div>
+		<div class="form-group col-10 offset-1">
+		<input type="submit" class="btn btn-info" title="Send Message" value="Send Message">
+		<p class="form-text" id="module_builtin_contactus_form_feedback"></p>
+	</div>
+	</div>
+</form>
+<script>
+function module_builtin_contactus_submit() {
+	$("#module_builtin_contactus_form_feedback").html("Sending...");
+	if ($("#module_builtin_contactus_form_name").val() != "" && $("#module_builtin_contactus_form_reply").val() != "" && $("#module_builtin_contactus_form_message").val() != "") {
+		module_ajax("contactform", {name: $("#module_builtin_contactus_form_name").val(),
+									reply: $("#module_builtin_contactus_form_reply").val(),
+									message: $("#module_builtin_contactus_form_message").val()}, function(data) {
+			if (data == "TRUE") {
+				$("#module_builtin_contactus_form_feedback").html("Your message was sent.");
+			} else {
+				$("#module_builtin_contactus_form_feedback").html("Your message couldn\'t be sent.");
+			}
+			setTimeout(function(){$("#module_builtin_contactus_form_feedback").html("")}, 10000);
+		});
+	} else {
+		$("#module_builtin_contactus_form_feedback").html("Your message couldn\'t be sent. Make sure you have completed the form.");
+		setTimeout(function(){$("#module_builtin_contactus_form_feedback").html("")}, 10000);
+	}
+}
+</script>';
+		return $html;
+		return urldecode("");
 	}
 	
-	function sitemap() {
+	function place_sitemap() {
 		global $conn, $sqlstat, $sqlerr;
 		global $authuser;
 		if ($sqlstat) {
@@ -71,7 +190,7 @@ class builtin_placeholders {
 		return $content;
 	}
 	
-	function pagerevision() {
+	function place_pagerevision() {
 		global $page;
 		return $page->revision;
 	}
@@ -82,7 +201,7 @@ class builtin_placeholders {
 			$subject = "Message from {$_POST["name"]}";
 			$htmlbody = "<h1>Message from {$_POST["name"]}</h1><h3>Reply: {$_POST["reply"]}</h3><h4>Message:</h4><p>{$_POST["message"]}</p>";
 			$body = "Message from {$_POST["name"]}\n\nReply: {$_POST["reply"]}\n\nMessage:\n\n{$_POST["message"]}";
-			$mail = $mailer->compose([["info@penderbus.org"]], $subject, $htmlbody, $body);
+			$mail = $mailer->compose([[getconfig("primaryemail")]], $subject, $htmlbody, $body);
 			if ($mail->send()) {
 				return "TRUE";
 			} else {

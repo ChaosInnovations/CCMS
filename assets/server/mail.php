@@ -20,7 +20,7 @@ class Mailer {
 	}
 	
 	function compose($to, $subject, $htmlbody, $body="", $attachments=[], $cc=[], $bcc=[]) {
-		$mail = new PHPMailer;
+		$mail = new PHPMailer(false);
 		$mail->isSMTP();
 		$mail->Host = $this->host;
 		//$mail->Port = $this->port;

@@ -1,40 +1,21 @@
 <?php
-
+ob_end_clean();
+ignore_user_abort(true);
+ob_start();
+// Prevent caching
+header("Expires: 0");
+header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT");
+header("Cache-Control: no-store, no-cache, must-revalidate");
+header("Cache-Control: post-check=0, pre-check=0", false);
+header("Pragma: no-cache");
+header("Access-Control-Allow-Origin: http://penderbus.org");
+header("Connection: close");
 if (isset($_GET["func"])) {
 	
 	include "secure.php";
 	include "pagegen.php";
 	include "mail.php";
-	// LOAD MODULES
-	$modulepath = "../server_modules/";
-	$availablemodules = ["builtin"];
-	$modules = [];
-	include ("builtin_placeholders.php");
-	$modules["builtin"] = new builtin_placeholders();
-	foreach (scandir($modulepath) as $path) {
-		if ($path != "." and $path != "..") {
-			if (file_exists("{$modulepath}{$path}/module.php")) {
-				include("{$modulepath}{$path}/module.php");
-				array_push($availablemodules, $path);
-				try {
-					$modclass = "module_{$path}";
-					$modules[$path] = new $modclass();
-				} catch (Exception $e) {
-					echo $e;
-				}
-			}
-		}
-	}
-	
-	foreach ($availablemodules as $m) {
-		foreach ($modules[$m]->dependencies as $d) {
-			if (!in_array($d, $availablemodules)) {
-				array_splice($availablemodules, array_search($m, $availablemodules), 1);
-				unset($modules[$m]);
-				break;
-			}
-		}
-	}
+    include "templates.php";
 	
 	load_jsons();
 
@@ -59,6 +40,37 @@ if (isset($_GET["func"])) {
 	$mailer->username = $mail_config->user;
 	$mailer->password = $mail_config->pass;
 	$mailer->from = $mail_config->from;
+	
+	// LOAD MODULES
+	$modulepath = "../server_modules/";
+	$availablemodules = ["builtin"];
+	$modules = [];
+	include ("builtin_placeholders.php");
+	$modules["builtin"] = new builtin_placeholders();
+	foreach (scandir($modulepath) as $path) {
+		if ($path != "." and $path != "..") {
+			if (file_exists("{$modulepath}{$path}/module.php")) {
+				include("{$modulepath}{$path}/module.php");
+				array_push($availablemodules, $path);
+				try {
+					$modclass = "\\module\\{$path}\\module";
+					$modules[$path] = new $modclass();
+				} catch (Exception $e) {
+					echo $e;
+				}
+			}
+		}
+	}
+	
+	foreach ($availablemodules as $m) {
+		foreach ($modules[$m]->dependencies as $d) {
+			if (!in_array($d, $availablemodules)) {
+				array_splice($availablemodules, array_search($m, $availablemodules), 1);
+				unset($modules[$m]);
+				break;
+			}
+		}
+	}
 	
 	if (in_array("ajax_" . $_GET["func"], get_defined_functions()["user"])) {
 		$func = "ajax_".$_GET["func"];
@@ -88,5 +100,8 @@ if (isset($_GET["func"])) {
 	header("Location: /");
 	echo "<script>window.location = '../../';</script>";
 }
-
+$size = ob_get_length();
+header("Content-Length: {$size}");
+ob_end_flush();
+flush();
 ?>

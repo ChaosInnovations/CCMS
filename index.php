@@ -1,5 +1,13 @@
 <?php
 
+// Delete setup script and STATE if it still exists (first time launch)
+$firstLaunch = false;
+if (file_exists("STATE")) {
+	$firstLaunch = true;
+	unlink("setup.php");
+	unlink("STATE");
+}
+
 include "assets/server/pagegen.php";
 include "assets/server/secure.php";
 include "assets/server/mail.php";
@@ -30,35 +38,56 @@ try {
 	$sqlerr = $e;
 	array_push($msgs, $e);
 }
-// Is the website set up already?
-if ($sqlstat) {
-	$stmt = $conn->prepare("SHOW TABLES LIKE 'config';");
-	$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
-	if (count($stmt->fetchAll()) != 1) {
-		// No, it's not, so seed it.
-		$conn->exec("CREATE TABLE `config` (`websitetitle` text NOT NULL,`primaryemail` text NOT NULL,`secondaryemail` text,`creationdate` date DEFAULT NULL,`defaulthead` mediumtext,`defaulttitle` text,`defaultbody` longtext,`defaultnav` mediumtext,`defaultfoot` mediumtext) ENGINE=InnoDB DEFAULT CHARSET=latin1;");
-		$conn->exec("CREATE TABLE `users` (`uid` char(32) NOT NULL,`email` tinytext NOT NULL,`name` tinytext NOT NULL,`registered` date NOT NULL,`permissions` text NOT NULL,`permviewbl` text NOT NULL,`permeditbl` text NOT NULL) ENGINE=InnoDB DEFAULT CHARSET=latin1;ALTER TABLE `users` ADD UNIQUE KEY `uid` (`uid`);");
-		$conn->exec("CREATE TABLE `access` (`uid` char(32) NOT NULL,`pwd` char(128) NOT NULL) ENGINE=InnoDB DEFAULT CHARSET=latin1;ALTER TABLE `access` ADD UNIQUE KEY `uid` (`uid`);");
-		$conn->exec("CREATE TABLE `tokens` (`uid` char(32) NOT NULL,`tid` char(32) NOT NULL,`start` date NOT NULL,`expire` date NOT NULL,`forcekill` tinyint(1) NOT NULL) ENGINE=InnoDB DEFAULT CHARSET=latin1;ALTER TABLE `tokens` ADD UNIQUE KEY `tid` (`tid`);");
-		$conn->exec("CREATE TABLE `content_pages` (`pageid` varchar(255) NOT NULL,`title` text NOT NULL,`head` longtext NOT NULL,`body` longtext NOT NULL,`navmod` mediumtext NOT NULL,`footmod` mediumtext NOT NULL,`secure` tinyint(1) NOT NULL,`revision` date NOT NULL) ENGINE=InnoDB DEFAULT CHARSET=latin1;ALTER TABLE `content_pages` ADD UNIQUE KEY `pageid` (`pageid`);");
-		$conn->exec("INSERT INTO `config` VALUES ('New Website', 'email@example.com', NULL, '" . date("Y-m-d") . "', NULL, NULL, NULL, NULL, NULL);");
-		$conn->exec("INSERT INTO `content_pages` VALUES ('home', 'Home%20Page', '', 'Empty', '', '', 0, '2017-01-29'),('notfound', 'Page%20not%20found!', '', 'Page not Found: %7B%7Bqueryerr%7D%7D', '', '', 0, '2017-01-29'),('secureaccess', 'Secure%20Access%20Portal', '', '%7B%7Bloginform%7D%7D', '', '', 0, '2017-01-29');");
-	}
-}
-if ($pageid == "") {
-	header("Location: ./");
-} else if (invalidPage()) {
-	header("Location: ?p=notfound&e={$pageid}");
-}
+
+$mailer = new Mailer();
+$mailer->host = $mail_config->host;
+$mailer->username = $mail_config->user;
+$mailer->password = $mail_config->pass;
+$mailer->from = $mail_config->from;
+
 if (isset($_COOKIE["token"]) and validToken($_COOKIE["token"])) {
 	$authuser = new AuthUser(uidFromToken($_COOKIE["token"]));
 } else {
 	setcookie("token", "0", 1);
 	$authuser = new AuthUser(null);
 }
+
+if ($pageid == "") {
+	header("Location: ./");
+} else if (invalidPage()) {
+	header("Location: ?p=notfound&e={$pageid}");
+}
 $page = new Page($pageid);
+
+// Prevent caching
+header("Expires: 0");
+header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT");
+header("Cache-Control: no-store, no-cache, must-revalidate");
+header("Cache-Control: post-check=0, pre-check=0", false);
+header("Pragma: no-cache");
+
+// Force HTTPS if this is a secure page or secureaccess, otherwise force HTTP:
+if ($page->secure || $pageid == "secureaccess") {
+	$httpsURL = 'https://'.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
+	if(!isset($_SERVER['HTTPS']) || $_SERVER['HTTPS']!=='on'){
+		if(count($_POST)>0) {
+			die('Page should be accessed with HTTPS, but a POST Submission has been sent here. Adjust the form to point to '.$httpsURL);
+		}
+		header("Status: 301 Moved Permanently");
+		header("Location: {$httpsURL}");
+		exit();
+	}
+} else {
+	$httpURL = 'http://'.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
+	if(isset($_SERVER['HTTPS']) && $_SERVER['HTTPS']==='on' ){
+		header("Status: 301 Moved Permanently");
+		header("Location: {$httpURL}");
+		exit();
+	}
+}
+
 if (($page->secure and !$authuser->permissions->page_viewsecure) or ($authuser->permissions->page_viewsecure and in_array($page->pageid, $authuser->permissions->page_viewblacklist))) {
-	header("Location: ?p=secureaccess");
+	header("Location: ?p=secureaccess&n={$pageid}");
 }
 // LOAD MODULES
 $modulepath = "assets/server_modules/";
@@ -72,7 +101,7 @@ foreach (scandir($modulepath) as $path) {
 			include("{$modulepath}{$path}/module.php");
 			array_push($availablemodules, $path);
 			try {
-				$modclass = "module_{$path}";
+				$modclass = "\\module\\{$path}\\module";
 				$modules[$path] = new $modclass();
 			} catch (Exception $e) {
 				echo $e;
@@ -96,12 +125,11 @@ $page->resolvePlaceholders();
 <html>
 	<head>
 		<meta charset="utf-8" />
-		<link rel="stylesheet" href="assets/site/bootstrap-3.3.6/css/bootstrap.css">
-		<link rel="stylesheet" href="assets/site/css/theme.default.css">
-		<script src="assets/site/js/jquery-1.12.4.min.js"></script>
-		<script src="assets/site/js/js.cookie.js"></script>
-		<script src="assets/site/bootstrap-3.3.6/js/bootstrap.min.js"></script>
-		<script src="assets/site/js/site.js"></script>
+		<link rel="stylesheet" href="/assets/site/css/fontawesome-5.0.13/css/fontawesome-all.min.css" media="all">
+		<link rel="stylesheet" href="/assets/site/css/bootstrap-4.1.1/css/bootstrap.min.css" media="all">
+		<link rel="stylesheet" href="/assets/site/css/site-1.1.0.css" media="all">
+		<link rel="stylesheet" type="text/css" href="/assets/site/js/codemirror/lib/codemirror.css" media="all">
+		<script src="/assets/site/js/jquery-3.3.1.min.js"></script>
 		<?php
 $page->insertHead();
 		?>
@@ -132,5 +160,11 @@ foreach ($msgs as $m) {
 }
 			?>
 		</script>
+		<script src="/assets/site/js/js.cookie.js"></script>
+		<script src="/assets/site/js/popper.min.js"></script>
+		<script src="/assets/site/css/bootstrap-4.1.1/js/bootstrap.min.js"></script>
+		<script src="/assets/site/js/site-1.0.1.js"></script>
+        <script type="text/javascript" src="/assets/site/js/codemirror/lib/codemirror.js"></script>
+        <script type="text/javascript" src="/assets/site/js/codemirror/mode/xml/xml.js"></script>
 	</body>
 </html>
