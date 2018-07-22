@@ -132,11 +132,11 @@ function ajax_editpage() {
 	
 	$newpageid = $_POST["newpageid"];
 	
-	if (!($newpageid == $page->pageid || !in_array($page->pageid, ["home", "notfound", "secureaccess"])) {
+	if (!($newpageid == $page->pageid || !in_array($page->pageid, ["home", "notfound", "secureaccess"]))) {
 		return "FALSE";
 	}
 	
-	if (!(invalidPage || $newpageid == $page->pageid) ||
+	if (!(invalidPage($newpageid) || $newpageid == $page->pageid) ||
 	    in_array($newpageid, ["TRUE", "FALSE"])) {
 		return "FALSE";
 	}
@@ -277,7 +277,7 @@ class Page {
 				$secure .= $TEMPLATES["secure-navbar-dropdown-modules-start"];
 				foreach($availablemodules as $m) {
 					$mc = $modules[$m];
-					if (isset($mc->name)) {
+					if (isset($mc->name) && method_exists($mc, "getModal")) {
 						$secure .= '
 <a class="dropdown-item" href="#" title="'.$mc->name.'" onclick="showDialog(\'module_'.$m.'\');">'.$mc->name.'</a>';
 					}
@@ -353,8 +353,10 @@ class Page {
 		$modals .= "</div>";
 		$script .= "</script>";
 		
+		$newSecure = $TEMPLATES["secure-menu"]($authuser, $securepages, $availablemodules, $modules);
+		
 		$base = urldecode(getconfig("defaultnav"));
-		$header = $secure . $base . $modals . $script;
+		$header = $secure . $newSecure . $modals . $script . $base;
 		return $header;
 	}
 

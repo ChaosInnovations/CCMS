@@ -1,0 +1,157 @@
+.navbar, .navbar-brand {
+	background-color: #009966;
+	color: #fff !important;
+	z-index: 1000;
+	border: 0;
+	border-radius: 0;
+}
+
+.navbar {
+	margin-bottom: 20px;
+}
+
+.secure-nav .navbar-nav > li > a {
+    padding-top:4px !important; 
+    padding-bottom:0 !important;
+    height: 30px;
+	background-color: #000000;
+}
+.secure-nav .navbar-text {
+	margin-top:4px !important; 
+    margin-bottom:0 !important;
+}
+.secure-nav {background-color:#000000;margin-bottom:0;min-height:28px !important;z-index: 1001;}
+.secure-nav .dropdown-menu {background-color:#000000;border-width:0;}
+
+.form .has-feedback .form-control-feedback {
+	right: 15px;
+}
+
+.modal-lg {
+	width: 90%;
+}
+
+.secureMenu {
+    position:fixed;
+    left:20px;
+    bottom:20px;
+    z-index:1001;
+}
+  
+.secureMenu > .secureMenu-icon {
+    left:0;
+    bottom:0;
+}
+  
+.secureMenu-icon {
+  	position:relative;
+    width:40px;
+    height:40px;
+    border-radius:20px;
+    border:1px solid #FFF;
+  	padding-top:0.15rem;
+    text-align:center;
+    background-color:#000;
+    color:#FFF;
+    cursor:pointer;
+}
+
+.secureMenu-icon:hover, .secureMenu-icon.active {
+    color:#000;
+    background-color:#FFF;
+    border-color:#000;
+}
+  
+.secureMenu-icon.active:hover {
+    color:#FFF;
+    background-color:#000;
+    border-color:#FFF;
+}
+  
+.secureMenu-icon > span {
+    font-size:1.3rem;
+}
+  
+.secureMenu-iconGroup {
+    position:absolute;
+    display:flex;
+    left:0;
+    bottom:0;
+}
+  
+.secureMenu-iconGroup.horizontal {
+    padding-left:40px;
+    flex-direction:row-reverse;
+}
+  
+.secureMenu-iconGroup.vertical {
+    padding-bottom:40px;
+    flex-direction:column;
+    justify-content:flex-end;
+}
+  
+.secureMenu-iconGroup.horizontal > .secureMenu-icon {
+    margin-left:-40px;
+    transition: margin-left 0.5s;
+}
+  
+.secureMenu-iconGroup.horizontal.visible > .secureMenu-icon {
+    margin-left:5px;
+}
+  
+.secureMenu-iconGroup.vertical > .secureMenu-icon {
+    margin-bottom:-40px;
+    transition: margin-bottom 0.5s;
+}
+  
+.secureMenu-iconGroup.vertical.visible > .secureMenu-icon {
+    margin-bottom:5px;
+}
+  
+.secureMenu-pane {
+    position:absolute;
+    left:45px;
+    bottom:45px;
+    width:175px;
+    height:220px;
+    border-radius:5px;
+    border:1px solid #FFF;
+  	padding-top:0.15rem;
+    padding-left:10px;
+    padding-right:10px;
+    text-align:center;
+    background-color:#000;
+    color:#FFF;
+    transition: width, height 0.5s, 0.5s;
+    overflow-y:auto;
+}
+  
+.secureMenu-pane > hr {
+    width:90%;
+    margin-top:0.15rem;
+    margin-bottom:0.15rem;
+    background-color: #FFF;
+}
+  
+.secureMenu-pane a {
+  	color: #FFF;
+}
+  
+.secureMenu-pane div {
+    width:100%;
+    overflow-x:auto;
+    text-align:left;
+    white-space:nowrap;
+}
+  
+.secureMenu-pane span {
+    cursor: pointer;
+}
+  
+.secureMenu-pane.collapsed.vertical {
+  	height: 0px;
+}
+  
+.secureMenu-pane.collapsed.horizontal {
+  	width: 0px;
+}
