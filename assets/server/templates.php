@@ -109,6 +109,130 @@ $TEMPLATES = [
 '
 </div></nav>',
 
+// Secure menu
+
+"secure-menu" => function ($authuser, $securepages, $availablemodules, $modules) {
+	$canChat = true; // temporary chat permission
+	
+	$securePageListing = '';
+	foreach ($securepages as $sp) {
+		if (!in_array($sp, $authuser->permissions->page_viewblacklist)) {
+			$spd = new Page($sp);
+			$securePageListing .= '<a href="?p='.$sp.'">'.$spd->title.'</a><br />
+			';
+		}
+	}
+	
+	$moduleListing = '';
+	foreach($availablemodules as $m) {
+		$mc = $modules[$m];
+		if (isset($mc->name) && method_exists($mc, "getModal")) {
+			$secure .= '<span onclick="showDialog(\'module_'.$m.'\');">'.$mc->name.'</span><br />
+			';
+		}
+	}
+	
+	return '
+<div id="secureMenu" class="secureMenu">
+  <div id="secureMenu_trigger" class="secureMenu-icon" title="Secure Menu" onclick="toggleSecureMenu();" style="z-index:10;">
+    <span><i class="fas fa-ellipsis-v"></i></span>
+  </div>
+  <div id="secureMenu_horizontal" class="secureMenu-iconGroup horizontal" style="z-index:9;">
+    <div id="secureMenu_option-signout" title="Sign Out" onclick="logout();" class="secureMenu-icon">
+      <span><i class="fas fa-sign-out-alt"></i></span>
+    </div>
+    <div id="secureMenu_option-account" title="Account Details" onclick="showDialog(\'account\');" class="secureMenu-icon">
+      <span><i class="fas fa-user-cog"></i></span>
+    </div>' . ($canChat ? '
+    <div id="secureMenu_option-collabTrigger" title="Collaborate" onclick="triggerPane(\'collab\');" class="secureMenu-icon">
+      <span><i class="fas fa-share-alt"></i></span>
+    </div>' : '') . '
+    <div id="secureMenu_option-home" title="Home" onclick="location.assign(\'./\');" class="secureMenu-icon">
+      <span><i class="fas fa-home"></i></span>
+    </div>
+  </div>
+  <div id="secureMenu_vertical" class="secureMenu-iconGroup vertical" style="z-index:9;">' . ($authuser->permissions->admin_managepages ? '
+    <div id="secureMenu_option-admin" title="Administration" onclick="showDialog(\'admin\');" class="secureMenu-icon">
+      <span><i class="fas fa-cogs"></i></span>
+    </div>' : '') . ($authuser->permissions->admin_managesite ? '
+    <div id="secureMenu_option-moduleTrigger" title="Modules" onclick="triggerPane(\'module\');" class="secureMenu-icon">
+      <span><i class="fas fa-puzzle-piece"></i></span>
+    </div>' : '') . ($authuser->permissions->page_viewsecure ? '
+    <div id="secureMenu_option-securepageTrigger" title="Secure Pages" onclick="triggerPane(\'securepage\');" class="secureMenu-icon">
+      <span><i class="fas fa-lock"></i></span>
+    </div>' : '') . ($authuser->permissions->page_create ? '
+    <div id="secureMenu_option-newpage" title="New Page" onclick="createPage();" class="secureMenu-icon">
+      <span><i class="fas fa-plus"></i></span>
+    </div>' : '') . ($authuser->permissions->page_edit ? '
+    <div id="secureMenu_option-edit" title="Edit Page" onclick="showDialog(\'edit\');" class="secureMenu-icon">
+      <span><i class="fas fa-edit"></i></span>
+    </div>' : '') . '
+  </div>' . ($canChat ? '
+  <div id="secureMenu_pane-collab" class="secureMenu-pane collapsed vertical" style="display:none;">
+    <b>Collaborate</b>
+    <hr />
+    <i>Coming Soon</i>
+  </div>' : '') . ($authuser->permissions->admin_managesite ? '
+  <div id="secureMenu_pane-module" class="secureMenu-pane collapsed horizontal" style="display:none;">
+    <b>Modules</b>
+    <hr />
+    <div>
+		' . $moduleListing . '
+      <span onclick="showDialog(\'module_hermes\');">Hermes Transit Management Platform</span><br />
+      <span onclick="showDialog(\'module_notices\');">Site Notices</span><br />
+    </div>
+  </div>' : '') . ($authuser->permissions->page_viewsecure ? '
+  <div id="secureMenu_pane-securepage" class="secureMenu-pane collapsed horizontal" style="display:none;">
+    <b>Secure Pages</b>
+    <hr />' . ($authuser->permissions->page_createsecure ? '
+    <span onclick="createSecurePage();"><i class="fas fa-plus"></i></span>
+    <hr />' : '') . '
+    <div>
+		' . $securePageListing . '
+    </div>
+  </div>' : '') . '
+  <script>
+    var secureMenuVisible = false;
+    var secureMenuLastPane = "";
+    var secureMenuPane = "";
+    function toggleSecureMenu() {
+      secureMenuVisible = !secureMenuVisible;
+      if (secureMenuVisible) {
+    	$("#secureMenu_horizontal").addClass("visible");
+        $("#secureMenu_vertical").addClass("visible");
+        $("#secureMenu_trigger").addClass("active");
+        triggerPane(secureMenuLastPane);
+      } else {
+        secureMenuLastPane = secureMenuPane;
+        triggerPane(secureMenuPane);
+    	$("#secureMenu_horizontal").removeClass("visible");
+        $("#secureMenu_vertical").removeClass("visible");
+        $("#secureMenu_trigger").removeClass("active");
+      }
+    }
+    function triggerPane(id) {
+      $(".secureMenu-pane").addClass("collapsed");
+      $("#secureMenu_option-collabTrigger").removeClass("active");
+      $("#secureMenu_option-moduleTrigger").removeClass("active");
+      $("#secureMenu_option-securepageTrigger").removeClass("active");
+      setTimeout(function(){
+        if (id!="collab" || secureMenuPane=="") $("#secureMenu_pane-collab").hide();
+        if (id!="module" || secureMenuPane=="") $("#secureMenu_pane-module").hide();
+        if (id!="securepage" || secureMenuPane=="") $("#secureMenu_pane-securepage").hide();
+      }, 500);
+      if (id == secureMenuPane) {
+        secureMenuPane = "";
+        return;
+      }
+      secureMenuPane = id;
+      $("#secureMenu_option-"+id+"Trigger").addClass("active");
+      $("#secureMenu_pane-"+id).show();
+      $("#secureMenu_pane-"+id).removeClass("collapsed");
+    }
+  </script>
+</div>';
+},
+
 
 //  ________
 // /        \

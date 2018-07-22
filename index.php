@@ -67,6 +67,7 @@ header("Cache-Control: post-check=0, pre-check=0", false);
 header("Pragma: no-cache");
 
 // Force HTTPS if this is a secure page or secureaccess, otherwise force HTTP:
+/*
 if ($page->secure || $pageid == "secureaccess") {
 	$httpsURL = 'https://'.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
 	if(!isset($_SERVER['HTTPS']) || $_SERVER['HTTPS']!=='on'){
@@ -85,6 +86,7 @@ if ($page->secure || $pageid == "secureaccess") {
 		exit();
 	}
 }
+*/
 
 if (($page->secure and !$authuser->permissions->page_viewsecure) or ($authuser->permissions->page_viewsecure and in_array($page->pageid, $authuser->permissions->page_viewblacklist))) {
 	header("Location: ?p=secureaccess&n={$pageid}");
@@ -127,7 +129,7 @@ $page->resolvePlaceholders();
 		<meta charset="utf-8" />
 		<link rel="stylesheet" href="/assets/site/css/fontawesome-5.0.13/css/fontawesome-all.min.css" media="all">
 		<link rel="stylesheet" href="/assets/site/css/bootstrap-4.1.1/css/bootstrap.min.css" media="all">
-		<link rel="stylesheet" href="/assets/site/css/site-1.1.0.css" media="all">
+		<link rel="stylesheet" href="/assets/site/css/site-1.2.0.css" media="all">
 		<link rel="stylesheet" type="text/css" href="/assets/site/js/codemirror/lib/codemirror.css" media="all">
 		<script src="/assets/site/js/jquery-3.3.1.min.js"></script>
 		<?php
