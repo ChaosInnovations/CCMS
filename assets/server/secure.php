@@ -2,6 +2,11 @@
 
 function new_token($uid) {
 	global $conn;
+	// Kill other tokens from this uid
+	$stmt = $conn->prepare("UPDATE tokens SET forcekill=1 WHERE uid=:uid;");
+	$stmt->bindParam(":uid", $uid);
+	$stmt->execute();
+	
 	$now = date("Y-m-d", time());
 	$end = date("Y-m-d", time()+3600*24*30); // 30-day expiry
 	while (true) { // In case the token is already taken
