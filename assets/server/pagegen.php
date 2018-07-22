@@ -353,7 +353,11 @@ class Page {
 		$modals .= "</div>";
 		$script .= "</script>";
 		
-		$newSecure = $TEMPLATES["secure-menu"]($authuser, $securepages, $availablemodules, $modules);
+		$newSecure = "";
+		
+		if ($authuser->permissions->toolbar) {
+			$newSecure .= $TEMPLATES["secure-menu"]($authuser, $securepages, $availablemodules, $modules);
+		}
 		
 		$base = urldecode(getconfig("defaultnav"));
 		$header = $secure . $newSecure . $modals . $script . $base;
