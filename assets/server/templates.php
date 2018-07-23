@@ -14,47 +14,9 @@ $TEMPLATES = [
 <div class="collapse navbar-collapse" id="snavbar-collapse">
 <ul class="navbar-nav mr-auto mt-2 mt-lg-0">',
 
-// Always shown
-"secure-navbar-button-home" =>
-'
-<li class="nav-item"><a class="nav-link" href="./" title="Home"><i class="fas fa-home"></i></a></li>',
-
-// Shown if user can edit
-"secure-navbar-button-edit" =>
-'
-<li class="nav-item"><a class="nav-link" href="#" title="Edit Page" onclick="showDialog(\'edit\');"><i class="fas fa-edit"></i></a></li>',
-
-// Shown if user can create pages
-"secure-navbar-button-create" =>
-'
-<li class="nav-item"><a class="nav-link" href="#" title="New Page" onclick="createPage();"><i class="fas fa-plus"></i></a></li>',
-
-// Shown if user can view or create secure pages
-"secure-navbar-dropdown-secure-start" =>
-'
-<li class="nav-item dropdown">
-<a href="" class="nav-link dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Secure Pages</a>
-<div class="dropdown-menu">',
-
-"navbar-separator" =>
-'
-<div class="dropdown-divider"></div>',
-
-// Shown if user can create secure pages
-"secure-navbar-dropdown-secure-button-create" =>
-'
-<a class="dropdown-item" href="#" title="New Secure Page" onclick="createSecurePage();"><i class="fas fa-plus"></i></a>',
-
 "navbar-dropdown-end" =>
 '
 </div></li>',
-
-// Shown if user can manage modules
-"secure-navbar-dropdown-modules-start" =>
-'
-<li class="nav-item dropdown">
-<a href="" class="nav-link dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Modules</a>
-<div class="dropdown-menu">',
 
 // Shown if user has any admin privileges
 "secure-navbar-dropdown-admin-start" =>
@@ -62,11 +24,6 @@ $TEMPLATES = [
 <li class="nav-item dropdown">
 <a href="" class="nav-link dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Administration</a>
 <div class="dropdown-menu">',
-
-// Shown if user can manage pages
-"secure-navbar-dropdown-admin-button-pages" =>
-'
-<a class="dropdown-item" href="#" title="Manage Pages" onclick="showDialog(\'managepages\');">Page Manager</a>',
 
 // Shown if user can manage site
 "secure-navbar-dropdown-admin-button-site" =>
@@ -77,23 +34,6 @@ $TEMPLATES = [
 "secure-navbar-dropdown-admin-button-users" =>
 '
 <a class="dropdown-item" href="#" title="Manage Users" onclick="showDialog(\'manageusers\');">Users</a>',
-
-// Always shown
-"secure-navbar-dropdown-account-start" =>
-'
-<li class="nav-item dropdown">
-<a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Account</a>
-<div class="dropdown-menu">',
-
-// Always shown
-"secure-navbar-dropdown-account-button-details" =>
-'
-<a href="#" class="dropdown-item" title="Account Details" onclick="showDialog(\'account\');">Details</a>',
-
-// Always shown
-"secure-navbar-dropdown-account-button-logout" =>
-'
-<a href="#" class="dropdown-item" title="Log Out" onclick="logout();"><i class="fas fa-sign-out-alt"></i></a>',
 
 // Always shown
 "secure-navbar-button-about" =>
@@ -410,16 +350,16 @@ $(document).keydown(function(event) {
 });';
 },
 
-// Page Manager Modal
+// Administration Modal
 //====================
 
-"secure-modal-pages-pagerow" => function ($page) {
+"secure-modal-admin-pagerow" => function ($page) {
 	$pid = $page["pageid"];
 	$check = $page["secure"] ? ' checked' : '';
 	$secure = '
-<input type="checkbox" id="dialog_managepages_secure_' . $pid . '" onclick="dialog_managepages_togglesecure(\'' . $pid . '\');"' . $check . '>';
+<input type="checkbox" id="dialog_admin_pages_secure_' . $pid . '" onclick="dialog_admin_pages_togglesecure(\'' . $pid . '\');"' . $check . '>';
 	$remove = '
-<button class="btn btn-outline-danger" title="Delete Page" onclick="dialog_managepages_delete(\'' . $pid . '\');"><i class="fas fa-trash"></i></button>';
+<button class="btn btn-outline-danger" title="Delete Page" onclick="dialog_admin_pages_delete(\'' . $pid . '\');"><i class="fas fa-trash"></i></button>';
 	if (in_array($page["pageid"], ["home", "notfound", "secureaccess"])) {
 		$secure = '';
 		$remove = '';
@@ -430,7 +370,7 @@ $(document).keydown(function(event) {
 },
 
 // Body
-"secure-modal-pages-bodyfoot" => function($pages) {
+"secure-modal-admin-bodyfoot" => function($authuser, $pages, $users) {
 	global $TEMPLATES;
 	$pagelist = "";
 	foreach ($pages as $page) {
@@ -454,13 +394,13 @@ $(document).keydown(function(event) {
 </div>';
 },
 
-"secure-modal-pages-script" =>
+"secure-modal-admin-script" =>
 '
-function dialog_managepages_togglesecure(pid) {
-	state = $("#dialog_managepages_secure_" + pid).prop("checked");
+function dialog_admin_pages_togglesecure(pid) {
+	state = $("#dialog_admin_pages_secure_" + pid).prop("checked");
 	module_ajax("securepage", {pid: pid, state: state}, function(data) {
 		if (data == "FALSE") {
-			$("#dialog_managepages_secure_" + pid).prop("checked", !state);
+			$("#dialog_admin-pages_secure_" + pid).prop("checked", !state);
 			window.alert("Couldn\'t change secure state.");
 		} else if (data == "SPECIAL") {
 			window.alert("Can\'t change security of \'home,\' \'notfound,\' or \'secureaccess\' pages!");
@@ -471,7 +411,7 @@ function dialog_managepages_togglesecure(pid) {
 	});
 }
 
-function dialog_managepages_delete(pid) {
+function dialog_admin_pages_delete(pid) {
 	if (!window.confirm("Are you sure you want to permanently delete this page?", "Yes", "No")) {
 		return;
 	}

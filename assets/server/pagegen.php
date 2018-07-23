@@ -124,7 +124,7 @@ function ajax_editpage() {
 	$page = new Page($_POST["pageid"]);
 	
 	if (!$authuser->permissions->page_edit ||
-	    !($page->secure && $authuser->permissions->page_editsecure) ||
+	    ($page->secure && !$authuser->permissions->page_editsecure) ||
 		in_array($page->pageid, $authuser->permissions->page_viewblacklist) ||
 		in_array($page->pageid, $authuser->permissions->page_editblacklist)) {
 		return "FALSE";
@@ -246,53 +246,24 @@ class Page {
 		if ($authuser->permissions->toolbar) {
 			
 			$secure .= $TEMPLATES["secure-navbar-start"];
-			$secure .= $TEMPLATES["secure-navbar-button-home"];
 			
-			if ($authuser->permissions->owner or (($this->secure and $authuser->permissions->page_editsecure) or (!$this->secure and $authuser->permissions->page_edit)) and !in_array($this->pageid, $authuser->permissions->page_editblacklist)) {
-				$secure .= $TEMPLATES["secure-navbar-button-edit"];
+			if ((($this->secure and $authuser->permissions->page_editsecure) or (!$this->secure and $authuser->permissions->page_edit)) and !in_array($this->pageid, $authuser->permissions->page_editblacklist)) {
 				$modals .= $TEMPLATES["secure-modal-start"]("dialog_edit", "Edit Page", "lg");
 				$modals .= $TEMPLATES["secure-modal-edit-bodyfoot"];
 				$modals .= $TEMPLATES["secure-modal-end"];
 				$script .= $TEMPLATES["secure-modal-edit-script"]($this->pageid, $this->rawtitle, $this->rawhead, $this->rawbody);
-			}
-			if ($authuser->permissions->page_create) {
-				$secure .= $TEMPLATES["secure-navbar-button-create"];
-			}
-			if ($authuser->permissions->page_viewsecure) {
-				$secure .= $TEMPLATES["secure-navbar-dropdown-secure-start"];
-				foreach ($securepages as $sp) {
-					$spd = new Page($sp);
-					if (!in_array($sp, $authuser->permissions->page_viewblacklist)) {
-						$secure .= "<a class=\"dropdown-item\" href=\"?p={$sp}\">{$spd->title}</a>";
-					}
-				}
-				if ($authuser->permissions->page_createsecure) {
-					$secure .= $TEMPLATES["navbar-separator"];
-					$secure .= $TEMPLATES["secure-navbar-dropdown-secure-button-create"];
-				}
-				$secure .= $TEMPLATES["navbar-dropdown-end"];
-			}
-			if ($authuser->permissions->admin_managesite and count($modules) > 1) {
-				$secure .= $TEMPLATES["navbar-separator"];
-				$secure .= $TEMPLATES["secure-navbar-dropdown-modules-start"];
-				foreach($availablemodules as $m) {
-					$mc = $modules[$m];
-					if (isset($mc->name) && method_exists($mc, "getModal")) {
-						$secure .= '
-<a class="dropdown-item" href="#" title="'.$mc->name.'" onclick="showDialog(\'module_'.$m.'\');">'.$mc->name.'</a>';
-					}
-				}
-				$secure .= $TEMPLATES["navbar-dropdown-end"];
 			}
 			if ($authuser->permissions->admin_managepages) {
 				$secure .= $TEMPLATES["secure-navbar-dropdown-admin-start"];
 				$stmt = $conn->prepare("SELECT pageid, title, secure, revision FROM content_pages ORDER BY pageid ASC;");
 				$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
 				$pages = $stmt->fetchAll();
-				$secure .= $TEMPLATES["secure-navbar-dropdown-admin-button-pages"];
-				$modals .= $TEMPLATES["secure-modal-start"]("dialog_managepages", "Page Manager", "lg");
-				$modals .= $TEMPLATES["secure-modal-pages-bodyfoot"]($pages);
-				$script .= $TEMPLATES["secure-modal-pages-script"];
+				$stmt = $conn->prepare("SELECT * FROM users;");
+				$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
+				$users = $stmt->fetchAll();
+				$modals .= $TEMPLATES["secure-modal-start"]("dialog_admin", "Administration", "lg");
+				$modals .= $TEMPLATES["secure-modal-admin-bodyfoot"]($authuser, $pages, $users);
+				$script .= $TEMPLATES["secure-modal-admin-script"];
 				$modals .= $TEMPLATES["secure-modal-end"];
 				if ($authuser->permissions->admin_managesite) {
 					$config_websitetitle = getconfig("websitetitle");
@@ -310,9 +281,6 @@ class Page {
 					$script .= $TEMPLATES["secure-modal-site-script"]($config_defaulttitle, $config_defaulthead, $config_defaultbody, $config_defaultnav, $config_defaultfoot);
 				}
 				if ($authuser->permissions->owner) {
-					$stmt = $conn->prepare("SELECT * FROM users;");
-					$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
-					$users = $stmt->fetchAll();
 					$secure .= $TEMPLATES["secure-navbar-dropdown-admin-button-users"];
 					$modals .= $TEMPLATES["secure-modal-start"]("dialog_manageusers", "User Accounts", "lg");
 					$modals .= $TEMPLATES["secure-modal-manageusers-bodyfoot"]($users, $authuser->uid);
@@ -321,14 +289,8 @@ class Page {
 				}
 				$secure .= $TEMPLATES["navbar-dropdown-end"];
 			}
-			$secure .= $TEMPLATES["secure-navbar-dropdown-account-start"];
-			$secure .= $TEMPLATES["secure-navbar-dropdown-account-button-details"];
-			$secure .= $TEMPLATES["navbar-separator"];
-			$secure .= $TEMPLATES["secure-navbar-dropdown-account-button-logout"];
-			$secure .= $TEMPLATES["navbar-dropdown-end"];
 			$secure .= $TEMPLATES["secure-navbar-button-about"];
 			$secure .= $TEMPLATES["secure-navbar-nav-end"];
-			$secure .= "<p class=\"navbar-text navbar-right\"><a href=\"#\" class=\"navbar-link\" onclick=\"showDialog('account');\">{$authuser->name}</a></p>";
 			$secure .= $TEMPLATES["secure-navbar-end"];
 			$modals .= $TEMPLATES["secure-modal-start"]("dialog_account", "Account Details", "lg");
 			$modals .= $TEMPLATES["secure-modal-account-bodyfoot"]($authuser);
