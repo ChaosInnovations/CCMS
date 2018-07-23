@@ -382,8 +382,8 @@ $(document).keydown(function(event) {
 	    <div class="col-3">
 		    <div class="nav flex-column nav-pills" id="dialog_admin_tabs" role="tablist" aria-orientation="vertical">
 		        <a class="nav-link active" id="dialog_admin_tab_pages" data-toggle="pill" href="#dialog_admin_panel_pages" role="tab" aria-controls="dialog_admin_panel_pages" aria-selected="true">Pages</a>
-		        <a class="nav-link" id="dialog_admin_tab_users" data-toggle="pill" href="#dialog_admin_panel_users" role="tab" aria-controls="dialog_admin_panel_users" aria-selected="false">Users</a>
-		        <a class="nav-link" id="dialog_admin_tab_site" data-toggle="pill" href="#dialog_admin_panel_site" role="tab" aria-controls="dialog_admin_panel_site" aria-selected="false">Site</a>
+		        ' . ($authuser->permissions->admin_managesite ? '<a class="nav-link" id="dialog_admin_tab_users" data-toggle="pill" href="#dialog_admin_panel_users" role="tab" aria-controls="dialog_admin_panel_users" aria-selected="false">Users</a>
+		        <a class="nav-link" id="dialog_admin_tab_site" data-toggle="pill" href="#dialog_admin_panel_site" role="tab" aria-controls="dialog_admin_panel_site" aria-selected="false">Site</a>':'').'
 		        <a class="nav-link" id="dialog_admin_tab_ccms" data-toggle="pill" href="#dialog_admin_panel_ccms" role="tab" aria-controls="dialog_admin_panel_ccms" aria-selected="false">Chaos CMS</a>
 		    </div>
 	    </div>
@@ -396,13 +396,13 @@ $(document).keydown(function(event) {
 						</thead>
 						<tbody>' . $pagelist . '</tbody>
 					</table>
-				</div>
+				</div>' . ($authuser->permissions->admin_managepages ? '
 		        <div class="tab-pane fade" id="dialog_admin_panel_users" role="tabpanel" aria-labelledby="dialog_admin_tab_users">
 					Users
 				</div>
 		        <div class="tab-pane fade" id="dialog_admin_panel_site" role="tabpanel" aria-labelledby="dialog_admin_tab_site">
 					Site
-				</div>
+				</div>':'').'
 		        <div class="tab-pane fade" id="dialog_admin_panel_ccms" role="tabpanel" aria-labelledby="dialog_admin_tab_ccms">
 					<dl>
 						<div class="row"><dt class="col-12 col-sm-4">Version</dt><dd class="col-12 col-sm-8">' . $ccms_info->version .'</dd></div>
