@@ -263,29 +263,13 @@ class Page {
 				$users = $stmt->fetchAll();
 				$modals .= $TEMPLATES["secure-modal-start"]("dialog_admin", "Administration", "lg");
 				$modals .= $TEMPLATES["secure-modal-admin-bodyfoot"]($authuser, $pages, $users);
-				$script .= $TEMPLATES["secure-modal-admin-script"];
+				$script .= $TEMPLATES["secure-modal-admin-script"]();
 				$modals .= $TEMPLATES["secure-modal-end"];
-				if ($authuser->permissions->admin_managesite) {
-					$config_websitetitle = getconfig("websitetitle");
-					$config_primaryemail = getconfig("primaryemail");
-					$config_secondaryemail = getconfig("secondaryemail");
-					$config_defaulttitle = getconfig("defaulttitle");
-					$config_defaulthead = getconfig("defaulthead");
-					$config_defaultbody = getconfig("defaultbody");
-					$config_defaultnav = getconfig("defaultnav");
-					$config_defaultfoot = getconfig("defaultfoot");
-					$secure .= $TEMPLATES["secure-navbar-dropdown-admin-button-site"];
-					$modals .= $TEMPLATES["secure-modal-start"]("dialog_managesite", "Site Manager", "lg");
-					$modals .= $TEMPLATES["secure-modal-site-bodyfoot"]($config_websitetitle, $config_primaryemail, $config_secondaryemail);
-					$modals .= $TEMPLATES["secure-modal-end"];
-					$script .= $TEMPLATES["secure-modal-site-script"]($config_defaulttitle, $config_defaulthead, $config_defaultbody, $config_defaultnav, $config_defaultfoot);
-				}
 				if ($authuser->permissions->owner) {
 					$secure .= $TEMPLATES["secure-navbar-dropdown-admin-button-users"];
 					$modals .= $TEMPLATES["secure-modal-start"]("dialog_manageusers", "User Accounts", "lg");
 					$modals .= $TEMPLATES["secure-modal-manageusers-bodyfoot"]($users, $authuser->uid);
 					$modals .= $TEMPLATES["secure-modal-end"];
-					$script .= $TEMPLATES["secure-modal-manageusers-script"]();
 				}
 				$secure .= $TEMPLATES["navbar-dropdown-end"];
 			}

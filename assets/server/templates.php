@@ -373,6 +373,10 @@ $(document).keydown(function(event) {
 		$pagelist .= $TEMPLATES["secure-modal-admin-pagerow"]($page);
 	}
 	
+	$websitetitle = getconfig("websitetitle");
+	$primaryemail = getconfig("primaryemail");
+	$secondaryemail = getconfig("secondaryemail");
+	
 	$releasedate = date("l, F j, Y", strtotime($ccms_info->release));
 	$creationdate = date("l, F j, Y", strtotime(getconfig("creationdate")));
 	
@@ -396,12 +400,72 @@ $(document).keydown(function(event) {
 						</thead>
 						<tbody>' . $pagelist . '</tbody>
 					</table>
-				</div>' . ($authuser->permissions->admin_managepages ? '
+				</div>' . ($authuser->permissions->owner ? '
 		        <div class="tab-pane fade" id="dialog_admin_panel_users" role="tabpanel" aria-labelledby="dialog_admin_tab_users">
 					Users
-				</div>
+				</div>':'') . ($authuser->permissions->admin_managesite ? '
 		        <div class="tab-pane fade" id="dialog_admin_panel_site" role="tabpanel" aria-labelledby="dialog_admin_tab_site">
-					Site
+					<form onsubmit="dialog_admin_site_save();return false;">
+						<div class="form-group row">
+							<div class="offset-sm-3 offset-md-2 col-sm-9 col-md-10">
+								<input type="submit" class="btn btn-primary" title="Save" value="Save">
+							</div>
+						</div>
+						<div class="form-group row">
+							<label class="col-form-label col-sm-3 col-md-2" for="dialog_admin_site_websitetitle">Website Title</label>
+							<div class="col-sm-9 col-md-10">
+								<input type="text" id="dialog_admin_site_websitetitle" name="websitetitle" class="form-control" title="Website Title" placeholder="Website Title" value="' . $websitetitle . '">
+							</div>
+						</div>
+						<div class="form-group row">
+							<label class="col-form-label col-sm-3 col-md-2" for="dialog_admin_site_primaryemail">Primary Email</label>
+							<div class="col-sm-9 col-md-10">
+								<input type="text" id="dialog_admin_site_primaryemail" name="primaryemail" class="form-control" title="Primary Email" placeholder="Primary Email" value="' . $primaryemail . '">
+							</div>
+						</div>
+						<div class="form-group row">
+							<label class="col-form-label col-sm-3 col-md-2" for="dialog_admin_site_secondaryemail">Secondary Email</label>
+							<div class="col-sm-9 col-md-10">
+								<input type="text" id="dialog_admin_site_secondaryemail" name="secondaryemail" class="form-control" title="Secondary Email" placeholder="Secondary Email" value="' . $secondaryemail . '">
+							</div>
+						</div>
+						<h4>Page Defaults</h4>
+						<div class="form-group row">
+							<label class="col-form-label col-sm-3 col-md-2" for="dialog_admin_site_defaulttitle">Default Page Title</label>
+							<div class="col-sm-9 col-md-10">
+								<input type="text" id="dialog_admin_site_defaulttitle" name="defaulttitle" class="form-control" title="Default Page Title" placeholder="Default Page Title">
+							</div>
+						</div>
+						<div class="form-group row">
+							<label class="col-form-label col-sm-3 col-md-2" for="dialog_admin_site_defaulthead">Default Page <code>&lt;head&gt;</code></label>
+							<div class="col-sm-9 col-md-10">
+								<textarea id="dialog_admin_site_defaulthead" name="defaulthead" class="form-control monospace" title="Default Page Head" placeholder="Default Page Head" rows="8"></textarea>
+							</div>
+						</div>
+						<div class="form-group row">
+							<label class="col-form-label col-sm-3 col-md-2" for="dialog_admin_site_defaultbody">Default Page <code>&lt;body&gt;</code></label>
+							<div class="col-sm-9 col-md-10">
+								<textarea id="dialog_admin_site_defaultbody" name="defaultbody" class="form-control monospace" title="Default Page Body" placeholder="Default Page Body" rows="16"></textarea>
+							</div>
+						</div>
+						<div class="form-group row">
+							<label class="col-form-label col-sm-3 col-md-2" for="dialog_admin_site_defaultnav">Default Navigation Header</label>
+							<div class="col-sm-9 col-md-10">
+								<textarea id="dialog_admin_site_defaultnav" name="defaultnav" class="form-control monospace" title="Default Navigation Header" placeholder="Default Navigation Header" rows="16"></textarea>
+							</div>
+						</div>
+						<div class="form-group row">
+							<label class="col-form-label col-sm-3 col-md-2" for="dialog_admin_site_defaultfoot">Default Footer</label>
+							<div class="col-sm-9 col-md-10">
+								<textarea id="dialog_admin_site_defaultfoot" name="defaultfoot" class="form-control monospace" title="Default Footer" placeholder="Default Footer" rows="16"></textarea>
+							</div>
+						</div>
+						<div class="form-group row">
+							<div class="offset-sm-3 offset-md-2 col-sm-9 col-md-10">
+								<input type="submit" class="btn btn-primary" title="Save" value="Save">
+							</div>
+						</div>
+					</form>
 				</div>':'').'
 		        <div class="tab-pane fade" id="dialog_admin_panel_ccms" role="tabpanel" aria-labelledby="dialog_admin_tab_ccms">
 					<dl>
@@ -423,8 +487,15 @@ $(document).keydown(function(event) {
 </div>';
 },
 
-"secure-modal-admin-script" =>
-'
+"secure-modal-admin-script" => function() {
+	
+	$defaulttitle = getconfig("defaulttitle");
+	$defaulthead = getconfig("defaulthead");
+	$defaultbody = getconfig("defaultbody");
+	$defaultnav = getconfig("defaultnav");
+	$defaultfoot = getconfig("defaultfoot");
+	
+	return '
 function dialog_admin_pages_togglesecure(pid) {
 	state = $("#dialog_admin_pages_secure_" + pid).prop("checked");
 	module_ajax("securepage", {pid: pid, state: state}, function(data) {
@@ -453,86 +524,90 @@ function dialog_admin_pages_delete(pid) {
 			window.location.reload(true);
 		}
 	});
-}',
+}
 
-// Site Manager Modal
-//====================
+function dialog_admin_users_check_email() {
+	module_ajax("checkuser", {email: $("#dialog_admin_users_newemail").val()}, function (data) {
+		if (data == "TRUE") {
+			$("#dialog_admin_users_newemail").parent().removeClass("has-success");
+			$("#dialog_admin_users_newemail").parent().addClass("has-error");
+			$("#dialog_admin_users_newemail").parent().find(".fa-check").hide();
+			$("#dialog_users_newemail").parent().find(".fa-times").show();
+		} else {
+			$("#dialog_admin_users_newemail").parent().removeClass("has-error");
+			$("#dialog_admin_users_newemail").parent().addClass("has-success");
+			$("#dialog_admin_users_newemail").parent().find(".fa-times").hide();
+			$("#dialog_admin_users_newemail").parent().find(".fa-check").show();
+		}
+	});
+}
 
+function dialog_admin_users_new() {
+	permissions = "";
+	permissions += $("#dialog_admin_users_permission_owner").prop("checked") ? "owner;" : "";
+	permissions += $("#dialog_admin_users_permission_admin_managepages").prop("checked") ? "admin_managepages;" : "";
+	permissions += $("#dialog_admin_users_permission_admin_managesite").prop("checked") ? "admin_managesite;" : "";
+	permissions += $("#dialog_admin_users_permission_page_viewsecure").prop("checked") ? "page_viewsecure;" : "";
+	permissions += $("#dialog_admin_users_permission_page_editsecure").prop("checked") ? "page_editsecure;" : "";
+	permissions += $("#dialog_admin_users_permission_page_createsecure").prop("checked") ? "page_createsecure;" : "";
+	permissions += $("#dialog_admin_users_permission_page_deletesecure").prop("checked") ? "page_deletesecure;" : "";
+	permissions += $("#dialog_admin_users_permission_page_edit").prop("checked") ? "page_edit;" : "";
+	permissions += $("#dialog_admin_users_permission_page_create").prop("checked") ? "page_create;" : "";
+	permissions += $("#dialog_admin_users_permission_page_delete").prop("checked") ? "page_delete;" : "";
+	permissions += $("#dialog_admin_users_permission_toolbar").prop("checked") ? "toolbar;" : "";
+	module_ajax("newuser", {email: $("#dialog_admin_users_newemail").val(),
+	                        name: $("#dialog_admin_users_newname").val(),
+							permissions: permissions}, function (data) {
+		if (data != "TRUE") {
+			window.alert("Couldn\'t create account. Is "+$("#dialog_admin_users_newemail").val()+" already in use?");
+			return;
+		}
+		window.alert("Created account with email \\""+$("#dialog_admin_users_newemail").val()+"\\" and password \\"password\\".");
+		window.location.reload(true);
+	});
+}
 
-"secure-modal-site-bodyfoot" => function ($websitetitle, $primaryemail, $secondaryemail) {
-// Body
-    return '
-<div class="modal-body">
-	<h4>Site Settings</h4>
-	<form onsubmit="dialog_admin_site_save();return false;">
-		<div class="form-group row">
-			<div class="offset-sm-3 offset-md-2 col-sm-9 col-md-10">
-				<input type="submit" class="btn btn-primary" title="Save" value="Save">
-			</div>
-		</div>
-		<div class="form-group row">
-			<label class="col-form-label col-sm-3 col-md-2" for="dialog_admin_site_websitetitle">Website Title</label>
-			<div class="col-sm-9 col-md-10">
-				<input type="text" id="dialog_admin_site_websitetitle" name="websitetitle" class="form-control" title="Website Title" placeholder="Website Title" value="' . $websitetitle . '">
-			</div>
-		</div>
-		<div class="form-group row">
-			<label class="col-form-label col-sm-3 col-md-2" for="dialog_admin_site_primaryemail">Primary Email</label>
-			<div class="col-sm-9 col-md-10">
-				<input type="text" id="dialog_admin_site_primaryemail" name="primaryemail" class="form-control" title="Primary Email" placeholder="Primary Email" value="' . $primaryemail . '">
-			</div>
-		</div>
-		<div class="form-group row">
-			<label class="col-form-label col-sm-3 col-md-2" for="dialog_admin_site_secondaryemail">Secondary Email</label>
-			<div class="col-sm-9 col-md-10">
-				<input type="text" id="dialog_admin_site_secondaryemail" name="secondaryemail" class="form-control" title="Secondary Email" placeholder="Secondary Email" value="' . $secondaryemail . '">
-			</div>
-		</div>
-		<h4>Page Defaults</h4>
-		<div class="form-group row">
-			<label class="col-form-label col-sm-3 col-md-2" for="dialog_admin_site_defaulttitle">Default Page Title</label>
-			<div class="col-sm-9 col-md-10">
-				<input type="text" id="dialog_admin_site_defaulttitle" name="defaulttitle" class="form-control" title="Default Page Title" placeholder="Default Page Title">
-			</div>
-		</div>
-		<div class="form-group row">
-			<label class="col-form-label col-sm-3 col-md-2" for="dialog_admin_site_defaulthead">Default Page <code>&lt;head&gt;</code></label>
-			<div class="col-sm-9 col-md-10">
-				<textarea id="dialog_admin_site_defaulthead" name="defaulthead" class="form-control monospace" title="Default Page Head" placeholder="Default Page Head" rows="8"></textarea>
-			</div>
-		</div>
-		<div class="form-group row">
-			<label class="col-form-label col-sm-3 col-md-2" for="dialog_admin_site_defaultbody">Default Page <code>&lt;body&gt;</code></label>
-			<div class="col-sm-9 col-md-10">
-				<textarea id="dialog_admin_site_defaultbody" name="defaultbody" class="form-control monospace" title="Default Page Body" placeholder="Default Page Body" rows="16"></textarea>
-			</div>
-		</div>
-		<div class="form-group row">
-			<label class="col-form-label col-sm-3 col-md-2" for="dialog_admin_site_defaultnav">Default Navigation Header</label>
-			<div class="col-sm-9 col-md-10">
-				<textarea id="dialog_admin_site_defaultnav" name="defaultnav" class="form-control monospace" title="Default Navigation Header" placeholder="Default Navigation Header" rows="16"></textarea>
-			</div>
-		</div>
-		<div class="form-group row">
-			<label class="col-form-label col-sm-3 col-md-2" for="dialog_admin_site_defaultfoot">Default Footer</label>
-			<div class="col-sm-9 col-md-10">
-				<textarea id="dialog_admin_site_defaultfoot" name="defaultfoot" class="form-control monospace" title="Default Footer" placeholder="Default Footer" rows="16"></textarea>
-			</div>
-		</div>
-	</form>
-</div>' . 
-// Foot
-'
-<div class="modal-footer">
-    <button type="button" class="btn btn-primary" title="Save" onclick="dialog_admin_site_save();">Save Changes</button>
-	<button type="button" class="btn btn-danger" title="Reset" onclick="dialog_admin_site_reset();">Reset Changes</button>
-	<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-</div>';
-},
+function dialog_admin_users_update(uid) {
+	module_ajax("edituser", {permissions: $("#dialog_admin_users_"+uid+"_perms_p").val(),
+	                         permviewbl: $("#dialog_admin_users_"+uid+"_perms_v").val(),
+							 permeditbl: $("#dialog_admin_users_"+uid+"_perms_e").val(),
+							 uid: uid,
+							 token: Cookies.get("token")}, function (data){
+		if (data == "TRUE") {
+			window.alert("Account updated.");
+		} else {
+			window.alert("Couldn\'t update this account.");
+		}
+	});
+	
+}
 
-// Script
-"secure-modal-site-script" => function ($defaulttitle, $defaulthead, $defaultbody, $defaultnav, $defaultfoot) {
-	return '
+function dialog_admin_users_delete(uid) {
+	if (window.confirm("Are you sure you want to remove this account?", "Yes", "No")) {
+		module_ajax("removeaccount", {uid: uid}, function (data) {
+			if (data == "TRUE") {
+				window.alert("Account removed.");
+				window.location.reload(true);
+			} else if (data == "OWNER") {
+				window.alert("You can\'t remove your own account if you\'re the only owner of this site!");
+			} else {
+				window.alert("Account couldn\'t be removed.");
+			}
+		});
+	}
+	
+}
+
+function dialog_admin_users_reset(uid) {
+	module_ajax("resetpwd", {uid: uid}, function (data) {
+		if (data == "TRUE") {
+			window.alert("Password reset to \\"password\\".");
+		} else {
+			window.alert("Something went wrong trying to reset a password.");
+		}
+	});
+}
+
 var defaulttitle = decodeURIComponent("' . $defaulttitle . '");
 var defaulthead = decodeURIComponent("' . $defaulthead . '");
 var defaultbody = decodeURIComponent("' . $defaultbody . '");
@@ -594,26 +669,7 @@ function dialog_admin_site_reset() {
 	$("#dialog_admin_site_defaultbody").val(defaultbody);
 	$("#dialog_admin_site_defaultnav").val(defaultnav);
 	$("#dialog_admin_site_defaultfoot").val(defaultfoot);
-}
-
-$(document).keydown(function(event) {
-    if (event.ctrlKey || event.metaKey) {
-        switch (String.fromCharCode(event.which).toLowerCase()) {
-        case "s":
-			if ($("#dialog_admin").is(":visible")) {
-			    event.preventDefault();
-			    dialog_admin_site_save();
-                break;
-			}
-		case "m":
-			if (!$("#dialog_admin").is(":visible")) {
-			    event.preventDefault();
-			    showDialog("admin");
-                break;
-			}
-		}
-    }
-});';
+}';
 },
 
 // Users Modal
@@ -773,92 +829,6 @@ $(document).keydown(function(event) {
 <div class="modal-footer">
 	<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
 </div>';
-},
-
-// Script
-"secure-modal-manageusers-script" => function () {
-	return '
-function dialog_admin_users_check_email() {
-	module_ajax("checkuser", {email: $("#dialog_admin_users_newemail").val()}, function (data) {
-		if (data == "TRUE") {
-			$("#dialog_admin_users_newemail").parent().removeClass("has-success");
-			$("#dialog_admin_users_newemail").parent().addClass("has-error");
-			$("#dialog_admin_users_newemail").parent().find(".fa-check").hide();
-			$("#dialog_users_newemail").parent().find(".fa-times").show();
-		} else {
-			$("#dialog_admin_users_newemail").parent().removeClass("has-error");
-			$("#dialog_admin_users_newemail").parent().addClass("has-success");
-			$("#dialog_admin_users_newemail").parent().find(".fa-times").hide();
-			$("#dialog_admin_users_newemail").parent().find(".fa-check").show();
-		}
-	});
-}
-
-function dialog_admin_users_new() {
-	permissions = "";
-	permissions += $("#dialog_admin_users_permission_owner").prop("checked") ? "owner;" : "";
-	permissions += $("#dialog_admin_users_permission_admin_managepages").prop("checked") ? "admin_managepages;" : "";
-	permissions += $("#dialog_admin_users_permission_admin_managesite").prop("checked") ? "admin_managesite;" : "";
-	permissions += $("#dialog_admin_users_permission_page_viewsecure").prop("checked") ? "page_viewsecure;" : "";
-	permissions += $("#dialog_admin_users_permission_page_editsecure").prop("checked") ? "page_editsecure;" : "";
-	permissions += $("#dialog_admin_users_permission_page_createsecure").prop("checked") ? "page_createsecure;" : "";
-	permissions += $("#dialog_admin_users_permission_page_deletesecure").prop("checked") ? "page_deletesecure;" : "";
-	permissions += $("#dialog_admin_users_permission_page_edit").prop("checked") ? "page_edit;" : "";
-	permissions += $("#dialog_admin_users_permission_page_create").prop("checked") ? "page_create;" : "";
-	permissions += $("#dialog_admin_users_permission_page_delete").prop("checked") ? "page_delete;" : "";
-	permissions += $("#dialog_admin_users_permission_toolbar").prop("checked") ? "toolbar;" : "";
-	module_ajax("newuser", {email: $("#dialog_admin_users_newemail").val(),
-	                        name: $("#dialog_admin_users_newname").val(),
-							permissions: permissions}, function (data) {
-		if (data != "TRUE") {
-			window.alert("Couldn\'t create account. Is "+$("#dialog_admin_users_newemail").val()+" already in use?");
-			return;
-		}
-		window.alert("Created account with email \\""+$("#dialog_admin_users_newemail").val()+"\\" and password \\"password\\".");
-		window.location.reload(true);
-	});
-}
-
-function dialog_admin_users_update(uid) {
-	module_ajax("edituser", {permissions: $("#dialog_admin_users_"+uid+"_perms_p").val(),
-	                         permviewbl: $("#dialog_admin_users_"+uid+"_perms_v").val(),
-							 permeditbl: $("#dialog_admin_users_"+uid+"_perms_e").val(),
-							 uid: uid,
-							 token: Cookies.get("token")}, function (data){
-		if (data == "TRUE") {
-			window.alert("Account updated.");
-		} else {
-			window.alert("Couldn\'t update this account.");
-		}
-	});
-	
-}
-
-function dialog_admin_users_delete(uid) {
-	if (window.confirm("Are you sure you want to remove this account?", "Yes", "No")) {
-		module_ajax("removeaccount", {uid: uid}, function (data) {
-			if (data == "TRUE") {
-				window.alert("Account removed.");
-				window.location.reload(true);
-			} else if (data == "OWNER") {
-				window.alert("You can\'t remove your own account if you\'re the only owner of this site!");
-			} else {
-				window.alert("Account couldn\'t be removed.");
-			}
-		});
-	}
-	
-}
-
-function dialog_admin_users_reset(uid) {
-	module_ajax("resetpwd", {uid: uid}, function (data) {
-		if (data == "TRUE") {
-			window.alert("Password reset to \\"password\\".");
-		} else {
-			window.alert("Something went wrong trying to reset a password.");
-		}
-	});
-}';
 },
 
 // Account Modal
