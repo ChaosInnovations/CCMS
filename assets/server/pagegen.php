@@ -289,16 +289,12 @@ class Page {
 				}
 				$secure .= $TEMPLATES["navbar-dropdown-end"];
 			}
-			$secure .= $TEMPLATES["secure-navbar-button-about"];
 			$secure .= $TEMPLATES["secure-navbar-nav-end"];
 			$secure .= $TEMPLATES["secure-navbar-end"];
 			$modals .= $TEMPLATES["secure-modal-start"]("dialog_account", "Account Details", "lg");
 			$modals .= $TEMPLATES["secure-modal-account-bodyfoot"]($authuser);
 			$modals .= $TEMPLATES["secure-modal-end"];
 			$script .= $TEMPLATES["secure-modal-account-script"];
-			$modals .= $TEMPLATES["secure-modal-start"]("dialog_about", "About Chaos CCMS", "md modal-dialog-centered");
-			$modals .= $TEMPLATES["secure-modal-about-bodyfoot"]($ccms_info->version, $ccms_info->release, $ccms_info->a_email, $ccms_info->author, $ccms_info->website, getconfig("creationdate"));
-			$modals .= $TEMPLATES["secure-modal-end"];
 			foreach ($availablemodules as $m) {
 				$mc = $modules[$m];
 				if (method_exists($mc, "getModal")) {
