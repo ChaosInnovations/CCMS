@@ -512,11 +512,6 @@ $(document).keydown(function(event) {
 		        <div class="tab-pane fade" id="dialog_admin_panel_site" role="tabpanel" aria-labelledby="dialog_admin_tab_site">
 					<form onsubmit="dialog_admin_site_save();return false;">
 						<div class="form-group row">
-							<div class="offset-sm-3 offset-md-2 col-sm-9 col-md-10">
-								<input type="submit" class="btn btn-primary" title="Save" value="Save">
-							</div>
-						</div>
-						<div class="form-group row">
 							<label class="col-form-label col-sm-3 col-md-2" for="dialog_admin_site_websitetitle">Website Title</label>
 							<div class="col-sm-9 col-md-10">
 								<input type="text" id="dialog_admin_site_websitetitle" name="websitetitle" class="form-control" title="Website Title" placeholder="Website Title" value="' . $websitetitle . '">
@@ -532,6 +527,11 @@ $(document).keydown(function(event) {
 							<label class="col-form-label col-sm-3 col-md-2" for="dialog_admin_site_secondaryemail">Secondary Email</label>
 							<div class="col-sm-9 col-md-10">
 								<input type="text" id="dialog_admin_site_secondaryemail" name="secondaryemail" class="form-control" title="Secondary Email" placeholder="Secondary Email" value="' . $secondaryemail . '">
+							</div>
+						</div>
+						<div class="form-group row">
+							<div class="offset-sm-3 offset-md-2 col-sm-9 col-md-10">
+								<input type="submit" class="btn btn-primary" title="Save" value="Save">
 							</div>
 						</div>
 						<h4>Page Defaults</h4>
