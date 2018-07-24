@@ -217,9 +217,9 @@ function ajax_resetpwd() {
 	$pwd = hash("sha512", "password");
 	$stmt = $conn->prepare("UPDATE access SET pwd=:pwd WHERE uid=:uid;");
 	$stmt->bindParam(":pwd", $pwd);
-	$stmt->bindParam(":uid", $uid);
+	$stmt->bindParam(":uid", $_POST["uid"]);
 	$stmt->execute();
-	echo "TRUE";
+	return "TRUE";
 }
 	
 function ajax_changepass() {
