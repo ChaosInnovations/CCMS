@@ -418,7 +418,7 @@ $(document).keydown(function(event) {
 						<div class="form-group row">
 							<label class="col-form-label col-sm-3 col-md-2" for="dialog_admin_users_newemail">Email</label>
 							<div class="input-group col-sm-9 col-md-10">
-								<input type="text" id="dialog_admin_users_newemail" class="form-control border-right-0 border-secondary" title="Email" placeholder="Email" oninput="dialog_manageusers_check_email();">
+								<input type="text" id="dialog_admin_users_newemail" class="form-control border-right-0 border-secondary" title="Email" placeholder="Email" oninput="dialog_admin_users_check_email();">
 								<div class="input-group-append">
 									<div class="input-group-text bg-transparent border-left-0 border-secondary">
 										<i class="fas fa-times" style="display:none;"></i>
