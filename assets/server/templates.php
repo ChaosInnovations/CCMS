@@ -4,47 +4,10 @@
 
 $TEMPLATES = [
 
-// Always shown
-"secure-navbar-start" =>
-'
-<nav class="navbar navbar-expand-lg navbar-dark secure-nav">
-<button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#snavbar-collapse" aria-expanded="false">
-<span class="navbar-toggler-icon"></span>
-</button>
-<div class="collapse navbar-collapse" id="snavbar-collapse">
-<ul class="navbar-nav mr-auto mt-2 mt-lg-0">',
-
-"navbar-dropdown-end" =>
-'
-</div></li>',
-
-// Shown if user has any admin privileges
-"secure-navbar-dropdown-admin-start" =>
-'
-<li class="nav-item dropdown">
-<a href="" class="nav-link dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Administration</a>
-<div class="dropdown-menu">',
-
-// Shown if user can manage site
-"secure-navbar-dropdown-admin-button-site" =>
-'
-<a class="dropdown-item" href="#" title="Manage Site" onclick="showDialog(\'managesite\');">Site Manager</a>',
-
-// Shown if user can manage users
-"secure-navbar-dropdown-admin-button-users" =>
-'
-<a class="dropdown-item" href="#" title="Manage Users" onclick="showDialog(\'manageusers\');">Users</a>',
-
-// Always shown
-"secure-navbar-nav-end" =>
-'</div></div>',
-
-// Always shown
-"secure-navbar-end" =>
-'
-</div></nav>',
-
-// Secure menu
+//  ____________
+// /            \
+//(  Admin Menu  )
+// \____________/
 
 "secure-menu" => function ($authuser, $securepages, $availablemodules, $modules) {
 	$canChat = true; // temporary chat permission
@@ -364,13 +327,62 @@ $(document).keydown(function(event) {
 <tr><td><a href="?p=' . $pid . '">' . $pid . '</a></td><td>' . urldecode($page["title"]) . '</td><td>' . $date . '</td><td>' . $secure . '</td><td>' . $remove . '</td></tr>';
 },
 
+
+"secure-modal-admin-usertools" => function ($uid, $email) {
+	return '
+<button class="btn btn-outline-danger" title="Delete Account" onclick="dialog_admin_users_delete(\'' . $uid . '\');"><i class="fas fa-trash"></i></button>
+<button class="btn btn-outline-secondary" title="Reset Password" onclick="dialog_admin_users_reset(\'' . $uid . '\');"><i class="fas fa-sync-alt"></i></button>
+<a class="btn btn-outline-secondary" href="mailto:' . $email . '" title="Send Email"><i class="fas fa-envelope"></i></a>';
+},
+
+"secure-modal-admin-userrow" => function ($user, $uid) {
+	global $TEMPLATES;
+	$auser = new AuthUser($user["uid"]);
+	$permissions = '
+<button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#dialog_admin_users_' . $user["uid"] . '_perms" aria-expanded="false" aria-controls="dialog_admin_users_' . $user["uid"] . '_perms">Show/Hide</button>
+<div class="collapse" id="dialog_admin_users_' . $user["uid"] . '_perms">
+	<div class="card">
+		<form class="form" onsubmit="dialog_admin_users_update(\'' . $user["uid"] . '\');return false;">
+			<div class="form-group">
+				<label class="col-form-label" for="dialog_admin_users_' . $user["uid"] . '_perms_p">Permissions</label>
+				<textarea id="dialog_admin_users_' . $user["uid"] . '_perms_p" name="perm" class="form-control monospace" title="Permissions" placeholder="No Permissions" rows="4">' . $user["permissions"] . '</textarea>
+			</div>
+			<div class="form-group"' . (!$auser->permissions->page_viewsecure ? ' style="display:none;"' : '')  . '>
+				<label class="col-form-label" for="dialog_admin_users_' . $user["uid"] . '_perms_v">View Blacklist</label>
+				<textarea id="dialog_admin_users_' . $user["uid"] . '_perms_v" name="view" class="form-control monospace" title="View Blacklist" placeholder="No Restrictions" rows="4">' . $user["permviewbl"] . '</textarea>
+			</div>
+			<div class="form-group"' . (!$auser->permissions->page_editsecure ? ' style="display:none;"' : '')  . '>
+				<label class="col-form-label" for="dialog_admin_users_' . $user["uid"] . '_perms_e">Edit Blacklist</label>
+				<textarea id="dialog_admin_users_' . $user["uid"] . '_perms_e" name="edit" class="form-control monospace" title="Edit Blacklist" placeholder="No Restrictions" rows="4">' . $user["permeditbl"] . '</textarea>
+			</div>
+			<input type="submit" class="btn btn-outline-secondary" title="Update" value="Update">
+		</form>
+	</div>
+</div>';
+	$col = '';
+	if ($user["uid"] == $uid) {
+		$permissions = '<p>owner;</p>';
+		$col = ' class="success"';
+	}
+	$date = date("l, F j, Y", strtotime($user["registered"]));
+	$tools = $TEMPLATES["secure-modal-admin-usertools"]($user["uid"], $user["email"]);
+	return '
+<tr' . $col . '><td>' . $user["name"] . '</td><td>' . $user["email"] . '</td><td>' . $permissions . '</td><td>' . $date . '</td><td>' . $tools . '</td></tr>';
+},
+
 // Body
 "secure-modal-admin-bodyfoot" => function($authuser, $pages, $users) {
 	global $TEMPLATES;
 	global $ccms_info;
+	
 	$pagelist = "";
 	foreach ($pages as $page) {
 		$pagelist .= $TEMPLATES["secure-modal-admin-pagerow"]($page);
+	}
+	
+	$userlist = "";
+	foreach ($users as $user) {
+		$userlist .= $TEMPLATES["secure-modal-admin-userrow"]($user, $authuser->uid);
 	}
 	
 	$websitetitle = getconfig("websitetitle");
@@ -402,7 +414,100 @@ $(document).keydown(function(event) {
 					</table>
 				</div>' . ($authuser->permissions->owner ? '
 		        <div class="tab-pane fade" id="dialog_admin_panel_users" role="tabpanel" aria-labelledby="dialog_admin_tab_users">
-					Users
+					<form role="edit" onsubmit="dialog_admin_users_new();return false;">
+						<div class="form-group row">
+							<label class="col-form-label col-sm-3 col-md-2" for="dialog_admin_users_newemail">Email</label>
+							<div class="input-group col-sm-9 col-md-10">
+								<input type="text" id="dialog_admin_users_newemail" class="form-control border-right-0 border-secondary" title="Email" placeholder="Email" oninput="dialog_manageusers_check_email();">
+								<div class="input-group-append">
+									<div class="input-group-text bg-transparent border-left-0 border-secondary">
+										<i class="fas fa-times" style="display:none;"></i>
+										<i class="fas fa-check" style="display:none;"></i>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="form-group row">
+							<label class="col-form-label col-sm-3 col-md-2" for="username">Name</label>
+							<div class="col-sm-9 col-md-10">
+								<input type="text" id="dialog_admin_users_newname" name="name" class="form-control border-secondary" title="Name" placeholder="Name">
+							</div>
+						</div>
+						<div class="form-group row">
+							<label class="col-form-label col-sm-3 col-md-2">Permissions</label>
+							<div class="col-sm-9 col-md-10">
+								<div class="row m-0">
+									<div class="form-check form-check-inline">
+										<input class="form-check-input" type="checkbox" id="dialog_admin_users_permission_owner" value="">
+										<label class="form-check-label">Owner</label>
+									</div>
+								</div>
+								<div class="row m-0">
+									<div class="form-check form-check-inline">
+										<input class="form-check-input" type="checkbox" id="dialog_admin_users_permission_admin_managepages">
+										<label class="form-check-label">Manage Pages</label>
+									</div>
+									<div class="form-check form-check-inline">
+										<input class="form-check-input" type="checkbox" id="dialog_admin_users_permission_admin_managesite">
+										<label class="form-check-label">Manage Site</label>
+									</div>
+								</div>
+								<div class="row m-0">
+									<div class="form-check form-check-inline">
+										<input class="form-check-input" type="checkbox" id="dialog_admin_users_permission_page_viewsecure">
+										<label class="form-check-label">View Secure Pages</label>
+									</div>
+									<div class="form-check form-check-inline">
+										<input class="form-check-input" type="checkbox" id="dialog_admin_users_permission_page_editsecure">
+										<label class="form-check-label">Edit Secure Pages</label>
+									</div>
+									<div class="form-check form-check-inline">
+										<input class="form-check-input" type="checkbox" id="dialog_admin_users_permission_page_createsecure">
+										<label class="form-check-label">Create Secure Pages</label>
+									</div>
+									<div class="form-check form-check-inline">
+										<input class="form-check-input" type="checkbox" id="dialog_admin_users_permission_page_deletesecure">
+										<label class="form-check-label">Delete Secure Pages</label>
+									</div>
+								</div>
+								<div class="row m-0">
+									<div class="form-check form-check-inline">
+										<input class="form-check-input" type="checkbox" id="dialog_admin_users_permission_page_edit">
+										<label class="form-check-label">Edit Pages</label>
+									</div>
+									<div class="form-check form-check-inline">
+										<input class="form-check-input" type="checkbox" id="dialog_admin_users_permission_page_create">
+										<label class="form-check-label">Create Pages</label>
+									</div>
+									<div class="form-check form-check-inline">
+										<input class="form-check-input" type="checkbox" id="dialog_admin_users_permission_page_delete">
+										<label class="form-check-label">Delete Pages</label>
+									</div>
+								</div>
+								<div class="row m-0">
+									<div class="form-check form-check-inline">
+										<input class="form-check-input" type="checkbox" id="dialog_admin_users_permission_toolbar">
+										<label class="form-check-label">View Toolbar</label>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="form-group row">
+							<div class="offset-sm-3 offset-md-2 col-md-10 col-sm-9">
+								<input type="submit" class="btn btn-primary" title="Create" value="Create">
+								<span class="dialog_admin_users_formfeedback_added" style="display:none;">User Created!</span>
+								<span class="dialog_admin_users_formfeedback_notadded" style="display:none;">There was an error. Check your connection.</span>
+							</div>
+						</div>
+					</form>
+					<hr width="90%" />
+					<h4>Current Users</h4>
+					<table class="table table-striped">
+						<thead>
+							<tr><th>Name</th><th>Email</th><th>Permissions</th><th>Registered On</th><th>Tools</th></tr>
+						</thead>
+						<tbody>' . $userlist . '</tbody>
+					</table>
 				</div>':'') . ($authuser->permissions->admin_managesite ? '
 		        <div class="tab-pane fade" id="dialog_admin_panel_site" role="tabpanel" aria-labelledby="dialog_admin_tab_site">
 					<form onsubmit="dialog_admin_site_save();return false;">
@@ -670,165 +775,6 @@ function dialog_admin_site_reset() {
 	$("#dialog_admin_site_defaultnav").val(defaultnav);
 	$("#dialog_admin_site_defaultfoot").val(defaultfoot);
 }';
-},
-
-// Users Modal
-//=============
-
-"secure-modal-manageusers-usertools" => function ($uid, $email) {
-	return '
-<button class="btn btn-outline-danger" title="Delete Account" onclick="dialog_admin_users_delete(\'' . $uid . '\');"><i class="fas fa-trash"></i></button>
-<button class="btn btn-outline-secondary" title="Reset Password" onclick="dialog_admin_users_reset(\'' . $uid . '\');"><i class="fas fa-sync-alt"></i></button>
-<a class="btn btn-outline-secondary" href="mailto:' . $email . '" title="Send Email"><i class="fas fa-envelope"></i></a>';
-},
-
-"secure-modal-manageusers-userrow" => function ($user, $uid) {
-	global $TEMPLATES;
-	$auser = new AuthUser($user["uid"]);
-	$permissions = '
-<button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#dialog_admin_users_' . $user["uid"] . '_perms" aria-expanded="false" aria-controls="dialog_admin_users_' . $user["uid"] . '_perms">Show/Hide</button>
-<div class="collapse" id="dialog_admin_users_' . $user["uid"] . '_perms">
-	<div class="card">
-		<form class="form" onsubmit="dialog_admin_users_update(\'' . $user["uid"] . '\');return false;">
-			<div class="form-group">
-				<label class="col-form-label" for="dialog_admin_users_' . $user["uid"] . '_perms_p">Permissions</label>
-				<textarea id="dialog_admin_users_' . $user["uid"] . '_perms_p" name="perm" class="form-control monospace" title="Permissions" placeholder="No Permissions" rows="4">' . $user["permissions"] . '</textarea>
-			</div>
-			<div class="form-group"' . (!$auser->permissions->page_viewsecure ? ' style="display:none;"' : '')  . '>
-				<label class="col-form-label" for="dialog_admin_users_' . $user["uid"] . '_perms_v">View Blacklist</label>
-				<textarea id="dialog_admin_users_' . $user["uid"] . '_perms_v" name="view" class="form-control monospace" title="View Blacklist" placeholder="No Restrictions" rows="4">' . $user["permviewbl"] . '</textarea>
-			</div>
-			<div class="form-group"' . (!$auser->permissions->page_editsecure ? ' style="display:none;"' : '')  . '>
-				<label class="col-form-label" for="dialog_admin_users_' . $user["uid"] . '_perms_e">Edit Blacklist</label>
-				<textarea id="dialog_admin_users_' . $user["uid"] . '_perms_e" name="edit" class="form-control monospace" title="Edit Blacklist" placeholder="No Restrictions" rows="4">' . $user["permeditbl"] . '</textarea>
-			</div>
-			<input type="submit" class="btn btn-outline-secondary" title="Update" value="Update">
-		</form>
-	</div>
-</div>';
-	$col = '';
-	if ($user["uid"] == $uid) {
-		$permissions = '<p>owner;</p>';
-		$col = ' class="success"';
-	}
-	$date = date("l, F j, Y", strtotime($user["registered"]));
-	$tools = $TEMPLATES["secure-modal-manageusers-usertools"]($user["uid"], $user["email"]);
-	return '
-<tr' . $col . '><td>' . $user["name"] . '</td><td>' . $user["email"] . '</td><td>' . $permissions . '</td><td>' . $date . '</td><td>' . $tools . '</td></tr>';
-},
-
-"secure-modal-manageusers-bodyfoot" => function ($users, $uid) {
-	global $TEMPLATES;
-// Body
-	$userlist = "";
-	foreach ($users as $user) {
-		$userlist .= $TEMPLATES["secure-modal-manageusers-userrow"]($user, $uid);
-	}
-    return '
-<div class="modal-body">
-	<h4>New User</h4>
-	<form role="edit" onsubmit="dialog_admin_users_new();return false;">
-		<div class="form-group row">
-			<label class="col-form-label col-sm-3 col-md-2" for="dialog_admin_users_newemail">Email</label>
-			<div class="input-group col-sm-9 col-md-10">
-				<input type="text" id="dialog_admin_users_newemail" class="form-control border-right-0 border-secondary" title="Email" placeholder="Email" oninput="dialog_manageusers_check_email();">
-				<div class="input-group-append">
-					<div class="input-group-text bg-transparent border-left-0 border-secondary">
-						<i class="fas fa-times" style="display:none;"></i>
-						<i class="fas fa-check" style="display:none;"></i>
-					</div>
-				</div>
-			</div>
-		</div>
-		<div class="form-group row">
-			<label class="col-form-label col-sm-3 col-md-2" for="username">Name</label>
-			<div class="col-sm-9 col-md-10">
-				<input type="text" id="dialog_admin_users_newname" name="name" class="form-control border-secondary" title="Name" placeholder="Name">
-			</div>
-		</div>
-		<div class="form-group row">
-		    <label class="col-form-label col-sm-3 col-md-2">Permissions</label>
-			<div class="col-sm-9 col-md-10">
-				<div class="row m-0">
-					<div class="form-check form-check-inline">
-						<input class="form-check-input" type="checkbox" id="dialog_admin_users_permission_owner" value="">
-						<label class="form-check-label">Owner</label>
-					</div>
-				</div>
-				<div class="row m-0">
-					<div class="form-check form-check-inline">
-						<input class="form-check-input" type="checkbox" id="dialog_admin_users_permission_admin_managepages">
-						<label class="form-check-label">Manage Pages</label>
-					</div>
-					<div class="form-check form-check-inline">
-						<input class="form-check-input" type="checkbox" id="dialog_admin_users_permission_admin_managesite">
-						<label class="form-check-label">Manage Site</label>
-					</div>
-				</div>
-				<div class="row m-0">
-					<div class="form-check form-check-inline">
-						<input class="form-check-input" type="checkbox" id="dialog_admin_users_permission_page_viewsecure">
-						<label class="form-check-label">View Secure Pages</label>
-					</div>
-					<div class="form-check form-check-inline">
-						<input class="form-check-input" type="checkbox" id="dialog_admin_users_permission_page_editsecure">
-						<label class="form-check-label">Edit Secure Pages</label>
-					</div>
-					<div class="form-check form-check-inline">
-						<input class="form-check-input" type="checkbox" id="dialog_admin_users_permission_page_createsecure">
-						<label class="form-check-label">Create Secure Pages</label>
-					</div>
-					<div class="form-check form-check-inline">
-						<input class="form-check-input" type="checkbox" id="dialog_admin_users_permission_page_deletesecure">
-						<label class="form-check-label">Delete Secure Pages</label>
-					</div>
-				</div>
-				<div class="row m-0">
-					<div class="form-check form-check-inline">
-						<input class="form-check-input" type="checkbox" id="dialog_admin_users_permission_page_edit">
-						<label class="form-check-label">Edit Pages</label>
-					</div>
-					<div class="form-check form-check-inline">
-						<input class="form-check-input" type="checkbox" id="dialog_admin_users_permission_page_create">
-						<label class="form-check-label">Create Pages</label>
-					</div>
-					<div class="form-check form-check-inline">
-						<input class="form-check-input" type="checkbox" id="dialog_admin_users_permission_page_delete">
-						<label class="form-check-label">Delete Pages</label>
-					</div>
-				</div>
-				<div class="row m-0">
-					<div class="form-check form-check-inline">
-						<input class="form-check-input" type="checkbox" id="dialog_admin_users_permission_toolbar">
-						<label class="form-check-label">View Toolbar</label>
-					</div>
-				</div>
-			</div>
-		</div>
-		<div class="form-group row">
-			<div class="offset-sm-3 offset-md-2 col-md-10 col-sm-9">
-				<input type="submit" class="btn btn-primary" title="Create" value="Create">
-				<span class="dialog_admin_users_formfeedback_added" style="display:none;">User Created!</span>
-				<span class="dialog_admin_users_formfeedback_notadded" style="display:none;">There was an error. Check your connection.</span>
-			</div>
-		</div>
-	</form>
-	<hr width="90%" />
-	<h4>Current Users</h4>
-	<table class="table table-striped">
-		<thead>
-			<tr><th>Name</th><th>Email</th><th>Permissions</th><th>Registered On</th><th>Tools</th></tr>
-		</thead>
-		<tbody>
-' . $userlist . '
-		</tbody>
-	</table>
-</div>' . 
-// Foot
-'
-<div class="modal-footer">
-	<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-</div>';
 },
 
 // Account Modal

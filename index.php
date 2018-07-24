@@ -129,7 +129,7 @@ $page->resolvePlaceholders();
 		<meta charset="utf-8" />
 		<link rel="stylesheet" href="/assets/site/css/fontawesome-5.0.13/css/fontawesome-all.min.css" media="all">
 		<link rel="stylesheet" href="/assets/site/css/bootstrap-4.1.1/css/bootstrap.min.css" media="all">
-		<link rel="stylesheet" href="/assets/site/css/site-1.2.0.css" media="all">
+		<link rel="stylesheet" href="/assets/site/css/site-1.3.0.css" media="all">
 		<link rel="stylesheet" type="text/css" href="/assets/site/js/codemirror/lib/codemirror.css" media="all">
 		<script src="/assets/site/js/jquery-3.3.1.min.js"></script>
 		<?php

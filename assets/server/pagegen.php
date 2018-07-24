@@ -222,9 +222,8 @@ class Page {
 	}
 	
 	function getHeader() {
-		global $authuser, $modules;
+		global $authuser;
 		global $conn, $sqlstat, $sqlerr;
-		global $ccms_info;
 		global $TEMPLATES;
 		global $availablemodules, $modules;
 		
@@ -238,14 +237,11 @@ class Page {
 				array_push($securepages, $p["pageid"]);
 			}
 		}
-	
-		$secure = "";
+		
 		$modals = "<div id=\"modals\">";
 		$script = "<script>";
 
 		if ($authuser->permissions->toolbar) {
-			
-			$secure .= $TEMPLATES["secure-navbar-start"];
 			
 			if ((($this->secure and $authuser->permissions->page_editsecure) or (!$this->secure and $authuser->permissions->page_edit)) and !in_array($this->pageid, $authuser->permissions->page_editblacklist)) {
 				$modals .= $TEMPLATES["secure-modal-start"]("dialog_edit", "Edit Page", "lg");
@@ -254,7 +250,6 @@ class Page {
 				$script .= $TEMPLATES["secure-modal-edit-script"]($this->pageid, $this->rawtitle, $this->rawhead, $this->rawbody);
 			}
 			if ($authuser->permissions->admin_managepages) {
-				$secure .= $TEMPLATES["secure-navbar-dropdown-admin-start"];
 				$stmt = $conn->prepare("SELECT pageid, title, secure, revision FROM content_pages ORDER BY pageid ASC;");
 				$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
 				$pages = $stmt->fetchAll();
@@ -265,29 +260,22 @@ class Page {
 				$modals .= $TEMPLATES["secure-modal-admin-bodyfoot"]($authuser, $pages, $users);
 				$script .= $TEMPLATES["secure-modal-admin-script"]();
 				$modals .= $TEMPLATES["secure-modal-end"];
-				if ($authuser->permissions->owner) {
-					$secure .= $TEMPLATES["secure-navbar-dropdown-admin-button-users"];
-					$modals .= $TEMPLATES["secure-modal-start"]("dialog_manageusers", "User Accounts", "lg");
-					$modals .= $TEMPLATES["secure-modal-manageusers-bodyfoot"]($users, $authuser->uid);
-					$modals .= $TEMPLATES["secure-modal-end"];
-				}
-				$secure .= $TEMPLATES["navbar-dropdown-end"];
 			}
-			$secure .= $TEMPLATES["secure-navbar-nav-end"];
-			$secure .= $TEMPLATES["secure-navbar-end"];
 			$modals .= $TEMPLATES["secure-modal-start"]("dialog_account", "Account Details", "lg");
 			$modals .= $TEMPLATES["secure-modal-account-bodyfoot"]($authuser);
 			$modals .= $TEMPLATES["secure-modal-end"];
 			$script .= $TEMPLATES["secure-modal-account-script"];
-			foreach ($availablemodules as $m) {
-				$mc = $modules[$m];
-				if (method_exists($mc, "getModal")) {
-					$modals .= $TEMPLATES["secure-modal-start"]("dialog_module_".$m, $mc->name, "lg");
-					$modals .= $mc->getModal();
-					$modals .= $TEMPLATES["secure-modal-end"];
-				}
-				if (method_exists($mc, "getScript")) {
-					$script .= $mc->getScript();
+			if ($authuser->permissions->admin_managesite) {
+				foreach ($availablemodules as $m) {
+					$mc = $modules[$m];
+					if (method_exists($mc, "getModal")) {
+						$modals .= $TEMPLATES["secure-modal-start"]("dialog_module_".$m, $mc->name, "lg");
+						$modals .= $mc->getModal();
+						$modals .= $TEMPLATES["secure-modal-end"];
+					}
+					if (method_exists($mc, "getScript")) {
+						$script .= $mc->getScript();
+					}
 				}
 			}
 		}
@@ -295,14 +283,14 @@ class Page {
 		$modals .= "</div>";
 		$script .= "</script>";
 		
-		$newSecure = "";
+		$secure = "";
 		
 		if ($authuser->permissions->toolbar) {
-			$newSecure .= $TEMPLATES["secure-menu"]($authuser, $securepages, $availablemodules, $modules);
+			$secure .= $TEMPLATES["secure-menu"]($authuser, $securepages, $availablemodules, $modules);
 		}
 		
 		$base = urldecode(getconfig("defaultnav"));
-		$header = $secure . $newSecure . $modals . $script . $base;
+		$header = $secure  . $modals . $script . $base;
 		return $header;
 	}
 
