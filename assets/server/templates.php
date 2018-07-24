@@ -234,11 +234,11 @@ $("#dialog_edit").on("shown.bs.modal", function() {
 	if (cm_edit_head == null) {
 		cm_edit_head = CodeMirror.fromTextArea(document.getElementById("dialog_edit_head"), {
 			lineNumbers: true,
-			mode:  "xml"
+			mode:  "htmlmixed"
 		});
 		cm_edit_body = CodeMirror.fromTextArea(document.getElementById("dialog_edit_body"), {
 			lineNumbers: true,
-			mode:  "xml"
+			mode:  "htmlmixed"
 		});
 	}
 });
@@ -395,15 +395,15 @@ $(document).keydown(function(event) {
 	return '
 <div class="modal-body">
 	<div class="row">
-	    <div class="col-3">
-		    <div class="nav flex-column nav-pills" id="dialog_admin_tabs" role="tablist" aria-orientation="vertical">
-		        <a class="nav-link active" id="dialog_admin_tab_pages" data-toggle="pill" href="#dialog_admin_panel_pages" role="tab" aria-controls="dialog_admin_panel_pages" aria-selected="true">Pages</a>
-		        ' . ($authuser->permissions->admin_managesite ? '<a class="nav-link" id="dialog_admin_tab_users" data-toggle="pill" href="#dialog_admin_panel_users" role="tab" aria-controls="dialog_admin_panel_users" aria-selected="false">Users</a>
-		        <a class="nav-link" id="dialog_admin_tab_site" data-toggle="pill" href="#dialog_admin_panel_site" role="tab" aria-controls="dialog_admin_panel_site" aria-selected="false">Site</a>':'').'
-		        <a class="nav-link" id="dialog_admin_tab_ccms" data-toggle="pill" href="#dialog_admin_panel_ccms" role="tab" aria-controls="dialog_admin_panel_ccms" aria-selected="false">Chaos CMS</a>
+	    <div class="col-12 col-md-3 mb-3">
+		    <div class="nav flex-md-column flex-row nav-pills" id="dialog_admin_tabs" role="tablist" aria-orientation="vertical">
+		        <a class="nav-link flex-sm-fill text-center text-md-left active" id="dialog_admin_tab_pages" data-toggle="pill" href="#dialog_admin_panel_pages" role="tab" aria-controls="dialog_admin_panel_pages" aria-selected="true">Pages</a>
+		        ' . ($authuser->permissions->admin_managesite ? '<a class="nav-link flex-sm-fill text-center text-md-left" id="dialog_admin_tab_users" data-toggle="pill" href="#dialog_admin_panel_users" role="tab" aria-controls="dialog_admin_panel_users" aria-selected="false">Users</a>
+		        <a class="nav-link flex-sm-fill text-center text-md-left" id="dialog_admin_tab_site" data-toggle="pill" href="#dialog_admin_panel_site" role="tab" aria-controls="dialog_admin_panel_site" aria-selected="false">Site</a>':'').'
+		        <a class="nav-link flex-sm-fill text-center text-md-left" id="dialog_admin_tab_ccms" data-toggle="pill" href="#dialog_admin_panel_ccms" role="tab" aria-controls="dialog_admin_panel_ccms" aria-selected="false">Chaos CMS</a>
 		    </div>
 	    </div>
-	    <div class="col-9">
+	    <div class="col-12 col-md-9">
 		    <div class="tab-content" id="dialog_admin_panels">
 		        <div class="tab-pane fade show active" id="dialog_admin_panel_pages" role="tabpanel" aria-labelledby="dialog_admin_tab_pages">
 					<table class="table table-striped">
@@ -732,19 +732,19 @@ $("#dialog_admin").on("shown.bs.modal", function() {
 	if (cm_admin_site_head == null) {
 		cm_admin_site_head = CodeMirror.fromTextArea(document.getElementById("dialog_admin_site_defaulthead"), {
 			lineNumbers: true,
-			mode:  "xml"
+			mode:  "htmlmixed"
 		});
 		cm_admin_site_body = CodeMirror.fromTextArea(document.getElementById("dialog_admin_site_defaultbody"), {
 			lineNumbers: true,
-			mode:  "xml"
+			mode:  "htmlmixed"
 		});
 		cm_admin_site_nav = CodeMirror.fromTextArea(document.getElementById("dialog_admin_site_defaultnav"), {
 			lineNumbers: true,
-			mode:  "xml"
+			mode:  "htmlmixed"
 		});
 		cm_admin_site_foot = CodeMirror.fromTextArea(document.getElementById("dialog_admin_site_defaultfoot"), {
 			lineNumbers: true,
-			mode:  "xml"
+			mode:  "htmlmixed"
 		});
 	}
 });
