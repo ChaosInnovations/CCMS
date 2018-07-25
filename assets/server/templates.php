@@ -4,112 +4,10 @@
 
 $TEMPLATES = [
 
-// Always shown
-"secure-navbar-start" =>
-'
-<nav class="navbar navbar-expand-lg navbar-dark secure-nav">
-<button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#snavbar-collapse" aria-expanded="false">
-<span class="navbar-toggler-icon"></span>
-</button>
-<div class="collapse navbar-collapse" id="snavbar-collapse">
-<ul class="navbar-nav mr-auto mt-2 mt-lg-0">',
-
-// Always shown
-"secure-navbar-button-home" =>
-'
-<li class="nav-item"><a class="nav-link" href="./" title="Home"><i class="fas fa-home"></i></a></li>',
-
-// Shown if user can edit
-"secure-navbar-button-edit" =>
-'
-<li class="nav-item"><a class="nav-link" href="#" title="Edit Page" onclick="showDialog(\'edit\');"><i class="fas fa-edit"></i></a></li>',
-
-// Shown if user can create pages
-"secure-navbar-button-create" =>
-'
-<li class="nav-item"><a class="nav-link" href="#" title="New Page" onclick="createPage();"><i class="fas fa-plus"></i></a></li>',
-
-// Shown if user can view or create secure pages
-"secure-navbar-dropdown-secure-start" =>
-'
-<li class="nav-item dropdown">
-<a href="" class="nav-link dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Secure Pages</a>
-<div class="dropdown-menu">',
-
-"navbar-separator" =>
-'
-<div class="dropdown-divider"></div>',
-
-// Shown if user can create secure pages
-"secure-navbar-dropdown-secure-button-create" =>
-'
-<a class="dropdown-item" href="#" title="New Secure Page" onclick="createSecurePage();"><i class="fas fa-plus"></i></a>',
-
-"navbar-dropdown-end" =>
-'
-</div></li>',
-
-// Shown if user can manage modules
-"secure-navbar-dropdown-modules-start" =>
-'
-<li class="nav-item dropdown">
-<a href="" class="nav-link dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Modules</a>
-<div class="dropdown-menu">',
-
-// Shown if user has any admin privileges
-"secure-navbar-dropdown-admin-start" =>
-'
-<li class="nav-item dropdown">
-<a href="" class="nav-link dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Administration</a>
-<div class="dropdown-menu">',
-
-// Shown if user can manage pages
-"secure-navbar-dropdown-admin-button-pages" =>
-'
-<a class="dropdown-item" href="#" title="Manage Pages" onclick="showDialog(\'managepages\');">Page Manager</a>',
-
-// Shown if user can manage site
-"secure-navbar-dropdown-admin-button-site" =>
-'
-<a class="dropdown-item" href="#" title="Manage Site" onclick="showDialog(\'managesite\');">Site Manager</a>',
-
-// Shown if user can manage users
-"secure-navbar-dropdown-admin-button-users" =>
-'
-<a class="dropdown-item" href="#" title="Manage Users" onclick="showDialog(\'manageusers\');">Users</a>',
-
-// Always shown
-"secure-navbar-dropdown-account-start" =>
-'
-<li class="nav-item dropdown">
-<a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Account</a>
-<div class="dropdown-menu">',
-
-// Always shown
-"secure-navbar-dropdown-account-button-details" =>
-'
-<a href="#" class="dropdown-item" title="Account Details" onclick="showDialog(\'account\');">Details</a>',
-
-// Always shown
-"secure-navbar-dropdown-account-button-logout" =>
-'
-<a href="#" class="dropdown-item" title="Log Out" onclick="logout();"><i class="fas fa-sign-out-alt"></i></a>',
-
-// Always shown
-"secure-navbar-button-about" =>
-'
-<li a class="nav-item"><a href="#" class="nav-link" title="About" onclick="showDialog(\'about\');">About</a></li>',
-
-// Always shown
-"secure-navbar-nav-end" =>
-'</div></div>',
-
-// Always shown
-"secure-navbar-end" =>
-'
-</div></nav>',
-
-// Secure menu
+//  ____________
+// /            \
+//(  Admin Menu  )
+// \____________/
 
 "secure-menu" => function ($authuser, $securepages, $availablemodules, $modules) {
 	$canChat = true; // temporary chat permission
@@ -336,11 +234,11 @@ $("#dialog_edit").on("shown.bs.modal", function() {
 	if (cm_edit_head == null) {
 		cm_edit_head = CodeMirror.fromTextArea(document.getElementById("dialog_edit_head"), {
 			lineNumbers: true,
-			mode:  "xml"
+			mode:  "htmlmixed"
 		});
 		cm_edit_body = CodeMirror.fromTextArea(document.getElementById("dialog_edit_body"), {
 			lineNumbers: true,
-			mode:  "xml"
+			mode:  "htmlmixed"
 		});
 	}
 });
@@ -410,16 +308,16 @@ $(document).keydown(function(event) {
 });';
 },
 
-// Page Manager Modal
+// Administration Modal
 //====================
 
-"secure-modal-pages-pagerow" => function ($page) {
+"secure-modal-admin-pagerow" => function ($page) {
 	$pid = $page["pageid"];
 	$check = $page["secure"] ? ' checked' : '';
 	$secure = '
-<input type="checkbox" id="dialog_managepages_secure_' . $pid . '" onclick="dialog_managepages_togglesecure(\'' . $pid . '\');"' . $check . '>';
+<input type="checkbox" id="dialog_admin_pages_secure_' . $pid . '" onclick="dialog_admin_pages_togglesecure(\'' . $pid . '\');"' . $check . '>';
 	$remove = '
-<button class="btn btn-outline-danger" title="Delete Page" onclick="dialog_managepages_delete(\'' . $pid . '\');"><i class="fas fa-trash"></i></button>';
+<button class="btn btn-outline-danger" title="Delete Page" onclick="dialog_admin_pages_delete(\'' . $pid . '\');"><i class="fas fa-trash"></i></button>';
 	if (in_array($page["pageid"], ["home", "notfound", "secureaccess"])) {
 		$secure = '';
 		$remove = '';
@@ -429,23 +327,263 @@ $(document).keydown(function(event) {
 <tr><td><a href="?p=' . $pid . '">' . $pid . '</a></td><td>' . urldecode($page["title"]) . '</td><td>' . $date . '</td><td>' . $secure . '</td><td>' . $remove . '</td></tr>';
 },
 
-// Body
-"secure-modal-pages-bodyfoot" => function($pages) {
+
+"secure-modal-admin-usertools" => function ($uid, $email) {
+	return '
+<button class="btn btn-outline-danger" title="Delete Account" onclick="dialog_admin_users_delete(\'' . $uid . '\');"><i class="fas fa-trash"></i></button>
+<button class="btn btn-outline-secondary" title="Reset Password" onclick="dialog_admin_users_reset(\'' . $uid . '\');"><i class="fas fa-sync-alt"></i></button>
+<a class="btn btn-outline-secondary" href="mailto:' . $email . '" title="Send Email"><i class="fas fa-envelope"></i></a>';
+},
+
+"secure-modal-admin-userrow" => function ($user, $uid) {
 	global $TEMPLATES;
+	$auser = new AuthUser($user["uid"]);
+	$permissions = '
+<button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#dialog_admin_users_' . $user["uid"] . '_perms" aria-expanded="false" aria-controls="dialog_admin_users_' . $user["uid"] . '_perms">Show/Hide</button>
+<div class="collapse" id="dialog_admin_users_' . $user["uid"] . '_perms">
+	<div class="card">
+		<form class="form" onsubmit="dialog_admin_users_update(\'' . $user["uid"] . '\');return false;">
+			<div class="form-group">
+				<label class="col-form-label" for="dialog_admin_users_' . $user["uid"] . '_perms_p">Permissions</label>
+				<textarea id="dialog_admin_users_' . $user["uid"] . '_perms_p" name="perm" class="form-control monospace" title="Permissions" placeholder="No Permissions" rows="4">' . $user["permissions"] . '</textarea>
+			</div>
+			<div class="form-group"' . (!$auser->permissions->page_viewsecure ? ' style="display:none;"' : '')  . '>
+				<label class="col-form-label" for="dialog_admin_users_' . $user["uid"] . '_perms_v">View Blacklist</label>
+				<textarea id="dialog_admin_users_' . $user["uid"] . '_perms_v" name="view" class="form-control monospace" title="View Blacklist" placeholder="No Restrictions" rows="4">' . $user["permviewbl"] . '</textarea>
+			</div>
+			<div class="form-group"' . (!$auser->permissions->page_editsecure ? ' style="display:none;"' : '')  . '>
+				<label class="col-form-label" for="dialog_admin_users_' . $user["uid"] . '_perms_e">Edit Blacklist</label>
+				<textarea id="dialog_admin_users_' . $user["uid"] . '_perms_e" name="edit" class="form-control monospace" title="Edit Blacklist" placeholder="No Restrictions" rows="4">' . $user["permeditbl"] . '</textarea>
+			</div>
+			<input type="submit" class="btn btn-outline-secondary" title="Update" value="Update">
+		</form>
+	</div>
+</div>';
+	$col = '';
+	if ($user["uid"] == $uid) {
+		$permissions = '<p>owner;</p>';
+		$col = ' class="success"';
+	}
+	$date = date("l, F j, Y", strtotime($user["registered"]));
+	$tools = $TEMPLATES["secure-modal-admin-usertools"]($user["uid"], $user["email"]);
+	return '
+<tr' . $col . '><td>' . $user["name"] . '</td><td>' . $user["email"] . '</td><td>' . $permissions . '</td><td>' . $date . '</td><td>' . $tools . '</td></tr>';
+},
+
+// Body
+"secure-modal-admin-bodyfoot" => function($authuser, $pages, $users) {
+	global $TEMPLATES;
+	global $ccms_info;
+	
 	$pagelist = "";
 	foreach ($pages as $page) {
-		$pagelist .= $TEMPLATES["secure-modal-pages-pagerow"]($page);
+		$pagelist .= $TEMPLATES["secure-modal-admin-pagerow"]($page);
 	}
+	
+	$userlist = "";
+	foreach ($users as $user) {
+		$userlist .= $TEMPLATES["secure-modal-admin-userrow"]($user, $authuser->uid);
+	}
+	
+	$websitetitle = getconfig("websitetitle");
+	$primaryemail = getconfig("primaryemail");
+	$secondaryemail = getconfig("secondaryemail");
+	
+	$releasedate = date("l, F j, Y", strtotime($ccms_info->release));
+	$creationdate = date("l, F j, Y", strtotime(getconfig("creationdate")));
+	
 	return '
 <div class="modal-body">
-    <table class="table table-striped">
-		<thead>
-			<tr><th>Page ID</th><th>Title</th><th>Last Revision</th><th><i class="fas fa-lock"></i></th><th>Delete</th></tr>
-		</thead>
-		<tbody>
-' . $pagelist . '
-		</tbody>
-	</table>
+	<div class="row">
+	    <div class="col-12 col-md-3 mb-3">
+		    <div class="nav flex-md-column flex-row nav-pills" id="dialog_admin_tabs" role="tablist" aria-orientation="vertical">
+		        <a class="nav-link flex-sm-fill text-center text-md-left active" id="dialog_admin_tab_pages" data-toggle="pill" href="#dialog_admin_panel_pages" role="tab" aria-controls="dialog_admin_panel_pages" aria-selected="true">Pages</a>
+		        ' . ($authuser->permissions->owner ? '<a class="nav-link flex-sm-fill text-center text-md-left" id="dialog_admin_tab_users" data-toggle="pill" href="#dialog_admin_panel_users" role="tab" aria-controls="dialog_admin_panel_users" aria-selected="false">Users</a>':'').'
+		        ' . ($authuser->permissions->admin_managesite ? '<a class="nav-link flex-sm-fill text-center text-md-left" id="dialog_admin_tab_site" data-toggle="pill" href="#dialog_admin_panel_site" role="tab" aria-controls="dialog_admin_panel_site" aria-selected="false">Site</a>':'').'
+		        <a class="nav-link flex-sm-fill text-center text-md-left" id="dialog_admin_tab_ccms" data-toggle="pill" href="#dialog_admin_panel_ccms" role="tab" aria-controls="dialog_admin_panel_ccms" aria-selected="false">Chaos CMS</a>
+		    </div>
+	    </div>
+	    <div class="col-12 col-md-9">
+		    <div class="tab-content" id="dialog_admin_panels">
+		        <div class="tab-pane fade show active" id="dialog_admin_panel_pages" role="tabpanel" aria-labelledby="dialog_admin_tab_pages">
+					<table class="table table-striped">
+						<thead>
+							<tr><th>Page ID</th><th>Title</th><th>Last Revision</th><th><i class="fas fa-lock"></i></th><th>Delete</th></tr>
+						</thead>
+						<tbody>' . $pagelist . '</tbody>
+					</table>
+				</div>' . ($authuser->permissions->owner ? '
+		        <div class="tab-pane fade" id="dialog_admin_panel_users" role="tabpanel" aria-labelledby="dialog_admin_tab_users">
+					<form role="edit" onsubmit="dialog_admin_users_new();return false;">
+						<div class="form-group row">
+							<label class="col-form-label col-sm-3 col-md-2" for="dialog_admin_users_newemail">Email</label>
+							<div class="input-group col-sm-9 col-md-10">
+								<input type="text" id="dialog_admin_users_newemail" class="form-control border-right-0 border-secondary" title="Email" placeholder="Email" oninput="dialog_admin_users_check_email();">
+								<div class="input-group-append">
+									<div class="input-group-text bg-transparent border-left-0 border-secondary">
+										<i class="fas fa-times" style="display:none;"></i>
+										<i class="fas fa-check" style="display:none;"></i>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="form-group row">
+							<label class="col-form-label col-sm-3 col-md-2" for="username">Name</label>
+							<div class="col-sm-9 col-md-10">
+								<input type="text" id="dialog_admin_users_newname" name="name" class="form-control border-secondary" title="Name" placeholder="Name">
+							</div>
+						</div>
+						<div class="form-group row">
+							<label class="col-form-label col-sm-3 col-md-2">Permissions</label>
+							<div class="col-sm-9 col-md-10">
+								<div class="row m-0">
+									<div class="form-check form-check-inline">
+										<input class="form-check-input" type="checkbox" id="dialog_admin_users_permission_owner" value="">
+										<label class="form-check-label">Owner</label>
+									</div>
+								</div>
+								<div class="row m-0">
+									<div class="form-check form-check-inline">
+										<input class="form-check-input" type="checkbox" id="dialog_admin_users_permission_admin_managepages">
+										<label class="form-check-label">Manage Pages</label>
+									</div>
+									<div class="form-check form-check-inline">
+										<input class="form-check-input" type="checkbox" id="dialog_admin_users_permission_admin_managesite">
+										<label class="form-check-label">Manage Site</label>
+									</div>
+								</div>
+								<div class="row m-0">
+									<div class="form-check form-check-inline">
+										<input class="form-check-input" type="checkbox" id="dialog_admin_users_permission_page_viewsecure">
+										<label class="form-check-label">View Secure Pages</label>
+									</div>
+									<div class="form-check form-check-inline">
+										<input class="form-check-input" type="checkbox" id="dialog_admin_users_permission_page_editsecure">
+										<label class="form-check-label">Edit Secure Pages</label>
+									</div>
+									<div class="form-check form-check-inline">
+										<input class="form-check-input" type="checkbox" id="dialog_admin_users_permission_page_createsecure">
+										<label class="form-check-label">Create Secure Pages</label>
+									</div>
+									<div class="form-check form-check-inline">
+										<input class="form-check-input" type="checkbox" id="dialog_admin_users_permission_page_deletesecure">
+										<label class="form-check-label">Delete Secure Pages</label>
+									</div>
+								</div>
+								<div class="row m-0">
+									<div class="form-check form-check-inline">
+										<input class="form-check-input" type="checkbox" id="dialog_admin_users_permission_page_edit">
+										<label class="form-check-label">Edit Pages</label>
+									</div>
+									<div class="form-check form-check-inline">
+										<input class="form-check-input" type="checkbox" id="dialog_admin_users_permission_page_create">
+										<label class="form-check-label">Create Pages</label>
+									</div>
+									<div class="form-check form-check-inline">
+										<input class="form-check-input" type="checkbox" id="dialog_admin_users_permission_page_delete">
+										<label class="form-check-label">Delete Pages</label>
+									</div>
+								</div>
+								<div class="row m-0">
+									<div class="form-check form-check-inline">
+										<input class="form-check-input" type="checkbox" id="dialog_admin_users_permission_toolbar">
+										<label class="form-check-label">View Toolbar</label>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="form-group row">
+							<div class="offset-sm-3 offset-md-2 col-md-10 col-sm-9">
+								<input type="submit" class="btn btn-primary" title="Create" value="Create">
+								<span class="dialog_admin_users_formfeedback_added" style="display:none;">User Created!</span>
+								<span class="dialog_admin_users_formfeedback_notadded" style="display:none;">There was an error. Check your connection.</span>
+							</div>
+						</div>
+					</form>
+					<hr width="90%" />
+					<h4>Current Users</h4>
+					<table class="table table-striped">
+						<thead>
+							<tr><th>Name</th><th>Email</th><th>Permissions</th><th>Registered On</th><th>Tools</th></tr>
+						</thead>
+						<tbody>' . $userlist . '</tbody>
+					</table>
+				</div>':'') . ($authuser->permissions->admin_managesite ? '
+		        <div class="tab-pane fade" id="dialog_admin_panel_site" role="tabpanel" aria-labelledby="dialog_admin_tab_site">
+					<form onsubmit="dialog_admin_site_save();return false;">
+						<div class="form-group row">
+							<label class="col-form-label col-sm-3 col-md-2" for="dialog_admin_site_websitetitle">Website Title</label>
+							<div class="col-sm-9 col-md-10">
+								<input type="text" id="dialog_admin_site_websitetitle" name="websitetitle" class="form-control" title="Website Title" placeholder="Website Title" value="' . $websitetitle . '">
+							</div>
+						</div>
+						<div class="form-group row">
+							<label class="col-form-label col-sm-3 col-md-2" for="dialog_admin_site_primaryemail">Primary Email</label>
+							<div class="col-sm-9 col-md-10">
+								<input type="text" id="dialog_admin_site_primaryemail" name="primaryemail" class="form-control" title="Primary Email" placeholder="Primary Email" value="' . $primaryemail . '">
+							</div>
+						</div>
+						<div class="form-group row">
+							<label class="col-form-label col-sm-3 col-md-2" for="dialog_admin_site_secondaryemail">Secondary Email</label>
+							<div class="col-sm-9 col-md-10">
+								<input type="text" id="dialog_admin_site_secondaryemail" name="secondaryemail" class="form-control" title="Secondary Email" placeholder="Secondary Email" value="' . $secondaryemail . '">
+							</div>
+						</div>
+						<div class="form-group row">
+							<div class="offset-sm-3 offset-md-2 col-sm-9 col-md-10">
+								<input type="submit" class="btn btn-primary" title="Save" value="Save">
+							</div>
+						</div>
+						<h4>Page Defaults</h4>
+						<div class="form-group row">
+							<label class="col-form-label col-sm-3 col-md-2" for="dialog_admin_site_defaulttitle">Default Page Title</label>
+							<div class="col-sm-9 col-md-10">
+								<input type="text" id="dialog_admin_site_defaulttitle" name="defaulttitle" class="form-control" title="Default Page Title" placeholder="Default Page Title">
+							</div>
+						</div>
+						<div class="form-group row">
+							<label class="col-form-label col-sm-3 col-md-2" for="dialog_admin_site_defaulthead">Default Page <code>&lt;head&gt;</code></label>
+							<div class="col-sm-9 col-md-10">
+								<textarea id="dialog_admin_site_defaulthead" name="defaulthead" class="form-control monospace" title="Default Page Head" placeholder="Default Page Head" rows="8"></textarea>
+							</div>
+						</div>
+						<div class="form-group row">
+							<label class="col-form-label col-sm-3 col-md-2" for="dialog_admin_site_defaultbody">Default Page <code>&lt;body&gt;</code></label>
+							<div class="col-sm-9 col-md-10">
+								<textarea id="dialog_admin_site_defaultbody" name="defaultbody" class="form-control monospace" title="Default Page Body" placeholder="Default Page Body" rows="16"></textarea>
+							</div>
+						</div>
+						<div class="form-group row">
+							<label class="col-form-label col-sm-3 col-md-2" for="dialog_admin_site_defaultnav">Default Navigation Header</label>
+							<div class="col-sm-9 col-md-10">
+								<textarea id="dialog_admin_site_defaultnav" name="defaultnav" class="form-control monospace" title="Default Navigation Header" placeholder="Default Navigation Header" rows="16"></textarea>
+							</div>
+						</div>
+						<div class="form-group row">
+							<label class="col-form-label col-sm-3 col-md-2" for="dialog_admin_site_defaultfoot">Default Footer</label>
+							<div class="col-sm-9 col-md-10">
+								<textarea id="dialog_admin_site_defaultfoot" name="defaultfoot" class="form-control monospace" title="Default Footer" placeholder="Default Footer" rows="16"></textarea>
+							</div>
+						</div>
+						<div class="form-group row">
+							<div class="offset-sm-3 offset-md-2 col-sm-9 col-md-10">
+								<input type="submit" class="btn btn-primary" title="Save" value="Save">
+							</div>
+						</div>
+					</form>
+				</div>':'').'
+		        <div class="tab-pane fade" id="dialog_admin_panel_ccms" role="tabpanel" aria-labelledby="dialog_admin_tab_ccms">
+					<dl>
+						<div class="row"><dt class="col-12 col-sm-4">Version</dt><dd class="col-12 col-sm-8">' . $ccms_info->version .'</dd></div>
+						<div class="row"><dt class="col-12 col-sm-4">Release Date</dt><dd class="col-12 col-sm-8">' . $releasedate . '</dd></div>
+						<div class="row"><dt class="col-12 col-sm-4">Author</dt><dd class="col-12 col-sm-8"><a href="mailto:' . $ccms_info->a_email .'" title="' . $ccms_info->a_email .'">' . $ccms_info->author .'</a></dd></div>
+						<div class="row"><dt class="col-12 col-sm-4">CCMS Website</dt><dd class="col-12 col-sm-8"><a href="' . $ccms_info->website .'" title="Chaos CMS Website">' . $ccms_info->website .'</a></dd></div>
+						<div class="row"><dt class="col-12 col-sm-4">Website created</dt><dd class="col-12 col-sm-8">' . $creationdate .'</dd></div>
+					</dl>
+				</div>
+		    </div>
+	    </div>
+	</div>
 </div>' .
 // Foot
 '
@@ -454,13 +592,20 @@ $(document).keydown(function(event) {
 </div>';
 },
 
-"secure-modal-pages-script" =>
-'
-function dialog_managepages_togglesecure(pid) {
-	state = $("#dialog_managepages_secure_" + pid).prop("checked");
+"secure-modal-admin-script" => function() {
+	
+	$defaulttitle = getconfig("defaulttitle");
+	$defaulthead = getconfig("defaulthead");
+	$defaultbody = getconfig("defaultbody");
+	$defaultnav = getconfig("defaultnav");
+	$defaultfoot = getconfig("defaultfoot");
+	
+	return '
+function dialog_admin_pages_togglesecure(pid) {
+	state = $("#dialog_admin_pages_secure_" + pid).prop("checked");
 	module_ajax("securepage", {pid: pid, state: state}, function(data) {
 		if (data == "FALSE") {
-			$("#dialog_managepages_secure_" + pid).prop("checked", !state);
+			$("#dialog_admin-pages_secure_" + pid).prop("checked", !state);
 			window.alert("Couldn\'t change secure state.");
 		} else if (data == "SPECIAL") {
 			window.alert("Can\'t change security of \'home,\' \'notfound,\' or \'secureaccess\' pages!");
@@ -471,7 +616,7 @@ function dialog_managepages_togglesecure(pid) {
 	});
 }
 
-function dialog_managepages_delete(pid) {
+function dialog_admin_pages_delete(pid) {
 	if (!window.confirm("Are you sure you want to permanently delete this page?", "Yes", "No")) {
 		return;
 	}
@@ -484,376 +629,53 @@ function dialog_managepages_delete(pid) {
 			window.location.reload(true);
 		}
 	});
-}',
+}
 
-// Site Manager Modal
-//====================
-
-
-"secure-modal-site-bodyfoot" => function ($websitetitle, $primaryemail, $secondaryemail) {
-// Body
-    return '
-<div class="modal-body">
-	<h4>Site Settings</h4>
-	<form onsubmit="dialog_managesite_save();return false;">
-		<div class="form-group row">
-			<div class="offset-sm-3 offset-md-2 col-sm-9 col-md-10">
-				<input type="submit" class="btn btn-primary" title="Save" value="Save">
-			</div>
-		</div>
-		<div class="form-group row">
-			<label class="col-form-label col-sm-3 col-md-2" for="dialog_managesite_websitetitle">Website Title</label>
-			<div class="col-sm-9 col-md-10">
-				<input type="text" id="dialog_managesite_websitetitle" name="websitetitle" class="form-control" title="Website Title" placeholder="Website Title" value="' . $websitetitle . '">
-			</div>
-		</div>
-		<div class="form-group row">
-			<label class="col-form-label col-sm-3 col-md-2" for="dialog_managesite_primaryemail">Primary Email</label>
-			<div class="col-sm-9 col-md-10">
-				<input type="text" id="dialog_managesite_primaryemail" name="primaryemail" class="form-control" title="Primary Email" placeholder="Primary Email" value="' . $primaryemail . '">
-			</div>
-		</div>
-		<div class="form-group row">
-			<label class="col-form-label col-sm-3 col-md-2" for="dialog_managesite_secondaryemail">Secondary Email</label>
-			<div class="col-sm-9 col-md-10">
-				<input type="text" id="dialog_managesite_secondaryemail" name="secondaryemail" class="form-control" title="Secondary Email" placeholder="Secondary Email" value="' . $secondaryemail . '">
-			</div>
-		</div>
-		<h4>Page Defaults</h4>
-		<div class="form-group row">
-			<label class="col-form-label col-sm-3 col-md-2" for="dialog_managesite_defaulttitle">Default Page Title</label>
-			<div class="col-sm-9 col-md-10">
-				<input type="text" id="dialog_managesite_defaulttitle" name="defaulttitle" class="form-control" title="Default Page Title" placeholder="Default Page Title">
-			</div>
-		</div>
-		<div class="form-group row">
-			<label class="col-form-label col-sm-3 col-md-2" for="dialog_managesite_defaulthead">Default Page <code>&lt;head&gt;</code></label>
-			<div class="col-sm-9 col-md-10">
-				<textarea id="dialog_managesite_defaulthead" name="defaulthead" class="form-control monospace" title="Default Page Head" placeholder="Default Page Head" rows="8"></textarea>
-			</div>
-		</div>
-		<div class="form-group row">
-			<label class="col-form-label col-sm-3 col-md-2" for="dialog_managesite_defaultbody">Default Page <code>&lt;body&gt;</code></label>
-			<div class="col-sm-9 col-md-10">
-				<textarea id="dialog_managesite_defaultbody" name="defaultbody" class="form-control monospace" title="Default Page Body" placeholder="Default Page Body" rows="16"></textarea>
-			</div>
-		</div>
-		<div class="form-group row">
-			<label class="col-form-label col-sm-3 col-md-2" for="dialog_managesite_defaultnav">Default Navigation Header</label>
-			<div class="col-sm-9 col-md-10">
-				<textarea id="dialog_managesite_defaultnav" name="defaultnav" class="form-control monospace" title="Default Navigation Header" placeholder="Default Navigation Header" rows="16"></textarea>
-			</div>
-		</div>
-		<div class="form-group row">
-			<label class="col-form-label col-sm-3 col-md-2" for="dialog_managesite_defaultfoot">Default Footer</label>
-			<div class="col-sm-9 col-md-10">
-				<textarea id="dialog_managesite_defaultfoot" name="defaultfoot" class="form-control monospace" title="Default Footer" placeholder="Default Footer" rows="16"></textarea>
-			</div>
-		</div>
-	</form>
-</div>' . 
-// Foot
-'
-<div class="modal-footer">
-    <button type="button" class="btn btn-primary" title="Save" onclick="dialog_managesite_save();">Save Changes</button>
-	<button type="button" class="btn btn-danger" title="Reset" onclick="dialog_managesite_reset();">Reset Changes</button>
-	<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-</div>';
-},
-
-// Script
-"secure-modal-site-script" => function ($defaulttitle, $defaulthead, $defaultbody, $defaultnav, $defaultfoot) {
-	return '
-var defaulttitle = decodeURIComponent("' . $defaulttitle . '");
-var defaulthead = decodeURIComponent("' . $defaulthead . '");
-var defaultbody = decodeURIComponent("' . $defaultbody . '");
-var defaultnav = decodeURIComponent("' . $defaultnav . '");
-var defaultfoot = decodeURIComponent("' . $defaultfoot . '");
-$("#dialog_managesite_defaulttitle").val(defaulttitle);
-$("#dialog_managesite_defaulthead").val(defaulthead);
-$("#dialog_managesite_defaultbody").val(defaultbody);
-$("#dialog_managesite_defaultnav").val(defaultnav);
-$("#dialog_managesite_defaultfoot").val(defaultfoot);
-var cm_managesite_head = null;
-var cm_managesite_body = null;
-var cm_managesite_nav = null;
-var cm_managesite_foot = null;
-
-$("#dialog_managesite").on("shown.bs.modal", function() {
-	if (cm_managesite_head == null) {
-		cm_managesite_head = CodeMirror.fromTextArea(document.getElementById("dialog_managesite_defaulthead"), {
-			lineNumbers: true,
-			mode:  "xml"
-		});
-		cm_managesite_body = CodeMirror.fromTextArea(document.getElementById("dialog_managesite_defaultbody"), {
-			lineNumbers: true,
-			mode:  "xml"
-		});
-		cm_managesite_nav = CodeMirror.fromTextArea(document.getElementById("dialog_managesite_defaultnav"), {
-			lineNumbers: true,
-			mode:  "xml"
-		});
-		cm_managesite_foot = CodeMirror.fromTextArea(document.getElementById("dialog_managesite_defaultfoot"), {
-			lineNumbers: true,
-			mode:  "xml"
-		});
-	}
-});
-
-function dialog_managesite_save() {
-	module_ajax("setconfig", {websitetitle: $("#dialog_managesite_websitetitle").val(),
-	                               primaryemail: $("#dialog_managesite_primaryemail").val(),
-								   secondaryemail: $("#dialog_managesite_secondaryemail").val(),
-								   defaulttitle: encodeURIComponent($("#dialog_managesite_defaulttitle").val()),
-								   defaulthead: encodeURIComponent(cm_managesite_head.getValue()),
-								   defaultbody: encodeURIComponent(cm_managesite_body.getValue()),
-								   defaultnav: encodeURIComponent(cm_managesite_nav.getValue()),
-								   defaultfoot: encodeURIComponent(cm_managesite_foot.getValue()),
-	                               token: Cookies.get("token")}, function(data){
+function dialog_admin_users_check_email() {
+	module_ajax("checkuser", {email: $("#dialog_admin_users_newemail").val()}, function (data) {
 		if (data == "TRUE") {
-			window.alert("Website settings saved.");
-			window.location.reload(true);
+			$("#dialog_admin_users_newemail").parent().removeClass("has-success");
+			$("#dialog_admin_users_newemail").parent().addClass("has-error");
+			$("#dialog_admin_users_newemail").parent().find(".fa-check").hide();
+			$("#dialog_users_newemail").parent().find(".fa-times").show();
 		} else {
-			window.alert("Couldn\'t save settings.");
+			$("#dialog_admin_users_newemail").parent().removeClass("has-error");
+			$("#dialog_admin_users_newemail").parent().addClass("has-success");
+			$("#dialog_admin_users_newemail").parent().find(".fa-times").hide();
+			$("#dialog_admin_users_newemail").parent().find(".fa-check").show();
 		}
 	});
 }
 
-function dialog_managesite_reset() {
-	$("#dialog_managesite_defaulttitle").val(defaulttitle);
-	$("#dialog_managesite_defaulthead").val(defaulthead);
-	$("#dialog_managesite_defaultbody").val(defaultbody);
-	$("#dialog_managesite_defaultnav").val(defaultnav);
-	$("#dialog_managesite_defaultfoot").val(defaultfoot);
-}
-
-$(document).keydown(function(event) {
-    if (event.ctrlKey || event.metaKey) {
-        switch (String.fromCharCode(event.which).toLowerCase()) {
-        case "s":
-			if ($("#dialog_managesite").is(":visible")) {
-			    event.preventDefault();
-			    dialog_managesite_save();
-                break;
-			}
-		case "m":
-			if (!$("#dialog_managesite").is(":visible")) {
-			    event.preventDefault();
-			    showDialog("managesite");
-                break;
-			}
-		}
-    }
-});';
-},
-
-// Users Modal
-//=============
-
-"secure-modal-manageusers-usertools" => function ($uid, $email) {
-	return '
-<button class="btn btn-outline-danger" title="Delete Account" onclick="dialog_manageusers_delete(\'' . $uid . '\');"><i class="fas fa-trash"></i></button>
-<button class="btn btn-outline-secondary" title="Reset Password" onclick="dialog_manageusers_reset(\'' . $uid . '\');"><i class="fas fa-sync-alt"></i></button>
-<a class="btn btn-outline-secondary" href="mailto:' . $email . '" title="Send Email"><i class="fas fa-envelope"></i></a>';
-},
-
-"secure-modal-manageusers-userrow" => function ($user, $uid) {
-	global $TEMPLATES;
-	$auser = new AuthUser($user["uid"]);
-	$permissions = '
-<button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#dialog_manageusers_' . $user["uid"] . '_perms" aria-expanded="false" aria-controls="dialog_manageusers_' . $user["uid"] . '_perms">Show/Hide</button>
-<div class="collapse" id="dialog_manageusers_' . $user["uid"] . '_perms">
-	<div class="card">
-		<form class="form" onsubmit="dialog_manageusers_update(\'' . $user["uid"] . '\');return false;">
-			<div class="form-group">
-				<label class="col-form-label" for="dialog_manageusers_' . $user["uid"] . '_perms_p">Permissions</label>
-				<textarea id="dialog_manageusers_' . $user["uid"] . '_perms_p" name="perm" class="form-control monospace" title="Permissions" placeholder="No Permissions" rows="4">' . $user["permissions"] . '</textarea>
-			</div>
-			<div class="form-group"' . (!$auser->permissions->page_viewsecure ? ' style="display:none;"' : '')  . '>
-				<label class="col-form-label" for="dialog_manageusers_' . $user["uid"] . '_perms_v">View Blacklist</label>
-				<textarea id="dialog_manageusers_' . $user["uid"] . '_perms_v" name="view" class="form-control monospace" title="View Blacklist" placeholder="No Restrictions" rows="4">' . $user["permviewbl"] . '</textarea>
-			</div>
-			<div class="form-group"' . (!$auser->permissions->page_editsecure ? ' style="display:none;"' : '')  . '>
-				<label class="col-form-label" for="dialog_manageusers_' . $user["uid"] . '_perms_e">Edit Blacklist</label>
-				<textarea id="dialog_manageusers_' . $user["uid"] . '_perms_e" name="edit" class="form-control monospace" title="Edit Blacklist" placeholder="No Restrictions" rows="4">' . $user["permeditbl"] . '</textarea>
-			</div>
-			<input type="submit" class="btn btn-outline-secondary" title="Update" value="Update">
-		</form>
-	</div>
-</div>';
-	$col = '';
-	if ($user["uid"] == $uid) {
-		$permissions = '<p>owner;</p>';
-		$col = ' class="success"';
-	}
-	$date = date("l, F j, Y", strtotime($user["registered"]));
-	$tools = $TEMPLATES["secure-modal-manageusers-usertools"]($user["uid"], $user["email"]);
-	return '
-<tr' . $col . '><td>' . $user["name"] . '</td><td>' . $user["email"] . '</td><td>' . $permissions . '</td><td>' . $date . '</td><td>' . $tools . '</td></tr>';
-},
-
-"secure-modal-manageusers-bodyfoot" => function ($users, $uid) {
-	global $TEMPLATES;
-// Body
-	$userlist = "";
-	foreach ($users as $user) {
-		$userlist .= $TEMPLATES["secure-modal-manageusers-userrow"]($user, $uid);
-	}
-    return '
-<div class="modal-body">
-	<h4>New User</h4>
-	<form role="edit" onsubmit="dialog_manageusers_new();return false;">
-		<div class="form-group row">
-			<label class="col-form-label col-sm-3 col-md-2" for="dialog_manageusers_newemail">Email</label>
-			<div class="input-group col-sm-9 col-md-10">
-				<input type="text" id="dialog_manageusers_newemail" class="form-control border-right-0 border-secondary" title="Email" placeholder="Email" oninput="dialog_manageusers_check_email();">
-				<div class="input-group-append">
-					<div class="input-group-text bg-transparent border-left-0 border-secondary">
-						<i class="fas fa-times" style="display:none;"></i>
-						<i class="fas fa-check" style="display:none;"></i>
-					</div>
-				</div>
-			</div>
-		</div>
-		<div class="form-group row">
-			<label class="col-form-label col-sm-3 col-md-2" for="username">Name</label>
-			<div class="col-sm-9 col-md-10">
-				<input type="text" id="dialog_manageusers_newname" name="name" class="form-control border-secondary" title="Name" placeholder="Name">
-			</div>
-		</div>
-		<div class="form-group row">
-		    <label class="col-form-label col-sm-3 col-md-2">Permissions</label>
-			<div class="col-sm-9 col-md-10">
-				<div class="row m-0">
-					<div class="form-check form-check-inline">
-						<input class="form-check-input" type="checkbox" id="dialog_manageusers_permission_owner" value="">
-						<label class="form-check-label">Owner</label>
-					</div>
-				</div>
-				<div class="row m-0">
-					<div class="form-check form-check-inline">
-						<input class="form-check-input" type="checkbox" id="dialog_manageusers_permission_admin_managepages">
-						<label class="form-check-label">Manage Pages</label>
-					</div>
-					<div class="form-check form-check-inline">
-						<input class="form-check-input" type="checkbox" id="dialog_manageusers_permission_admin_managesite">
-						<label class="form-check-label">Manage Site</label>
-					</div>
-				</div>
-				<div class="row m-0">
-					<div class="form-check form-check-inline">
-						<input class="form-check-input" type="checkbox" id="dialog_manageusers_permission_page_viewsecure">
-						<label class="form-check-label">View Secure Pages</label>
-					</div>
-					<div class="form-check form-check-inline">
-						<input class="form-check-input" type="checkbox" id="dialog_manageusers_permission_page_editsecure">
-						<label class="form-check-label">Edit Secure Pages</label>
-					</div>
-					<div class="form-check form-check-inline">
-						<input class="form-check-input" type="checkbox" id="dialog_manageusers_permission_page_createsecure">
-						<label class="form-check-label">Create Secure Pages</label>
-					</div>
-					<div class="form-check form-check-inline">
-						<input class="form-check-input" type="checkbox" id="dialog_manageusers_permission_page_deletesecure">
-						<label class="form-check-label">Delete Secure Pages</label>
-					</div>
-				</div>
-				<div class="row m-0">
-					<div class="form-check form-check-inline">
-						<input class="form-check-input" type="checkbox" id="dialog_manageusers_permission_page_edit">
-						<label class="form-check-label">Edit Pages</label>
-					</div>
-					<div class="form-check form-check-inline">
-						<input class="form-check-input" type="checkbox" id="dialog_manageusers_permission_page_create">
-						<label class="form-check-label">Create Pages</label>
-					</div>
-					<div class="form-check form-check-inline">
-						<input class="form-check-input" type="checkbox" id="dialog_manageusers_permission_page_delete">
-						<label class="form-check-label">Delete Pages</label>
-					</div>
-				</div>
-				<div class="row m-0">
-					<div class="form-check form-check-inline">
-						<input class="form-check-input" type="checkbox" id="dialog_manageusers_permission_toolbar">
-						<label class="form-check-label">View Toolbar</label>
-					</div>
-				</div>
-			</div>
-		</div>
-		<div class="form-group row">
-			<div class="offset-sm-3 offset-md-2 col-md-10 col-sm-9">
-				<input type="submit" class="btn btn-primary" title="Create" value="Create">
-				<span class="dialog_manageusers_formfeedback_added" style="display:none;">User Created!</span>
-				<span class="dialog_manageusers_formfeedback_notadded" style="display:none;">There was an error. Check your connection.</span>
-			</div>
-		</div>
-	</form>
-	<hr width="90%" />
-	<h4>Current Users</h4>
-	<table class="table table-striped">
-		<thead>
-			<tr><th>Name</th><th>Email</th><th>Permissions</th><th>Registered On</th><th>Tools</th></tr>
-		</thead>
-		<tbody>
-' . $userlist . '
-		</tbody>
-	</table>
-</div>' . 
-// Foot
-'
-<div class="modal-footer">
-	<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-</div>';
-},
-
-// Script
-"secure-modal-manageusers-script" => function () {
-	return '
-function dialog_manageusers_check_email() {
-	module_ajax("checkuser", {email: $("#dialog_manageusers_newemail").val()}, function (data) {
-		if (data == "TRUE") {
-			$("#dialog_manageusers_newemail").parent().removeClass("has-success");
-			$("#dialog_manageusers_newemail").parent().addClass("has-error");
-			$("#dialog_manageusers_newemail").parent().find(".fa-check").hide();
-			$("#dialog_manageusers_newemail").parent().find(".fa-times").show();
-		} else {
-			$("#dialog_manageusers_newemail").parent().removeClass("has-error");
-			$("#dialog_manageusers_newemail").parent().addClass("has-success");
-			$("#dialog_manageusers_newemail").parent().find(".fa-times").hide();
-			$("#dialog_manageusers_newemail").parent().find(".fa-check").show();
-		}
-	});
-}
-
-function dialog_manageusers_new() {
+function dialog_admin_users_new() {
 	permissions = "";
-	permissions += $("#dialog_manageusers_permission_owner").prop("checked") ? "owner;" : "";
-	permissions += $("#dialog_manageusers_permission_admin_managepages").prop("checked") ? "admin_managepages;" : "";
-	permissions += $("#dialog_manageusers_permission_admin_managesite").prop("checked") ? "admin_managesite;" : "";
-	permissions += $("#dialog_manageusers_permission_page_viewsecure").prop("checked") ? "page_viewsecure;" : "";
-	permissions += $("#dialog_manageusers_permission_page_editsecure").prop("checked") ? "page_editsecure;" : "";
-	permissions += $("#dialog_manageusers_permission_page_createsecure").prop("checked") ? "page_createsecure;" : "";
-	permissions += $("#dialog_manageusers_permission_page_deletesecure").prop("checked") ? "page_deletesecure;" : "";
-	permissions += $("#dialog_manageusers_permission_page_edit").prop("checked") ? "page_edit;" : "";
-	permissions += $("#dialog_manageusers_permission_page_create").prop("checked") ? "page_create;" : "";
-	permissions += $("#dialog_manageusers_permission_page_delete").prop("checked") ? "page_delete;" : "";
-	permissions += $("#dialog_manageusers_permission_toolbar").prop("checked") ? "toolbar;" : "";
-	module_ajax("newuser", {email: $("#dialog_manageusers_newemail").val(),
-	                        name: $("#dialog_manageusers_newname").val(),
+	permissions += $("#dialog_admin_users_permission_owner").prop("checked") ? "owner;" : "";
+	permissions += $("#dialog_admin_users_permission_admin_managepages").prop("checked") ? "admin_managepages;" : "";
+	permissions += $("#dialog_admin_users_permission_admin_managesite").prop("checked") ? "admin_managesite;" : "";
+	permissions += $("#dialog_admin_users_permission_page_viewsecure").prop("checked") ? "page_viewsecure;" : "";
+	permissions += $("#dialog_admin_users_permission_page_editsecure").prop("checked") ? "page_editsecure;" : "";
+	permissions += $("#dialog_admin_users_permission_page_createsecure").prop("checked") ? "page_createsecure;" : "";
+	permissions += $("#dialog_admin_users_permission_page_deletesecure").prop("checked") ? "page_deletesecure;" : "";
+	permissions += $("#dialog_admin_users_permission_page_edit").prop("checked") ? "page_edit;" : "";
+	permissions += $("#dialog_admin_users_permission_page_create").prop("checked") ? "page_create;" : "";
+	permissions += $("#dialog_admin_users_permission_page_delete").prop("checked") ? "page_delete;" : "";
+	permissions += $("#dialog_admin_users_permission_toolbar").prop("checked") ? "toolbar;" : "";
+	module_ajax("newuser", {email: $("#dialog_admin_users_newemail").val(),
+	                        name: $("#dialog_admin_users_newname").val(),
 							permissions: permissions}, function (data) {
 		if (data != "TRUE") {
-			window.alert("Couldn\'t create account. Is "+$("#dialog_manageusers_newemail").val()+" already in use?");
+			window.alert("Couldn\'t create account. Is "+$("#dialog_admin_users_newemail").val()+" already in use?");
 			return;
 		}
-		window.alert("Created account with email \\""+$("#dialog_manageusers_newemail").val()+"\\" and password \\"password\\".");
+		window.alert("Created account with email \\""+$("#dialog_admin_users_newemail").val()+"\\" and password \\"password\\".");
 		window.location.reload(true);
 	});
 }
 
-function dialog_manageusers_update(uid) {
-	module_ajax("edituser", {permissions: $("#dialog_manageusers_"+uid+"_perms_p").val(),
-	                         permviewbl: $("#dialog_manageusers_"+uid+"_perms_v").val(),
-							 permeditbl: $("#dialog_manageusers_"+uid+"_perms_e").val(),
+function dialog_admin_users_update(uid) {
+	module_ajax("edituser", {permissions: $("#dialog_admin_users_"+uid+"_perms_p").val(),
+	                         permviewbl: $("#dialog_admin_users_"+uid+"_perms_v").val(),
+							 permeditbl: $("#dialog_admin_users_"+uid+"_perms_e").val(),
 							 uid: uid,
 							 token: Cookies.get("token")}, function (data){
 		if (data == "TRUE") {
@@ -865,7 +687,7 @@ function dialog_manageusers_update(uid) {
 	
 }
 
-function dialog_manageusers_delete(uid) {
+function dialog_admin_users_delete(uid) {
 	if (window.confirm("Are you sure you want to remove this account?", "Yes", "No")) {
 		module_ajax("removeaccount", {uid: uid}, function (data) {
 			if (data == "TRUE") {
@@ -881,7 +703,7 @@ function dialog_manageusers_delete(uid) {
 	
 }
 
-function dialog_manageusers_reset(uid) {
+function dialog_admin_users_reset(uid) {
 	module_ajax("resetpwd", {uid: uid}, function (data) {
 		if (data == "TRUE") {
 			window.alert("Password reset to \\"password\\".");
@@ -891,18 +713,68 @@ function dialog_manageusers_reset(uid) {
 	});
 }
 
-$(document).keydown(function(event) {
-    if (event.ctrlKey || event.metaKey) {
-        switch (String.fromCharCode(event.which).toLowerCase()) {
-		case "u":
-			if (!$("#dialog_manageusers").is(":visible")) {
-			    event.preventDefault();
-			    showDialog("manageusers");
-                break;
-			}
+var defaulttitle = decodeURIComponent("' . $defaulttitle . '");
+var defaulthead = decodeURIComponent("' . $defaulthead . '");
+var defaultbody = decodeURIComponent("' . $defaultbody . '");
+var defaultnav = decodeURIComponent("' . $defaultnav . '");
+var defaultfoot = decodeURIComponent("' . $defaultfoot . '");
+$("#dialog_admin_site_defaulttitle").val(defaulttitle);
+$("#dialog_admin_site_defaulthead").val(defaulthead);
+$("#dialog_admin_site_defaultbody").val(defaultbody);
+$("#dialog_admin_site_defaultnav").val(defaultnav);
+$("#dialog_admin_site_defaultfoot").val(defaultfoot);
+var cm_admin_site_head = null;
+var cm_admin_site_body = null;
+var cm_admin_site_nav = null;
+var cm_admin_site_foot = null;
+
+$("#dialog_admin").on("shown.bs.modal", function() {
+	if (cm_admin_site_head == null) {
+		cm_admin_site_head = CodeMirror.fromTextArea(document.getElementById("dialog_admin_site_defaulthead"), {
+			lineNumbers: true,
+			mode:  "htmlmixed"
+		});
+		cm_admin_site_body = CodeMirror.fromTextArea(document.getElementById("dialog_admin_site_defaultbody"), {
+			lineNumbers: true,
+			mode:  "htmlmixed"
+		});
+		cm_admin_site_nav = CodeMirror.fromTextArea(document.getElementById("dialog_admin_site_defaultnav"), {
+			lineNumbers: true,
+			mode:  "htmlmixed"
+		});
+		cm_admin_site_foot = CodeMirror.fromTextArea(document.getElementById("dialog_admin_site_defaultfoot"), {
+			lineNumbers: true,
+			mode:  "htmlmixed"
+		});
+	}
+});
+
+function dialog_admin_site_save() {
+	module_ajax("setconfig", {websitetitle: $("#dialog_admin_site_websitetitle").val(),
+	                               primaryemail: $("#dialog_admin_site_primaryemail").val(),
+								   secondaryemail: $("#dialog_admin_site_secondaryemail").val(),
+								   defaulttitle: encodeURIComponent($("#dialog_admin_site_defaulttitle").val()),
+								   defaulthead: encodeURIComponent(cm_admin_site_head.getValue()),
+								   defaultbody: encodeURIComponent(cm_admin_site_body.getValue()),
+								   defaultnav: encodeURIComponent(cm_admin_site_nav.getValue()),
+								   defaultfoot: encodeURIComponent(cm_admin_site_foot.getValue()),
+	                               token: Cookies.get("token")}, function(data){
+		if (data == "TRUE") {
+			window.alert("Website settings saved.");
+			window.location.reload(true);
+		} else {
+			window.alert("Couldn\'t save settings.");
 		}
-    }
-});';
+	});
+}
+
+function dialog_admin_site_reset() {
+	$("#dialog_admin_site_defaulttitle").val(defaulttitle);
+	$("#dialog_admin_site_defaulthead").val(defaulthead);
+	$("#dialog_admin_site_defaultbody").val(defaultbody);
+	$("#dialog_admin_site_defaultnav").val(defaultnav);
+	$("#dialog_admin_site_defaultfoot").val(defaultfoot);
+}';
 },
 
 // Account Modal
@@ -1097,30 +969,6 @@ $(document).keydown(function(event) {
 		}
     }
 });',
-
-// About Modal
-//=============
-
-// Body
-"secure-modal-about-bodyfoot" => function ($version, $release, $aemail, $author, $website, $creation){
-	$releasedate = date("l, F j, Y", strtotime($release));
-	$creationdate = date("l, F j, Y", strtotime($creation));
-	return '
-<div class="modal-body">
-	<dl>
-		<div class="row"><dt class="col-12 col-sm-4">Version</dt><dd class="col-12 col-sm-8">' . $version .'</dd></div>
-		<div class="row"><dt class="col-12 col-sm-4">Release Date</dt><dd class="col-12 col-sm-8">' . $releasedate . '</dd></div>
-		<div class="row"><dt class="col-12 col-sm-4">Author</dt><dd class="col-12 col-sm-8"><a href="mailto:' . $aemail .'" title="' . $aemail .'">' . $author .'</a></dd></div>
-		<div class="row"><dt class="col-12 col-sm-4">CCMS Website</dt><dd class="col-12 col-sm-8"><a href="' . $website .'" title="Chaos CMS Website">' . $website .'</a></dd></div>
-		<div class="row"><dt class="col-12 col-sm-4">Website created</dt><dd class="col-12 col-sm-8">' . $creationdate .'</dd></div>
-	</dl>
-</div>' .
-// Foot
-'
-<div class="modal-footer">
-	<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-</div>';
-},
 
 //   ________
 //  /        \
