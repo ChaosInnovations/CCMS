@@ -29,6 +29,7 @@
     background-color:#000;
     color:#FFF;
     cursor:pointer;
+	transition:background-color 0.25s,color 0.25s,border-color 0.25s;
 }
 
 .secureMenu-icon:hover, .secureMenu-icon.active {
@@ -67,7 +68,7 @@
   
 .secureMenu-iconGroup.horizontal > .secureMenu-icon {
     margin-left:-40px;
-    transition: margin-left 0.5s;
+    transition: margin-left 0.5s,background-color 0.25s,color 0.25s,border-color 0.25s;
 }
   
 .secureMenu-iconGroup.horizontal.visible > .secureMenu-icon {
@@ -76,7 +77,7 @@
   
 .secureMenu-iconGroup.vertical > .secureMenu-icon {
     margin-bottom:-40px;
-    transition: margin-bottom 0.5s;
+    transition: margin-bottom 0.5s,background-color 0.25s,color 0.25s,border-color 0.25s;
 }
   
 .secureMenu-iconGroup.vertical.visible > .secureMenu-icon {
@@ -84,11 +85,13 @@
 }
   
 .secureMenu-pane {
-    position:absolute;
-    left:45px;
-    bottom:45px;
+    position:fixed;
+    left:65px;
+    bottom:65px;
     width:175px;
     height:220px;
+	max-width:70%;
+	max-height:70%;
     border-radius:5px;
     border:1px solid #FFF;
   	padding-top:0.15rem;
@@ -99,9 +102,10 @@
     color:#FFF;
     transition: width, height 0.5s, 0.5s;
     overflow-y:auto;
+	overflow-x:hidden;
 }
   
-.secureMenu-pane > hr {
+.secureMenu-pane hr {
     width:90%;
     margin-top:0.15rem;
     margin-bottom:0.15rem;
@@ -129,4 +133,118 @@
   
 .secureMenu-pane.collapsed.horizontal {
   	width: 0px;
+}
+
+.secureMenu-pane.expanded-lg {
+	height:600px;
+	width:500px;
+}
+
+.secureMenu-pane.expanded-sm {
+	height:400px;
+	width:300px;
+}
+
+button.collab-lg {
+    text-align: center;
+    vertical-align: middle;
+    border: 1px solid #FFF;
+    padding: .375rem .75rem;
+    font-size: 1rem;
+    line-height: 1.5;
+    border-radius: .25rem;
+    background-color: #000;
+    color: #fff;
+    cursor: pointer;
+    transition: background-color 0.25s, border-color 0.25s, color 0.25s;
+	margin-top:0.4rem;
+	width:4rem;
+}
+
+button.collab-lg:hover {
+    border: 1px solid #000;
+    background-color: #fff;
+    color: #000;
+}
+
+.collab-page {
+    position: absolute;
+    top: 0px;
+    left: 100%;
+    background-color: #000;
+    transition: left 0.5s;
+    height: 100%;
+	text-align: center !important;
+}
+
+.collab-page.out {
+	left: 0;
+}
+
+.collab-page > .collab-back {
+    border: none;
+    background-color: #000;
+    color: #fff;
+    position: absolute;
+    left: 0.3rem;
+    top: 0px;
+    cursor: pointer;
+}
+
+.collab-person {
+	padding: 0 25px 0 25px;
+	margin: 15px 0 15px 0;
+	display: flex;
+}
+
+.collab-person .status {
+	width: 15px;
+	flex: none;
+	border-radius: 7.5px;
+}
+
+.collab-person .status.online {
+	background-color: #0F0;
+}
+
+.collab-person .status.offline {
+	background-color: #F00;
+}
+
+.collab-person .status.offline > .status.online {
+	position:relative;
+	width:100%;
+	min-height:15px;
+}
+
+.collab-person .info {
+	padding-left: 5px;
+}
+
+.collab-person .collab-chat {
+	text-align: center;
+    vertical-align: middle;
+    border: 1px solid #FFF;
+    padding: .375rem .75rem;
+    font-size: 1rem;
+    line-height: 1.5;
+    border-radius: .25rem;
+    background-color: #000;
+    color: #fff;
+    cursor: pointer;
+    transition: background-color 0.25s, border-color 0.25s, color 0.25s;
+	margin-top:0.4rem;
+}
+
+.collab-person .collab-chat:hover {
+    border: 1px solid #000;
+    background-color: #FFF;
+    color: #000;
+}
+
+.collab-person .collab-chat:disabled {
+	cursor: not-allowed;
+    border: 1px solid #777;
+    background-color: #000;
+    color: #777;
 }

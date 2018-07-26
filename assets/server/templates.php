@@ -10,6 +10,8 @@ $TEMPLATES = [
 // \____________/
 
 "secure-menu" => function ($authuser, $securepages, $availablemodules, $modules) {
+	global $TEMPLATES;
+	
 	$canChat = true; // temporary chat permission
 	
 	$securePageListing = '';
@@ -67,9 +69,7 @@ $TEMPLATES = [
     </div>' : '') . '
   </div>' . ($canChat ? '
   <div id="secureMenu_pane-collab" class="secureMenu-pane collapsed vertical" style="display:none;">
-    <b>Collaborate</b>
-    <hr />
-    <i>Coming Soon</i>
+    ' . $TEMPLATES["secure-collab-pane"]() . '
   </div>' : '') . ($authuser->permissions->admin_managesite ? '
   <div id="secureMenu_pane-module" class="secureMenu-pane collapsed horizontal" style="display:none;">
     <b>Modules</b>
@@ -131,6 +131,106 @@ $TEMPLATES = [
 </div>';
 },
 
+//  _____________
+// /             \
+//(  Collab Pane  )
+// \_____________/
+
+"secure-collab-pane" => function () {
+	return '
+<b>Collaborate</b>
+<hr />
+<button class="collab-lg" onclick="collab_showPage(\'rooms\');" title="Chat Rooms"><i class="fas fa-comments"></i></button><br />
+<button class="collab-lg" onclick="collab_showPage(\'todo\');" title="TODO Lists"><i class="fas fa-clipboard-list"></i></button><br />
+<button class="collab-lg" onclick="collab_showPage(\'people\');" title="People and Direct Messages"><i class="fas fa-users"></i></button><br />
+<div id="secureMenu_collab-rooms" class="collab-page">
+	<button class="collab-back" onclick="collab_hidePage(\'rooms\');" title="Go Back"><i class="fas fa-arrow-left"></i></button>
+	<b>Chat Rooms</b>
+	<hr />
+	<div id="secureMenu_collab-room-rid" class="collab-person">
+		<div class="status offline">
+		    <div class="status online" style="height:50%;">
+		    </div>
+		</div>
+		<div class="info">
+			Everyone<br />
+			<small><i>1/2 online</i></small>
+		</div>
+		<button class="collab-chat" title="Open Room" onclick="collab_showChat(\'rid\');"><i class="fas fa-comments"></i></button>
+	</div>
+</div>
+<div id="secureMenu_collab-todo" class="collab-page">
+	<button class="collab-back" onclick="collab_hidePage(\'todo\');" title="Go Back"><i class="fas fa-arrow-left"></i></button>
+	<b>TODO Lists</b>
+	<hr />
+	<i>Coming Soon</i>
+</div>
+<div id="secureMenu_collab-people" class="collab-page">
+	<button class="collab-back" onclick="collab_hidePage(\'people\');" title="Go Back"><i class="fas fa-arrow-left"></i></button>
+	<b>People</b>
+	<hr />
+	<div id="secureMenu_collab-person-fd2cd58021eb9764141c9e25e81e9458" class="collab-person">
+		<div class="status online">
+		</div>
+		<div class="info">
+			<b>Thomas Boland</b><br />
+			<small><i>Home Page</i></small>
+		</div>
+		<button class="collab-chat" title="Open Chat" disabled><i class="fas fa-comment"></i></button>
+	</div>
+	<div id="secureMenu_collab-person-uid" class="collab-person">
+		<div class="status offline">
+		</div>
+		<div class="info">
+			User<br />
+			<small><i>Offline</i></small>
+		</div>
+		<button class="collab-chat" title="Open Chat" onclick="collab_showChat(\'uid\');"><i class="fas fa-comment"></i></button>
+	</div>
+</div>
+<div id="secureMenu_collab-list" class="collab-page">
+	<button class="collab-back" onclick="collab_hidePage(\'list\');" title="Go Back"><i class="fas fa-arrow-left"></i></button>
+	<b>List Name</b>
+	<hr />
+	<i>Coming Soon</i>
+</div>
+<div id="secureMenu_collab-chat" class="collab-page">
+	<button class="collab-back" onclick="collab_hideChat();" title="Go Back"><i class="fas fa-arrow-left"></i></button>
+	<b>Chat Name</b>
+	<hr />
+	<i>Coming Soon</i>
+</div>
+<script>
+    function collab_showPage(id) {
+		$("#secureMenu_collab-" + id).addClass("out");
+		if (id == "rooms" || id == "todo" || id == "people") {
+			$("#secureMenu_pane-collab").addClass("expanded-sm");
+		}
+		if (id == "chat") {
+			$("#secureMenu_pane-collab").removeClass("expanded-sm");
+			$("#secureMenu_pane-collab").addClass("expanded-lg");
+		}
+	}
+	function collab_hidePage(id) {
+		$("#secureMenu_collab-" + id).removeClass("out");
+		if (id == "rooms" || id == "todo" || id == "people") {
+			$("#secureMenu_pane-collab").removeClass("expanded-sm");
+		}
+		if (id == "chat") {
+			$("#secureMenu_pane-collab").removeClass("expanded-lg");
+			$("#secureMenu_pane-collab").addClass("expanded-sm");
+		}
+	}
+	function collab_showChat(uid) {
+		//empty old chat
+		//start populate loop
+		collab_showPage("chat");
+	}
+	function collab_hideChat() {
+		collab_hidePage("chat");
+	}
+</script>';
+},
 
 //  ________
 // /        \
