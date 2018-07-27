@@ -16,6 +16,7 @@ if (isset($_GET["func"])) {
 	include "pagegen.php";
 	include "mail.php";
     include "templates.php";
+	include "collab.php";
 	
 	load_jsons();
 

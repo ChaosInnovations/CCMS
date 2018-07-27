@@ -162,6 +162,18 @@ function ajax_editpage() {
 	return $newpageid;
 }
 
+function page_title($pid) {
+	global $conn;
+	$stmt = $conn->prepare("SELECT title FROM content_pages WHERE pageid=:pid;");
+	$stmt->bindParam(":pid", $pid);
+	$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
+	$pages = $stmt->fetchAll();
+	if (count($pages) == 0) {
+		return "Not Found";
+	}
+	return urldecode($pages[0]["title"]);
+}
+
 class Page {
 	
 	public $pageid = "";

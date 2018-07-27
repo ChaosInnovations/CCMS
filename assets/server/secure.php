@@ -107,12 +107,15 @@ function ajax_newuser() {
 	}
 	$body = $TEMPLATES["email-newuser"]($_POST["name"], $authuser->name, "http://penderbus.org/", getconfig("websitetitle"));
 	$mail = $mailer->compose([[$_POST["email"], $_POST["name"]]], "Account Created", $body, "");
+	// comment below for testing
+	
 	if (!$mail->send()) {
 		return "FALSE";
 	}
+	
 	$now = date("Y-m-d");
 	$pwd = hash("sha512", "password");
-	$stmt = $conn->prepare("INSERT INTO users VALUES (:uid, :email, :name, :now, :perms, '', '');");
+	$stmt = $conn->prepare("INSERT INTO users VALUES (:uid, :email, :name, :now, :perms, '', '', 0, NULL);");
 	$stmt->bindParam(":uid", $uid);
 	$stmt->bindParam(":email", $_POST["email"]);
 	$stmt->bindParam(":name", $_POST["name"]);

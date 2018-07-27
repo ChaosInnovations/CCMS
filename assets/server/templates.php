@@ -10,6 +10,8 @@ $TEMPLATES = [
 // \____________/
 
 "secure-menu" => function ($authuser, $securepages, $availablemodules, $modules) {
+	global $TEMPLATES;
+	
 	$canChat = true; // temporary chat permission
 	
 	$securePageListing = '';
@@ -67,9 +69,7 @@ $TEMPLATES = [
     </div>' : '') . '
   </div>' . ($canChat ? '
   <div id="secureMenu_pane-collab" class="secureMenu-pane collapsed vertical" style="display:none;">
-    <b>Collaborate</b>
-    <hr />
-    <i>Coming Soon</i>
+    ' . $TEMPLATES["secure-collab-pane"]() . '
   </div>' : '') . ($authuser->permissions->admin_managesite ? '
   <div id="secureMenu_pane-module" class="secureMenu-pane collapsed horizontal" style="display:none;">
     <b>Modules</b>
@@ -131,6 +131,182 @@ $TEMPLATES = [
 </div>';
 },
 
+//  _____________
+// /             \
+//(  Collab Pane  )
+// \_____________/
+
+"secure-collab-pane-userlist" => function() {
+	global $conn, $authuser;
+	
+	$list = '';
+	
+	// User statuses
+	$stmt = $conn->prepare("SELECT uid, name, collab_status, collab_pageid FROM users ORDER BY name ASC;");
+	$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
+	$users = $stmt->fetchAll();
+	
+	foreach ($users as $user) {
+		$list .= '
+<div id="secureMenu_collab-person-' . $user["uid"] . '" class="collab-person">
+	<div class="status '.($user["collab_status"]>0?'online':'offline'). '"></div>
+	<div class="info">
+		' . ($user["uid"]==$authuser->uid?'<b>':'') . $user["name"] . ($user["uid"]==$authuser->uid?'</b>':'') . '<br />
+		<small><i><span class="page"><a href="?p=' . $user["collab_pageid"] . '" title="' . page_title($user["collab_pageid"]) . '">' . page_title($user["collab_pageid"]) . '</a></span></i></small>
+	</div>
+	<button class="collab-chat" title="Open Chat"' . ($user["uid"]==$authuser->uid?'disabled':'onclick="collab_showChat(\'U\');"') . '><i class="fas fa-comment"></i></button>
+</div>';
+	}
+	
+	return $list;
+},
+
+"secure-collab-pane-roomlist" => function() {
+	global $conn, $authuser;
+	
+	$list = '';
+	
+	// Room statuses
+	$stmt = $conn->prepare("SELECT room_id, room_name, room_members FROM collab_rooms ORDER BY room_name ASC;");
+	$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
+	$rooms = $stmt->fetchAll();
+	
+	foreach ($rooms as $room) {
+		
+		$numMembers = count(explode(";", $room["room_members"]));
+		$numOnline = 0;
+		if ($room["room_members"] == "*") {
+			$stmt = $conn->prepare("SELECT uid FROM users;");
+			$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
+			$numMembers = count($stmt->fetchAll());
+			$stmt = $conn->prepare("SELECT uid FROM users WHERE collab_status>0;");
+			$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
+			$numOnline = count($stmt->fetchAll());
+		} else {
+			$members = explode(";", $room["room_members"]);
+			if (!in_array($authuser->uid, $members)) {
+				continue;
+			}
+			$stmt = $conn->prepare("SELECT uid FROM users WHERE collab_status>0;");
+			$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
+			$users = $stmt->fetchAll();
+			foreach ($users as $user) {
+				if(in_array($user["uid"], $members)) {
+					$numOnline++;
+				}
+			}
+		}
+		
+		$list .= '
+<div id="secureMenu_collab-room-' . $room["room_id"] . '" class="collab-person">
+	<div class="status offline"><div class="status online" style="height:' . $numOnline*100/$numMembers . '%;"></div></div>
+	<div class="info">
+		' . $room["room_name"] . '<br />
+		<small><i><span class="online">' . $numOnline . '/' .$numMembers . ' online</span></i></small>
+	</div>
+	<button class="collab-chat" title="Open Room" onclick="collab_showChat(\'R' . $room["room_id"] . '\');"><i class="fas fa-comments"></i></button>
+</div>';
+
+	}
+	
+	return $list;
+},
+
+"secure-collab-pane" => function () {
+	global $TEMPLATES;
+	return '
+<b>Collaborate</b>
+<hr />
+<button class="collab-lg" onclick="collab_showPage(\'rooms\');" title="Chat Rooms"><i class="fas fa-comments"></i></button><br />
+<button class="collab-lg" onclick="collab_showPage(\'todo\');" title="TODO Lists"><i class="fas fa-clipboard-list"></i></button><br />
+<button class="collab-lg" onclick="collab_showPage(\'people\');" title="People and Direct Messages"><i class="fas fa-users"></i></button><br />
+<div id="secureMenu_collab-rooms" class="collab-page">
+	<button class="collab-back" onclick="collab_hidePage(\'rooms\');" title="Go Back"><i class="fas fa-arrow-left"></i></button>
+	<b>Chat Rooms</b>
+	<hr />
+	' . $TEMPLATES["secure-collab-pane-roomlist"]() . '
+</div>
+<div id="secureMenu_collab-todo" class="collab-page">
+	<button class="collab-back" onclick="collab_hidePage(\'todo\');" title="Go Back"><i class="fas fa-arrow-left"></i></button>
+	<b>TODO Lists</b>
+	<hr />
+	<i>Coming Soon</i>
+</div>
+<div id="secureMenu_collab-people" class="collab-page">
+	<button class="collab-back" onclick="collab_hidePage(\'people\');" title="Go Back"><i class="fas fa-arrow-left"></i></button>
+	<b>People</b>
+	<hr />
+	' . $TEMPLATES["secure-collab-pane-userlist"]() . '
+</div>
+<div id="secureMenu_collab-list" class="collab-page">
+	<button class="collab-back" onclick="collab_hidePage(\'list\');" title="Go Back"><i class="fas fa-arrow-left"></i></button>
+	<b>List Name</b>
+	<hr />
+	<i>Coming Soon</i>
+</div>
+<div id="secureMenu_collab-chat" class="collab-page">
+	<button class="collab-back" onclick="collab_hideChat();" title="Go Back"><i class="fas fa-arrow-left"></i></button>
+	<b>Chat Name</b>
+	<hr />
+	<i>Coming Soon</i>
+</div>
+<script>
+    function collab_showPage(id) {
+		$("#secureMenu_collab-" + id).addClass("out");
+		if (id == "rooms" || id == "todo" || id == "people") {
+			$("#secureMenu_pane-collab").addClass("expanded-sm");
+		}
+		if (id == "chat") {
+			$("#secureMenu_pane-collab").removeClass("expanded-sm");
+			$("#secureMenu_pane-collab").addClass("expanded-lg");
+		}
+	}
+	function collab_hidePage(id) {
+		$("#secureMenu_collab-" + id).removeClass("out");
+		if (id == "rooms" || id == "todo" || id == "people") {
+			$("#secureMenu_pane-collab").removeClass("expanded-sm");
+		}
+		if (id == "chat") {
+			$("#secureMenu_pane-collab").removeClass("expanded-lg");
+			$("#secureMenu_pane-collab").addClass("expanded-sm");
+		}
+	}
+	function collab_showChat(uid) {
+		//empty old chat
+		//start populate loop
+		collab_showPage("chat");
+	}
+	function collab_hideChat() {
+		collab_hidePage("chat");
+	}
+	$(document).ready(function() {setInterval(collab_update, 3000);});
+	function collab_update() {
+		module_ajax("collab_update", {}, collab_update_callback);
+	}
+	function collab_update_callback(data) {
+		//console.log(data);
+		var data = JSON.parse(data);
+		for (user in data["users"]) {
+			var u = data["users"][user];
+			if (u.status > 0) {
+				$("#secureMenu_collab-person-" + u.uid + " .status").removeClass("offline");
+				$("#secureMenu_collab-person-" + u.uid + " .status").addClass("online");
+				$("#secureMenu_collab-person-" + u.uid + " .page").html("<a href=\"?p="+u.page_id+"\" title=\""+u.page_title+"\">"+u.page_title+"</a>");
+			} else {
+				$("#secureMenu_collab-person-" + u.uid + " .status").removeClass("online");
+				$("#secureMenu_collab-person-" + u.uid + " .status").addClass("offline");
+				$("#secureMenu_collab-person-" + u.uid + " .page").html("Offline");
+			}
+		}
+		for (room in data["rooms"]) {
+			var r = data["rooms"][room];
+			var percent = r.on*100/r.members;
+			$("#secureMenu_collab-room-" + r.rid + " .status > .online").height("" + percent + "%");
+			$("#secureMenu_collab-room-" + r.rid + " .info .online").html("" + r.on + "/" + r.members + " online");
+		}
+	}
+</script>';
+},
 
 //  ________
 // /        \
