@@ -214,7 +214,6 @@ button.collab-lg:hover {
 .collab-person .status.offline > .status.online {
 	position:relative;
 	width:100%;
-	min-height:15px;
 }
 
 .collab-person .info {

@@ -47,10 +47,17 @@ $mailer->from = $mail_config->from;
 
 if (isset($_COOKIE["token"]) and validToken($_COOKIE["token"])) {
 	$authuser = new AuthUser(uidFromToken($_COOKIE["token"]));
+	if ($pageid != "notfound") {
+		$stmt = $conn->prepare("UPDATE users SET collab_pageid=:pid WHERE uid=:uid;");
+		$stmt->bindParam(":pid", $pageid);
+		$stmt->bindParam(":uid", $authuser->uid);
+		$stmt->execute();
+	}
 } else {
 	setcookie("token", "0", 1);
 	$authuser = new AuthUser(null);
 }
+
 
 if ($pageid == "") {
 	header("Location: ./");
@@ -129,7 +136,7 @@ $page->resolvePlaceholders();
 		<meta charset="utf-8" />
 		<link rel="stylesheet" href="/assets/site/css/fontawesome-5.0.13/css/fontawesome-all.min.css" media="all">
 		<link rel="stylesheet" href="/assets/site/css/bootstrap-4.1.1/css/bootstrap.min.css" media="all">
-		<link rel="stylesheet" href="/assets/site/css/site-1.3.0.css" media="all">
+		<link rel="stylesheet" href="/assets/site/css/site-1.3.1.css" media="all">
 		<link rel="stylesheet" type="text/css" href="/assets/site/js/codemirror/lib/codemirror.css" media="all">
 		<script src="/assets/site/js/jquery-3.3.1.min.js"></script>
 		<?php
@@ -168,5 +175,9 @@ foreach ($msgs as $m) {
 		<script src="/assets/site/js/site-1.0.1.js"></script>
         <script type="text/javascript" src="/assets/site/js/codemirror/lib/codemirror.js"></script>
         <script type="text/javascript" src="/assets/site/js/codemirror/mode/xml/xml.js"></script>
+		<script type="text/javascript" src="/assets/site/js/codemirror/mode/html/html.js"></script>
+		<script type="text/javascript" src="/assets/site/js/codemirror/mode/css/css.js"></script>
+		<script type="text/javascript" src="/assets/site/js/codemirror/mode/javascript/javascript.js"></script>
+		<script type="text/javascript" src="/assets/site/js/codemirror/mode/htmlmixed/htmlmixed.js"></script>
 	</body>
 </html>
