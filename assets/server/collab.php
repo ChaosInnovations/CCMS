@@ -72,18 +72,18 @@ function ajax_collab_watchdog() {
 
 function collab_watchdog($args) {
 	global $conn;
-	$newdate = date("Y-m-d H:i:00", time()+60*5); // + 5 minutes
+	$newdate = date("Y-m-d H:i:00", time()+60-60*60*5); // + 5 minutes
 	$stmt = $conn->prepare("INSERT INTO schedule (after, function, args) VALUES (:next, 'collab_watchdog', :args);");
 	$stmt->bindParam(":next", $newdate);
 	$stmt->bindParam(":args", json_encode($args));
 	$stmt->execute();
-	// will run every 2 seconds for 5 minutes (150 times).
+	// will run every 2 seconds for 1 minute (30 times).
 	$start = microtime(true);
-	set_time_limit(300);
-	for ($i = 0; $i < 149; ++$i) {
+	set_time_limit(60);
+	for ($i = 0; $i < 29; ++$i) {
 		$stmt = $conn->prepare("UPDATE users SET collab_status=collab_status-1 WHERE collab_status>0;");
 		$stmt->execute();
-		time_sleep_until($start + $i + 2);
+		time_sleep_until($start + $i*2 + 2);
 	}
 }
 
