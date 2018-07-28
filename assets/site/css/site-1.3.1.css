@@ -116,7 +116,7 @@
   	color: #FFF;
 }
   
-.secureMenu-pane div {
+.secureMenu-pane > div {
     width:100%;
     overflow-x:auto;
     text-align:left;
@@ -222,9 +222,14 @@ button.collab-lg:hover {
 .collab-person .status.offline > .status.online, .collab-person .status.incomplete > .status.complete {
 	position:relative;
 	width:100%;
+	transition: height 0.4s;
 }
 
 .collab-person .info {
+	width:100%;
+    overflow-x:auto;
+    text-align:left;
+    white-space:nowrap;
 	padding-left: 5px;
 }
 
@@ -259,3 +264,82 @@ button.collab-lg:hover {
     background-color: #000;
     color: #777;
 }
+
+.collab-page .composer {
+	position: absolute;
+	width:100%;
+	height:60px;
+	bottom:0;
+	padding:10px;
+}
+
+.collab-page .composer button {
+	background-color: #FFF;
+}
+
+.collab-page .composer button:hover {
+	background-color: #000;
+}
+
+.collab-page .messages {
+	height:100%;
+	overflow-y: auto;
+	padding-left:15px;
+	padding-right:15px;
+}
+
+#secureMenu_collab-chat {
+	padding-top: 40px;
+	padding-bottom: 60px;
+}
+
+.collab-page .title {
+	text-align: center;
+	position: absolute;
+	width:100%;
+	height: 40px;
+	top: 0;
+}
+
+.collab-page .messages div {
+    position: relative;
+    width: 100%;
+    white-space: normal;
+	margin-bottom:10px;
+}
+
+.collab-page .messages .received {
+    left: 0px;
+	text-align: left;
+}
+
+.collab-page .messages .sent {
+    right: 0px;
+	text-align: right;
+}
+
+.collab-page .messages div p {
+    margin-bottom: 0px;
+    padding: 5px 10px 5px 10px;
+	position: relative;
+	width: 60%;
+}
+
+.collab-page .messages div .from {
+    font-size: 0.8rem;
+}
+
+.collab-page .messages div.received p {
+    background-color: #777;
+    border-top-right-radius: 20px;
+    border-bottom-right-radius: 20px;
+}
+
+.collab-page .messages div.sent p {
+	right: -40%;
+    background-color: #DDD;
+	color: #000;
+    border-top-left-radius: 20px;
+    border-bottom-left-radius: 20px;
+}
+

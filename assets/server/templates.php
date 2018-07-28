@@ -154,7 +154,7 @@ $TEMPLATES = [
 		' . ($user["uid"]==$authuser->uid?'<b>':'') . $user["name"] . ($user["uid"]==$authuser->uid?'</b>':'') . '<br />
 		<small><i><span class="page"><a href="?p=' . $user["collab_pageid"] . '" title="' . page_title($user["collab_pageid"]) . '">' . page_title($user["collab_pageid"]) . '</a></span></i></small>
 	</div>
-	<button class="collab-chat" title="Open Chat"' . ($user["uid"]==$authuser->uid?'disabled':'onclick="collab_showChat(\'U' . $user["uid"] . '\');"') . '><i class="fas fa-comment"></i></button>
+	<button class="collab-chat" title="Open Chat"' . ($user["uid"]==$authuser->uid?'disabled':'onclick="collab_showChat(\'U' . $user["uid"] . '\', \'' . $user["name"] . '\');"') . '><i class="fas fa-comment"></i></button>
 </div>';
 	}
 	
@@ -204,7 +204,7 @@ $TEMPLATES = [
 		' . $room["room_name"] . '<br />
 		<small><i><span class="online">' . $numOnline . '/' .$numMembers . ' online</span></i></small>
 	</div>
-	<button class="collab-chat" title="Open Room" onclick="collab_showChat(\'R' . $room["room_id"] . '\');"><i class="fas fa-comments"></i></button>
+	<button class="collab-chat" title="Open Room" onclick="collab_showChat(\'R' . $room["room_id"] . '\', \'' . $room["room_name"] . '\');"><i class="fas fa-comments"></i></button>
 </div>';
 
 	}
@@ -242,7 +242,7 @@ $TEMPLATES = [
 		' . $list["list_name"] . '<br />
 		<small><i><span class="done">' . $numComplete . '/' .$numTasks . ' finished</span></i></small>
 	</div>
-	<button class="collab-chat" title="Open List" onclick="collab_showList(\'' . $list["list_id"] . '\');"><i class="fas fa-clipboard-list"></i></button>
+	<button class="collab-chat" title="Open List" onclick="collab_showList(\'' . $list["list_id"] . '\', \'' . $list["list_name"] . '\');"><i class="fas fa-clipboard-list"></i></button>
 </div>';
 	}
 	
@@ -282,10 +282,23 @@ $TEMPLATES = [
 	<i>Coming Soon</i>
 </div>
 <div id="secureMenu_collab-chat" class="collab-page">
+	<div class="title">
+		<b>Chat Name</b>
+		<hr />
+	</div>
 	<button class="collab-back" onclick="collab_hideChat();" title="Go Back"><i class="fas fa-arrow-left"></i></button>
-	<b>Chat Name</b>
-	<hr />
-	<i>Coming Soon</i>
+	<div class="messages">
+	</div>
+	<div class="composer">
+		<form onsubmit="collab_sendMessage();return false;">
+			<div class="input-group">
+				<input type="text" id="secureMenu_collab-chat-newmessage" class="form-control" placeholder="Message..." aria-label="Message">
+				<div class="input-group-append">
+					<button class="btn btn-outline-secondary" type="submit">Send</button>
+				</div>
+			</div>
+		</form>
+	</div>
 </div>
 <script>
     function collab_showPage(id) {
@@ -310,27 +323,37 @@ $TEMPLATES = [
 	}
 	var collab_chat = null;
 	var collab_list = null;
-	function collab_showChat(id) {
-		//empty old chat
+	function collab_showChat(id, name) {
+		$("#secureMenu_collab-chat .messages").html("");
+		$("#secureMenu_collab-chat .title b").text(name);
 		collab_chat = id;
+		collab_update();
 		collab_showPage("chat");
 	}
 	function collab_hideChat() {
 		collab_hidePage("chat");
 		collab_chat = null;
 	}
-	function collab_showList(id) {
-		//empty old chat
+	function collab_showList(id, name) {
 		collab_list = id;
+		collab_update();
 		collab_showPage("list");
 	}
 	function collab_hideList() {
 		collab_hidePage("list");
 		collab_list = null;
 	}
+	function collab_sendMessage() {
+		var msg = $("#secureMenu_collab-chat-newmessage").val();
+		if (msg == "") {
+			return;
+		}
+		$("#secureMenu_collab-chat-newmessage").val("");
+		module_ajax("collab_update", {chat:collab_chat,list:collab_list,message:msg}, collab_update_callback);
+	}
 	$(document).ready(function() {setInterval(collab_update, 3000);});
 	function collab_update() {
-		module_ajax("collab_update", {chat:collab_chat}, collab_update_callback);
+		module_ajax("collab_update", {chat:collab_chat,list:collab_list}, collab_update_callback);
 	}
 	function collab_update_callback(data) {
 		console.log(data);
@@ -352,6 +375,28 @@ $TEMPLATES = [
 			var percent = r.on*100/r.members;
 			$("#secureMenu_collab-room-" + r.rid + " .status > .online").height("" + percent + "%");
 			$("#secureMenu_collab-room-" + r.rid + " .info .online").html("" + r.on + "/" + r.members + " online");
+		}
+		for (list in data["lists"]) {
+			var l = data["lists"][list];
+			var percent = l.done*100/l.tasks;
+			$("#secureMenu_collab-list-" + l.lid + " .status > .complete").height("" + percent + "%");
+			$("#secureMenu_collab-list-" + l.lid + " .info .done").html("" + l.done + "/" + l.tasks + " finished");
+		}
+		var scrollChat = false;
+		for (msg in data["chat"]) {
+			var m = data["chat"][msg];
+			if ($("#secureMenu_collab-chat-"+m.id).length == 0) {
+				var msgHtml = "<div id=\"secureMenu_collab-chat-"+m.id+"\" class=\""+m.type+"\" title=\""+m.sent+"\">";
+				msgHtml    += "<p></p><span class=\"from\">Sent "+m.sent_informal+" by "+m.from+"</span></div>";
+				$("#secureMenu_collab-chat .messages").append(msgHtml);
+				$("#secureMenu_collab-chat-"+m.id+" p").text(m.body);
+				scrollChat = true;
+			} else {
+				$("#secureMenu_collab-chat-"+m.id+" .from").html("Sent "+m.sent_informal+" by "+m.from);
+			}
+		}
+		if (scrollChat) {
+			$("#secureMenu_collab-chat .messages").animate({scrollTop:$("#secureMenu_collab-chat .messages")[0].scrollHeight}, 500);
 		}
 	}
 </script>';
