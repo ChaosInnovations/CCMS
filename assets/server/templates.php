@@ -154,7 +154,7 @@ $TEMPLATES = [
 		' . ($user["uid"]==$authuser->uid?'<b>':'') . $user["name"] . ($user["uid"]==$authuser->uid?'</b>':'') . '<br />
 		<small><i><span class="page"><a href="?p=' . $user["collab_pageid"] . '" title="' . page_title($user["collab_pageid"]) . '">' . page_title($user["collab_pageid"]) . '</a></span></i></small>
 	</div>
-	<button class="collab-chat" title="Open Chat"' . ($user["uid"]==$authuser->uid?'disabled':'onclick="collab_showChat(\'U\');"') . '><i class="fas fa-comment"></i></button>
+	<button class="collab-chat" title="Open Chat"' . ($user["uid"]==$authuser->uid?'disabled':'onclick="collab_showChat(\'U' . $user["uid"] . '\');"') . '><i class="fas fa-comment"></i></button>
 </div>';
 	}
 	
@@ -212,6 +212,43 @@ $TEMPLATES = [
 	return $list;
 },
 
+"secure-collab-pane-todolist" => function() {
+	global $conn, $authuser;
+	
+	$todolist = '';
+	
+	// Todo statuses
+	$stmt = $conn->prepare("SELECT list_id, list_name, list_participants FROM collab_lists;");
+	$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
+	$lists = $stmt->fetchAll();
+	foreach($lists as $list) {
+		if ($list["list_participants"] != "*" && !in_array($authuser->uid, explode(";", $list["list_participants"]))) {
+			continue;
+		}
+		
+		$stmt = $conn->prepare("SELECT todo_id FROM collab_todo WHERE list_id=:lid;");
+		$stmt->bindParam(":lid", $list["list_id"]);
+		$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
+		$numTasks = count($stmt->fetchAll());
+		$stmt = $conn->prepare("SELECT todo_id FROM collab_todo WHERE list_id=:lid AND todo_done=1;");
+		$stmt->bindParam(":lid", $list["list_id"]);
+		$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
+		$numComplete = count($stmt->fetchAll());
+		
+		$todolist .= '
+<div id="secureMenu_collab-list-' . $list["list_id"] . '" class="collab-person">
+	<div class="status incomplete"><div class="status complete" style="height:' . $numComplete*100/$numTasks . '%;"></div></div>
+	<div class="info">
+		' . $list["list_name"] . '<br />
+		<small><i><span class="done">' . $numComplete . '/' .$numTasks . ' finished</span></i></small>
+	</div>
+	<button class="collab-chat" title="Open List" onclick="collab_showList(\'' . $list["list_id"] . '\');"><i class="fas fa-clipboard-list"></i></button>
+</div>';
+	}
+	
+	return $todolist;
+},
+
 "secure-collab-pane" => function () {
 	global $TEMPLATES;
 	return '
@@ -230,7 +267,7 @@ $TEMPLATES = [
 	<button class="collab-back" onclick="collab_hidePage(\'todo\');" title="Go Back"><i class="fas fa-arrow-left"></i></button>
 	<b>TODO Lists</b>
 	<hr />
-	<i>Coming Soon</i>
+	' . $TEMPLATES["secure-collab-pane-todolist"]() . '
 </div>
 <div id="secureMenu_collab-people" class="collab-page">
 	<button class="collab-back" onclick="collab_hidePage(\'people\');" title="Go Back"><i class="fas fa-arrow-left"></i></button>
@@ -239,7 +276,7 @@ $TEMPLATES = [
 	' . $TEMPLATES["secure-collab-pane-userlist"]() . '
 </div>
 <div id="secureMenu_collab-list" class="collab-page">
-	<button class="collab-back" onclick="collab_hidePage(\'list\');" title="Go Back"><i class="fas fa-arrow-left"></i></button>
+	<button class="collab-back" onclick="collab_hideList();" title="Go Back"><i class="fas fa-arrow-left"></i></button>
 	<b>List Name</b>
 	<hr />
 	<i>Coming Soon</i>
@@ -271,20 +308,32 @@ $TEMPLATES = [
 			$("#secureMenu_pane-collab").addClass("expanded-sm");
 		}
 	}
-	function collab_showChat(uid) {
+	var collab_chat = null;
+	var collab_list = null;
+	function collab_showChat(id) {
 		//empty old chat
-		//start populate loop
+		collab_chat = id;
 		collab_showPage("chat");
 	}
 	function collab_hideChat() {
 		collab_hidePage("chat");
+		collab_chat = null;
+	}
+	function collab_showList(id) {
+		//empty old chat
+		collab_list = id;
+		collab_showPage("list");
+	}
+	function collab_hideList() {
+		collab_hidePage("list");
+		collab_list = null;
 	}
 	$(document).ready(function() {setInterval(collab_update, 3000);});
 	function collab_update() {
-		module_ajax("collab_update", {}, collab_update_callback);
+		module_ajax("collab_update", {chat:collab_chat}, collab_update_callback);
 	}
 	function collab_update_callback(data) {
-		//console.log(data);
+		console.log(data);
 		var data = JSON.parse(data);
 		for (user in data["users"]) {
 			var u = data["users"][user];

@@ -211,13 +211,25 @@ button.collab-lg:hover {
 	background-color: #F00;
 }
 
-.collab-person .status.offline > .status.online {
+.collab-person .status.complete {
+	background-color: #00F;
+}
+
+.collab-person .status.incomplete {
+	background-color: #909;
+}
+
+.collab-person .status.offline > .status.online, .collab-person .status.incomplete > .status.complete {
 	position:relative;
 	width:100%;
 }
 
 .collab-person .info {
 	padding-left: 5px;
+}
+
+.collab-person .info span {
+	cursor: initial;
 }
 
 .collab-person .collab-chat {

@@ -55,6 +55,28 @@ function ajax_collab_update() {
 		array_push($update["rooms"], $data);
 	}
 	
+	// List statuses
+	$stmt = $conn->prepare("SELECT list_id, list_name, list_participants FROM collab_lists;");
+	$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
+	$lists = $stmt->fetchAll();
+	foreach($lists as $list) {
+		if ($list["list_participants"] != "*" && !in_array($authuser->uid, explode(";", $list["list_participants"]))) {
+			continue;
+		}
+		
+		$stmt = $conn->prepare("SELECT todo_id FROM collab_todo WHERE list_id=:lid;");
+		$stmt->bindParam(":lid", $list["list_id"]);
+		$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
+		$numTasks = count($stmt->fetchAll());
+		$stmt = $conn->prepare("SELECT todo_id FROM collab_todo WHERE list_id=:lid AND todo_done=1;");
+		$stmt->bindParam(":lid", $list["list_id"]);
+		$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
+		$numComplete = count($stmt->fetchAll());
+		
+		$data = ["lid"=>$list["list_id"],"name"=>$list["list_name"],"done"=>$numComplete,"tasks"=>$numTasks];
+		array_push($update["lists"], $data);
+	}
+	
 	return json_encode($update);
 }
 
