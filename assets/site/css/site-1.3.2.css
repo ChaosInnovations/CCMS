@@ -167,6 +167,27 @@ button.collab-lg:hover {
     color: #000;
 }
 
+button.collab-btn {
+    text-align: center;
+    vertical-align: middle;
+    border: 1px solid #FFF;
+    padding: .375rem .75rem;
+    font-size: 1rem;
+    line-height: 1.5;
+    border-radius: .25rem;
+    background-color: #000;
+    color: #fff;
+    cursor: pointer;
+    transition: background-color 0.25s, border-color 0.25s, color 0.25s;
+	margin-top:0.4rem;
+}
+
+button.collab-btn:hover {
+    border: 1px solid #000;
+    background-color: #fff;
+    color: #000;
+}
+
 .collab-page {
     position: absolute;
     top: 0px;
@@ -181,14 +202,21 @@ button.collab-lg:hover {
 	left: 0;
 }
 
-.collab-page > .collab-back {
+.collab-page > .collab-back, .collab-page > .collab-new {
     border: none;
     background-color: #000;
     color: #fff;
     position: absolute;
-    left: 0.3rem;
     top: 0px;
     cursor: pointer;
+}
+
+.collab-page > .collab-back {
+    left: 0.3rem;
+}
+
+.collab-page > .collab-new {
+	right: 0.3rem;
 }
 
 .collab-person {
@@ -281,16 +309,20 @@ button.collab-lg:hover {
 	background-color: #000;
 }
 
-.collab-page .messages {
+.collab-page .messages, .collab-page .todos {
 	height:100%;
 	overflow-y: auto;
 	padding-left:15px;
 	padding-right:15px;
 }
 
-#secureMenu_collab-chat {
+#secureMenu_collab-chat, #secureMenu_collab-list {
 	padding-top: 40px;
 	padding-bottom: 60px;
+}
+
+#secureMenu_collab-create form {
+	padding: 15px;
 }
 
 .collab-page .title {
@@ -306,6 +338,19 @@ button.collab-lg:hover {
     width: 100%;
     white-space: normal;
 	margin-bottom:10px;
+}
+
+.collab-page .todos .collab-todo {
+    position: relative;
+    width: 100%;
+    white-space: normal;
+	margin-bottom:10px;
+	text-align: left;
+	display: flex;
+}
+
+.collab-page .todos .collab-todo div {
+	width:100%;
 }
 
 .collab-page .messages .received {
@@ -343,3 +388,20 @@ button.collab-lg:hover {
     border-bottom-left-radius: 20px;
 }
 
+.collab-todo .collab-delete {
+	text-align: center;
+    vertical-align: middle;
+    border: 1px solid #FFF;
+    font-size: 1rem;
+    line-height: 1.5;
+    border-radius: .25rem;
+    background-color: #000;
+    color: #fff;
+    cursor: pointer;
+    transition: border-color 0.25s, color 0.25s;
+}
+
+.collab-todo .collab-delete:hover {
+    border: 1px solid #F00;
+    color: #F00;
+}

@@ -9,7 +9,7 @@ function ajax_collab_update() {
 	$stmt->bindParam(":uid", $authuser->uid);
 	$stmt->execute();
 	
-	// Send message?
+	// Send message
 	if (isset($_POST["message"])) {
 		$now = date("Y-m-d H:i:s", time() - 3600 * 9);
 		$stmt = $conn->prepare("INSERT INTO collab_chat (chat_from, chat_to, chat_body, chat_sent) VALUES (:uid, :to, :msg, :now);");
@@ -17,6 +17,41 @@ function ajax_collab_update() {
 		$stmt->bindParam(":to", $_POST["chat"]);
 		$stmt->bindParam(":msg", $_POST["message"]);
 		$stmt->bindParam(":now", $now);
+		$stmt->execute();
+	}
+	
+	// Add entry
+	if (isset($_POST["entry"])) {
+		$stmt = $conn->prepare("INSERT INTO collab_todo (list_id, todo_label, todo_done) VALUES (:lid, :label, 0);");
+		$stmt->bindParam(":lid", $_POST["list"]);
+		$stmt->bindParam(":label", $_POST["entry"]);
+		$stmt->execute();
+	}
+	
+	// Check entry
+	if (isset($_POST["check_entry"])) {
+		$stmt = $conn->prepare("UPDATE collab_todo SET todo_done=!todo_done WHERE todo_id=:tid;");
+		$stmt->bindParam(":tid", $_POST["check_entry"]);
+		$stmt->execute();
+	}
+	
+	// Delete entry
+	if (isset($_POST["delete_entry"])) {
+		$stmt = $conn->prepare("DELETE FROM collab_todo WHERE todo_id=:tid;");
+		$stmt->bindParam(":tid", $_POST["delete_entry"]);
+		$stmt->execute();
+	}
+	
+	// Add room or list
+	if (isset($_POST["new_type"]) && isset($_POST["new_id"]) && isset($_POST["new_members"]) && isset($_POST["new_name"])) {
+		if ($_POST["new_type"] == "list") {
+			$stmt = $conn->prepare("INSERT INTO collab_lists (list_id, list_name, list_participants) VALUES (:id, :name, :members);");
+		} else {
+			$stmt = $conn->prepare("INSERT INTO collab_rooms (room_id, room_name, room_members) VALUES (:id, :name, :members);");
+		}
+		$stmt->bindParam(":id", $_POST["new_id"]);
+		$stmt->bindParam(":name", $_POST["new_name"]);
+		$stmt->bindParam(":members", $_POST["new_members"]);
 		$stmt->execute();
 	}
 	
@@ -131,6 +166,19 @@ function ajax_collab_update() {
 			}
 			$data = ["type"=>$type,"id"=>$message["chat_id"],"body"=>$message["chat_body"],"from"=>$name,"sent"=>$sent,"sent_informal"=>$sent2];
 		    array_push($update["chat"], $data);
+		}
+	}
+	
+	// Todo list
+	if (strlen($_POST["list"]) == 32) {
+		$stmt = $conn->prepare("SELECT todo_id, todo_label, todo_done FROM collab_todo WHERE list_id=:lid ORDER BY todo_id ASC;");
+		$stmt->bindParam(":lid", $_POST["list"]);
+		$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
+		$entries= $stmt->fetchAll();
+		
+		foreach ($entries as $entry) {
+			$data = ["id"=>$entry["todo_id"],"label"=>$entry["todo_label"],"done"=>$entry["todo_done"]];
+		    array_push($update["todo"], $data);
 		}
 	}
 	

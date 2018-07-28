@@ -237,7 +237,7 @@ $TEMPLATES = [
 		
 		$todolist .= '
 <div id="secureMenu_collab-list-' . $list["list_id"] . '" class="collab-person">
-	<div class="status incomplete"><div class="status complete" style="height:' . $numComplete*100/$numTasks . '%;"></div></div>
+	<div class="status incomplete"><div class="status complete" style="height:' . ($numTasks>0?$numComplete*100/$numTasks:0) . '%;"></div></div>
 	<div class="info">
 		' . $list["list_name"] . '<br />
 		<small><i><span class="done">' . $numComplete . '/' .$numTasks . ' finished</span></i></small>
@@ -249,23 +249,40 @@ $TEMPLATES = [
 	return $todolist;
 },
 
+"secure-collab-pane-createMemberList" => function() {
+	global $conn, $authuser;
+	
+	$list = '';
+	
+	$stmt = $conn->prepare("SELECT uid, name FROM users ORDER BY name ASC;");
+	$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
+	$users = $stmt->fetchAll();
+	foreach($users as $user) {
+		$list .= '<option value="' . $user["uid"] . '">' . $user["name"] . '</option>';
+	}
+	
+	return $list;
+},
+
 "secure-collab-pane" => function () {
 	global $TEMPLATES;
 	return '
 <b>Collaborate</b>
 <hr />
 <button class="collab-lg" onclick="collab_showPage(\'rooms\');" title="Chat Rooms"><i class="fas fa-comments"></i></button><br />
-<button class="collab-lg" onclick="collab_showPage(\'todo\');" title="TODO Lists"><i class="fas fa-clipboard-list"></i></button><br />
+<button class="collab-lg" onclick="collab_showPage(\'todo\');" title="To-Do Lists"><i class="fas fa-clipboard-list"></i></button><br />
 <button class="collab-lg" onclick="collab_showPage(\'people\');" title="People and Direct Messages"><i class="fas fa-users"></i></button><br />
 <div id="secureMenu_collab-rooms" class="collab-page">
 	<button class="collab-back" onclick="collab_hidePage(\'rooms\');" title="Go Back"><i class="fas fa-arrow-left"></i></button>
+	<button class="collab-new" onclick="collab_startCreate(\'room\');" title="New Room"><i class="fas fa-plus"></i></button>
 	<b>Chat Rooms</b>
 	<hr />
 	' . $TEMPLATES["secure-collab-pane-roomlist"]() . '
 </div>
 <div id="secureMenu_collab-todo" class="collab-page">
 	<button class="collab-back" onclick="collab_hidePage(\'todo\');" title="Go Back"><i class="fas fa-arrow-left"></i></button>
-	<b>TODO Lists</b>
+	<button class="collab-new" onclick="collab_startCreate(\'list\');" title="New List"><i class="fas fa-plus"></i></button>
+	<b>To-Do Lists</b>
 	<hr />
 	' . $TEMPLATES["secure-collab-pane-todolist"]() . '
 </div>
@@ -276,10 +293,23 @@ $TEMPLATES = [
 	' . $TEMPLATES["secure-collab-pane-userlist"]() . '
 </div>
 <div id="secureMenu_collab-list" class="collab-page">
+	<div class="title">
+		<b>List Name</b>
+		<hr />
+	</div>
 	<button class="collab-back" onclick="collab_hideList();" title="Go Back"><i class="fas fa-arrow-left"></i></button>
-	<b>List Name</b>
-	<hr />
-	<i>Coming Soon</i>
+	<div class="todos">
+	</div>
+	<div class="composer">
+		<form onsubmit="collab_addTodo();return false;">
+			<div class="input-group">
+				<input type="text" id="secureMenu_collab-todo-newentry" class="form-control" placeholder="New Item..." aria-label="New Item">
+				<div class="input-group-append">
+					<button class="btn btn-outline-secondary" type="submit"><i class="fas fa-plus"></i></button>
+				</div>
+			</div>
+		</form>
+	</div>
 </div>
 <div id="secureMenu_collab-chat" class="collab-page">
 	<div class="title">
@@ -294,11 +324,36 @@ $TEMPLATES = [
 			<div class="input-group">
 				<input type="text" id="secureMenu_collab-chat-newmessage" class="form-control" placeholder="Message..." aria-label="Message">
 				<div class="input-group-append">
-					<button class="btn btn-outline-secondary" type="submit">Send</button>
+					<button class="btn btn-outline-secondary" type="submit"><i class="fab fa-telegram-plane"></i></button>
 				</div>
 			</div>
 		</form>
 	</div>
+</div>
+<div id="secureMenu_collab-create" class="collab-page">
+    <button class="collab-back" onclick="collab_hidePage(\'create\');" title="Go Back"><i class="fas fa-arrow-left"></i></button>
+	<b>Create</b>
+	<hr />
+	<form onsubmit="collab_create();return false;">
+		<div class="form-group">
+			<select class="form-control" id="secureMenu_collab-create-type">
+				<option value="room" selected>New Room</option>
+				<option value="list">New List</option>
+			</select>
+		</div>
+		<div class="form-group">
+			<label for="secureMenu_collab-create-members">Participants</label>
+			<select multiple class="form-control" id="secureMenu_collab-create-members">
+				<option value="*" selected>Everyone</option>
+				' . $TEMPLATES["secure-collab-pane-createMemberList"]() . '
+			</select>
+		</div>
+		<div class="form-group">
+			<label for="secureMenu_collab-create-name">Name</label>
+			<input type="text" class="form-control" id="secureMenu_collab-create-name" placeholder="Name">
+		</div>
+		<button type="submit" title="Create" class="collab-btn">Create</button>
+	</form>
 </div>
 <script>
     function collab_showPage(id) {
@@ -306,7 +361,7 @@ $TEMPLATES = [
 		if (id == "rooms" || id == "todo" || id == "people") {
 			$("#secureMenu_pane-collab").addClass("expanded-sm");
 		}
-		if (id == "chat") {
+		if (id == "chat" || id == "create") {
 			$("#secureMenu_pane-collab").removeClass("expanded-sm");
 			$("#secureMenu_pane-collab").addClass("expanded-lg");
 		}
@@ -316,10 +371,44 @@ $TEMPLATES = [
 		if (id == "rooms" || id == "todo" || id == "people") {
 			$("#secureMenu_pane-collab").removeClass("expanded-sm");
 		}
-		if (id == "chat") {
+		if (id == "chat" || id == "create") {
 			$("#secureMenu_pane-collab").removeClass("expanded-lg");
 			$("#secureMenu_pane-collab").addClass("expanded-sm");
 		}
+	}
+	function collab_startCreate(type) {
+		$("#secureMenu_collab-create-type").val(type);
+		collab_showPage("create");
+	}
+	function collab_md5(d){result = M(V(Y(X(d),8*d.length)));return result.toLowerCase()};function M(d){for(var _,m="0123456789ABCDEF",f="",r=0;r<d.length;r++)_=d.charCodeAt(r),f+=m.charAt(_>>>4&15)+m.charAt(15&_);return f}function X(d){for(var _=Array(d.length>>2),m=0;m<_.length;m++)_[m]=0;for(m=0;m<8*d.length;m+=8)_[m>>5]|=(255&d.charCodeAt(m/8))<<m%32;return _}function V(d){for(var _="",m=0;m<32*d.length;m+=8)_+=String.fromCharCode(d[m>>5]>>>m%32&255);return _}function Y(d,_){d[_>>5]|=128<<_%32,d[14+(_+64>>>9<<4)]=_;for(var m=1732584193,f=-271733879,r=-1732584194,i=271733878,n=0;n<d.length;n+=16){var h=m,t=f,g=r,e=i;f=md5_ii(f=md5_ii(f=md5_ii(f=md5_ii(f=md5_hh(f=md5_hh(f=md5_hh(f=md5_hh(f=md5_gg(f=md5_gg(f=md5_gg(f=md5_gg(f=md5_ff(f=md5_ff(f=md5_ff(f=md5_ff(f,r=md5_ff(r,i=md5_ff(i,m=md5_ff(m,f,r,i,d[n+0],7,-680876936),f,r,d[n+1],12,-389564586),m,f,d[n+2],17,606105819),i,m,d[n+3],22,-1044525330),r=md5_ff(r,i=md5_ff(i,m=md5_ff(m,f,r,i,d[n+4],7,-176418897),f,r,d[n+5],12,1200080426),m,f,d[n+6],17,-1473231341),i,m,d[n+7],22,-45705983),r=md5_ff(r,i=md5_ff(i,m=md5_ff(m,f,r,i,d[n+8],7,1770035416),f,r,d[n+9],12,-1958414417),m,f,d[n+10],17,-42063),i,m,d[n+11],22,-1990404162),r=md5_ff(r,i=md5_ff(i,m=md5_ff(m,f,r,i,d[n+12],7,1804603682),f,r,d[n+13],12,-40341101),m,f,d[n+14],17,-1502002290),i,m,d[n+15],22,1236535329),r=md5_gg(r,i=md5_gg(i,m=md5_gg(m,f,r,i,d[n+1],5,-165796510),f,r,d[n+6],9,-1069501632),m,f,d[n+11],14,643717713),i,m,d[n+0],20,-373897302),r=md5_gg(r,i=md5_gg(i,m=md5_gg(m,f,r,i,d[n+5],5,-701558691),f,r,d[n+10],9,38016083),m,f,d[n+15],14,-660478335),i,m,d[n+4],20,-405537848),r=md5_gg(r,i=md5_gg(i,m=md5_gg(m,f,r,i,d[n+9],5,568446438),f,r,d[n+14],9,-1019803690),m,f,d[n+3],14,-187363961),i,m,d[n+8],20,1163531501),r=md5_gg(r,i=md5_gg(i,m=md5_gg(m,f,r,i,d[n+13],5,-1444681467),f,r,d[n+2],9,-51403784),m,f,d[n+7],14,1735328473),i,m,d[n+12],20,-1926607734),r=md5_hh(r,i=md5_hh(i,m=md5_hh(m,f,r,i,d[n+5],4,-378558),f,r,d[n+8],11,-2022574463),m,f,d[n+11],16,1839030562),i,m,d[n+14],23,-35309556),r=md5_hh(r,i=md5_hh(i,m=md5_hh(m,f,r,i,d[n+1],4,-1530992060),f,r,d[n+4],11,1272893353),m,f,d[n+7],16,-155497632),i,m,d[n+10],23,-1094730640),r=md5_hh(r,i=md5_hh(i,m=md5_hh(m,f,r,i,d[n+13],4,681279174),f,r,d[n+0],11,-358537222),m,f,d[n+3],16,-722521979),i,m,d[n+6],23,76029189),r=md5_hh(r,i=md5_hh(i,m=md5_hh(m,f,r,i,d[n+9],4,-640364487),f,r,d[n+12],11,-421815835),m,f,d[n+15],16,530742520),i,m,d[n+2],23,-995338651),r=md5_ii(r,i=md5_ii(i,m=md5_ii(m,f,r,i,d[n+0],6,-198630844),f,r,d[n+7],10,1126891415),m,f,d[n+14],15,-1416354905),i,m,d[n+5],21,-57434055),r=md5_ii(r,i=md5_ii(i,m=md5_ii(m,f,r,i,d[n+12],6,1700485571),f,r,d[n+3],10,-1894986606),m,f,d[n+10],15,-1051523),i,m,d[n+1],21,-2054922799),r=md5_ii(r,i=md5_ii(i,m=md5_ii(m,f,r,i,d[n+8],6,1873313359),f,r,d[n+15],10,-30611744),m,f,d[n+6],15,-1560198380),i,m,d[n+13],21,1309151649),r=md5_ii(r,i=md5_ii(i,m=md5_ii(m,f,r,i,d[n+4],6,-145523070),f,r,d[n+11],10,-1120210379),m,f,d[n+2],15,718787259),i,m,d[n+9],21,-343485551),m=safe_add(m,h),f=safe_add(f,t),r=safe_add(r,g),i=safe_add(i,e)}return Array(m,f,r,i)}function md5_cmn(d,_,m,f,r,i){return safe_add(bit_rol(safe_add(safe_add(_,d),safe_add(f,i)),r),m)}function md5_ff(d,_,m,f,r,i,n){return md5_cmn(_&m|~_&f,d,_,r,i,n)}function md5_gg(d,_,m,f,r,i,n){return md5_cmn(_&f|m&~f,d,_,r,i,n)}function md5_hh(d,_,m,f,r,i,n){return md5_cmn(_^m^f,d,_,r,i,n)}function md5_ii(d,_,m,f,r,i,n){return md5_cmn(m^(_|~f),d,_,r,i,n)}function safe_add(d,_){var m=(65535&d)+(65535&_);return(d>>16)+(_>>16)+(m>>16)<<16|65535&m}function bit_rol(d,_){return d<<_|d>>>32-_}
+	function collab_create() {
+		var type = $("#secureMenu_collab-create-type").val();
+		var members = $("#secureMenu_collab-create-members").val().join(";");
+		if (members.substr(0, 1) == "*") {
+			members = "*";
+		}
+		var name = $("#secureMenu_collab-create-name").val();
+		var id = collab_md5(Date());
+		collab_hidePage("create");
+		$("#secureMenu_collab-create-members").val("*");
+		$("#secureMenu_collab-create-name").val("");
+		if (type == "room") {
+			var rHtml = "<div id=\"secureMenu_collab-room-" + id + "\" class=\"collab-person\">";
+			rHtml += "<div class=\"status offline\"><div class=\"status online\" style=\"height:50%;\"></div></div>";
+			rHtml += "<div class=\"info\">" + name + "<br /><small><i><span class=\"online\"></span></i></small></div>";
+			rHtml += "<button class=\"collab-chat\" title=\"Open Room\" onclick=\"collab_showChat(\'R" + id + "\',\'" + name + "\');\"><i class=\"fas fa-comments\"></i></button>";
+			$("#secureMenu_collab-rooms").append(rHtml);
+			collab_showChat("R"+id,name);
+		} else {
+			var tHtml = "<div id=\"secureMenu_collab-list-" + id + "\" class=\"collab-person\">";
+			tHtml += "<div class=\"status incomplete\"><div class=\"status complete\" style=\"height:50%;\"></div></div>";
+			tHtml += "<div class=\"info\">" + name + "<br /><small><i><span class=\"done\"></span></i></small></div>";
+			tHtml += "<button class=\"collab-chat\" title=\"Open List\" onclick=\"collab_showList(\'" + id + "\',\'" + name + "\');\"><i class=\"fas fa-clipboard-list\"></i></button>";
+			$("#secureMenu_collab-todo").append(tHtml);
+			collab_showList(id,name);
+		}
+		
+		module_ajax("collab_update", {chat:collab_chat,list:collab_list,new_id:id,new_type:type,new_members:members,new_name:name}, collab_update_callback);
 	}
 	var collab_chat = null;
 	var collab_list = null;
@@ -335,6 +424,8 @@ $TEMPLATES = [
 		collab_chat = null;
 	}
 	function collab_showList(id, name) {
+		$("#secureMenu_collab-list .todos").html("");
+		$("#secureMenu_collab-list .title b").text(name);
 		collab_list = id;
 		collab_update();
 		collab_showPage("list");
@@ -350,6 +441,21 @@ $TEMPLATES = [
 		}
 		$("#secureMenu_collab-chat-newmessage").val("");
 		module_ajax("collab_update", {chat:collab_chat,list:collab_list,message:msg}, collab_update_callback);
+	}
+	function collab_addTodo() {
+		var label = $("#secureMenu_collab-todo-newentry").val();
+		if (label == "") {
+			return;
+		}
+		$("#secureMenu_collab-todo-newentry").val("");
+		module_ajax("collab_update", {chat:collab_chat,list:collab_list,entry:label}, collab_update_callback);
+	}
+	function collab_check(id) {
+		module_ajax("collab_update", {chat:collab_chat,list:collab_list,check_entry:id}, collab_update_callback);
+	}
+	function collab_deleteTodo(id) {
+		module_ajax("collab_update", {chat:collab_chat,list:collab_list,delete_entry:id}, collab_update_callback);
+		$("#secureMenu_collab-todo-"+id)[0].remove();
 	}
 	$(document).ready(function() {setInterval(collab_update, 3000);});
 	function collab_update() {
@@ -397,6 +503,20 @@ $TEMPLATES = [
 		}
 		if (scrollChat) {
 			$("#secureMenu_collab-chat .messages").animate({scrollTop:$("#secureMenu_collab-chat .messages")[0].scrollHeight}, 500);
+		}
+		
+		for (entry in data["todo"]) {
+			var e = data["todo"][entry];
+			if ($("#secureMenu_collab-todo-"+e.id).length == 0) {
+				var eHtml = "<div id=\"secureMenu_collab-todo-"+e.id+"\" class=\"collab-todo\">";
+				eHtml += "<div class=\"form-check\">";
+				eHtml += "<input class=\"form-check-input\" type=\"checkbox\" onclick=\"collab_check(\'" + e.id + "\');\">";
+				eHtml += "<label class=\"form-check-label\"></label></div>";
+				eHtml += "<button class=\"collab-delete\" title=\"Delete\" onclick=\"collab_deleteTodo(\'" + e.id + "\');\"><i class=\"fas fa-trash\"></i></button>";
+				$("#secureMenu_collab-list .todos").append(eHtml);
+				$("#secureMenu_collab-todo-"+e.id+" label").text(e.label);
+			}
+			$("#secureMenu_collab-todo-"+e.id+" .form-check-input")[0].checked = e.done == 1;
 		}
 	}
 </script>';
@@ -676,7 +796,7 @@ $(document).keydown(function(event) {
 	    <div class="col-12 col-md-9">
 		    <div class="tab-content" id="dialog_admin_panels">
 		        <div class="tab-pane fade show active" id="dialog_admin_panel_pages" role="tabpanel" aria-labelledby="dialog_admin_tab_pages">
-					<table class="table table-striped">
+					<table class="table table-responsive table-striped">
 						<thead>
 							<tr><th>Page ID</th><th>Title</th><th>Last Revision</th><th><i class="fas fa-lock"></i></th><th>Delete</th></tr>
 						</thead>
@@ -772,7 +892,7 @@ $(document).keydown(function(event) {
 					</form>
 					<hr width="90%" />
 					<h4>Current Users</h4>
-					<table class="table table-striped">
+					<table class="table table-responsive table-striped">
 						<thead>
 							<tr><th>Name</th><th>Email</th><th>Permissions</th><th>Registered On</th><th>Tools</th></tr>
 						</thead>
