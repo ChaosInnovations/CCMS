@@ -146,6 +146,7 @@
 }
 
 button.collab-lg {
+	position: relative;
     text-align: center;
     vertical-align: middle;
     border: 1px solid #FFF;
@@ -278,6 +279,7 @@ button.collab-btn:hover {
     cursor: pointer;
     transition: background-color 0.25s, border-color 0.25s, color 0.25s;
 	margin-top:0.4rem;
+	position: relative;
 }
 
 .collab-person .collab-chat:hover {
@@ -404,4 +406,29 @@ button.collab-btn:hover {
 .collab-todo .collab-delete:hover {
     border: 1px solid #F00;
     color: #F00;
+}
+
+.notif-badge {
+    font-size: 75% !important;
+    background-color: #f00;
+    color: #fff;
+    padding: 0.25em 0.4em;
+    font-weight: 700;
+    line-height: 1;
+    text-align: center;
+    white-space: nowrap;
+    border-radius: 0.5rem;
+    position: absolute;
+    left: 100%;
+    bottom: 0px;
+    transform: translate(-10px, 25%);
+	display: none;
+}
+
+.secureMenu-icon.active > .notif-badge, .secureMenu-iconGroup.visible .active .notif-badge, .secureMenu-iconGroup .notif-badge {
+	opacity: 0;
+}
+
+.secureMenu-iconGroup.visible .notif-badge {
+	opacity: 1 !important;
 }

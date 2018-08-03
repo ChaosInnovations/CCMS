@@ -1,5 +1,26 @@
 <?php
 
+function notify($uid, $what) {
+	global $conn;
+	$what .= ";";
+	$stmt = $conn->prepare("UPDATE users SET collab_notifs = CONCAT(`collab_notifs`,:what) WHERE uid=:uid;");
+	$stmt->bindParam(":what", $what);
+	$stmt->bindParam(":uid", $uid);
+	$stmt->execute();
+	
+	// TODO: Insert email notification here
+	
+}
+
+function unnotify($uid, $what) {
+	global $conn;
+	$what .= ";";
+	$stmt = $conn->prepare("UPDATE users SET collab_notifs = REPLACE(`collab_notifs`,:what,'') WHERE uid=:uid;");
+	$stmt->bindParam(":what", $what);
+	$stmt->bindParam(":uid", $uid);
+	$stmt->execute();
+}
+
 function ajax_collab_update() {
 	global $conn;
 	global $authuser;
@@ -18,6 +39,30 @@ function ajax_collab_update() {
 		$stmt->bindParam(":msg", $_POST["message"]);
 		$stmt->bindParam(":now", $now);
 		$stmt->execute();
+		// Notify members
+		if (substr($_POST["chat"], 0, 1) == "R") {
+			// multiple members
+			$rid = substr($_POST["chat"], 1);
+			$stmt = $conn->prepare("SELECT room_members FROM collab_rooms WHERE room_id=:rid;");
+			$stmt->bindParam(":rid", $rid);
+			$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
+			$room = $stmt->fetchAll()[0];
+			if ($room["room_members"] == "*") {
+				$stmt = $conn->prepare("SELECT uid FROM users;");
+				$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
+				foreach($stmt->fetchAll() as $u) {
+					notify($u["uid"], "R" . $rid);
+				}
+			} else {
+				$members = explode(";", $room["room_members"]);
+				foreach($members as $m) {
+					notify($m, "R" . $rid);
+				}
+			}
+		} else {
+			$uid = substr($_POST["chat"], 1);
+			notify($uid, "U" . $authuser->uid);
+		}
 	}
 	
 	// Add entry
@@ -26,6 +71,23 @@ function ajax_collab_update() {
 		$stmt->bindParam(":lid", $_POST["list"]);
 		$stmt->bindParam(":label", $_POST["entry"]);
 		$stmt->execute();
+		// Notify members
+		$stmt = $conn->prepare("SELECT list_participants FROM collab_lists WHERE list_id=:lid;");
+		$stmt->bindParam(":lid", $_POST["list"]);
+		$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
+		$list = $stmt->fetchAll()[0];
+		if ($list["list_participants"] == "*") {
+			$stmt = $conn->prepare("SELECT uid FROM users;");
+			$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
+			foreach($stmt->fetchAll() as $u) {
+				notify($u["uid"], "L" . $_POST["list"]);
+			}
+		} else {
+			$members = explode(";", $list["list_participants"]);
+			foreach($members as $m) {
+				notify($m, "L" . $_POST["list"]);
+			}
+		}
 	}
 	
 	// Check entry
@@ -33,6 +95,23 @@ function ajax_collab_update() {
 		$stmt = $conn->prepare("UPDATE collab_todo SET todo_done=!todo_done WHERE todo_id=:tid;");
 		$stmt->bindParam(":tid", $_POST["check_entry"]);
 		$stmt->execute();
+		// Notify members
+		$stmt = $conn->prepare("SELECT list_participants FROM collab_lists WHERE list_id=:lid;");
+		$stmt->bindParam(":lid", $_POST["list"]);
+		$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
+		$list = $stmt->fetchAll()[0];
+		if ($list["list_participants"] == "*") {
+			$stmt = $conn->prepare("SELECT uid FROM users;");
+			$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
+			foreach($stmt->fetchAll() as $u) {
+				notify($u["uid"], "L" . $_POST["list"]);
+			}
+		} else {
+			$members = explode(";", $list["list_participants"]);
+			foreach($members as $m) {
+				notify($m, "L" . $_POST["list"]);
+			}
+		}
 	}
 	
 	// Delete entry
@@ -40,6 +119,23 @@ function ajax_collab_update() {
 		$stmt = $conn->prepare("DELETE FROM collab_todo WHERE todo_id=:tid;");
 		$stmt->bindParam(":tid", $_POST["delete_entry"]);
 		$stmt->execute();
+		// Notify members
+		$stmt = $conn->prepare("SELECT list_participants FROM collab_lists WHERE list_id=:lid;");
+		$stmt->bindParam(":lid", $_POST["list"]);
+		$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
+		$list = $stmt->fetchAll()[0];
+		if ($list["list_participants"] == "*") {
+			$stmt = $conn->prepare("SELECT uid FROM users;");
+			$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
+			foreach($stmt->fetchAll() as $u) {
+				notify($u["uid"], "L" . $_POST["list"]);
+			}
+		} else {
+			$members = explode(";", $list["list_participants"]);
+			foreach($members as $m) {
+				notify($m, "L" . $_POST["list"]);
+			}
+		}
 	}
 	
 	// Add room or list
@@ -53,10 +149,23 @@ function ajax_collab_update() {
 		$stmt->bindParam(":name", $_POST["new_name"]);
 		$stmt->bindParam(":members", $_POST["new_members"]);
 		$stmt->execute();
+		// Notify members
+		if ($_POST["new_members"] == "*") {
+			$stmt = $conn->prepare("SELECT uid FROM users;");
+			$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
+			foreach($stmt->fetchAll() as $u) {
+				notify($u["uid"], ($_POST["new_type"] == "list"?"L":"R") . $_POST["new_id"]);
+			}
+		} else {
+			$members = explode(";", $_POST["new_members"]);
+			foreach($members as $m) {
+				notify($m, ($_POST["new_type"] == "list"?"L":"R") . $_POST["new_id"]);
+			}
+		}
 	}
 	
 	// update object
-	$update = ["users"=>[],"rooms"=>[],"lists"=>[],"todo"=>[],"chat"=>[]];
+	$update = ["users"=>[],"rooms"=>[],"lists"=>[],"todo"=>[],"chat"=>[],"notifs"=>[]];
 	
 	// User statuses
 	$stmt = $conn->prepare("SELECT uid, collab_status, collab_pageid FROM users;");
@@ -130,13 +239,15 @@ function ajax_collab_update() {
 		} else {
 			$otherUid = substr($_POST["chat"], 1);
 			$ucid = "U" . $authuser->uid;
-			$stmt = $conn->prepare("SELECT chat_id, chat_from, chat_body, chat_sent FROM collab_chat WHERE chat_to=:cid OR (chat_to=:ucid AND chat_from=:ouid) ORDER BY chat_sent DESC LIMIT 60;");
+			$stmt = $conn->prepare("SELECT chat_id, chat_from, chat_body, chat_sent FROM collab_chat WHERE (chat_to=:cid AND chat_from=:uid) OR (chat_to=:ucid AND chat_from=:ouid) ORDER BY chat_sent DESC LIMIT 60;");
 			$stmt->bindParam(":ucid", $ucid);
 			$stmt->bindParam(":ouid", $otherUid);
+			$stmt->bindParam(":uid", $authuser->uid);
 		}
 		$stmt->bindParam(":cid", $_POST["chat"]);
 		$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
 		$messages = array_reverse($stmt->fetchAll());
+		unnotify($authuser->uid, $_POST["chat"]);
 		
 		foreach ($messages as $message) {
 			$stmt = $conn->prepare("SELECT name FROM users WHERE uid=:uid;");
@@ -176,10 +287,31 @@ function ajax_collab_update() {
 		$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
 		$entries= $stmt->fetchAll();
 		
+		unnotify($authuser->uid, "L" . $_POST["list"]);
+		
 		foreach ($entries as $entry) {
 			$data = ["id"=>$entry["todo_id"],"label"=>$entry["todo_label"],"done"=>$entry["todo_done"]];
 		    array_push($update["todo"], $data);
 		}
+	}
+	
+	// Get notifications
+	$stmt = $conn->prepare("SELECT collab_notifs FROM users WHERE uid=:uid;");
+	$stmt->bindParam(":uid", $authuser->uid);
+	$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
+	foreach (explode(";", $stmt->fetchAll()[0]["collab_notifs"]) as $notif) {
+		if ($notif == "") {
+			continue;
+		}
+		array_push($update["notifs"], $notif);
+	}
+	$defaultPasswordHash = hash("sha512", "password");
+	$stmt = $conn->prepare("SELECT uid FROM access WHERE uid=:uid AND pwd=:pwd;");
+	$stmt->bindParam(":uid", $authuser->uid);
+	$stmt->bindParam(":pwd", $defaultPasswordHash);
+	$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
+	if (count($stmt->fetchAll()) == 1) {
+		array_push($update["notifs"], "pwd");
 	}
 	
 	return json_encode($update);

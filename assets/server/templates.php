@@ -35,6 +35,7 @@ $TEMPLATES = [
 	return '
 <div id="secureMenu" class="secureMenu">
   <div id="secureMenu_trigger" class="secureMenu-icon" title="Secure Menu" onclick="toggleSecureMenu();" style="z-index:10;">
+	<span class="notif-badge">0</span>
     <span><i class="fas fa-ellipsis-v"></i></span>
   </div>
   <div id="secureMenu_horizontal" class="secureMenu-iconGroup horizontal" style="z-index:9;">
@@ -42,9 +43,11 @@ $TEMPLATES = [
       <span><i class="fas fa-sign-out-alt"></i></span>
     </div>
     <div id="secureMenu_option-account" title="Account Details" onclick="showDialog(\'account\');" class="secureMenu-icon">
+	  <span class="notif-badge">1</span>
       <span><i class="fas fa-user-cog"></i></span>
     </div>' . ($canChat ? '
     <div id="secureMenu_option-collabTrigger" title="Collaborate" onclick="triggerPane(\'collab\');" class="secureMenu-icon">
+	  <span class="notif-badge">0</span>
       <span><i class="fas fa-share-alt"></i></span>
     </div>' : '') . '
     <div id="secureMenu_option-home" title="Home" onclick="location.assign(\'./\');" class="secureMenu-icon">
@@ -154,7 +157,10 @@ $TEMPLATES = [
 		' . ($user["uid"]==$authuser->uid?'<b>':'') . $user["name"] . ($user["uid"]==$authuser->uid?'</b>':'') . '<br />
 		<small><i><span class="page"><a href="?p=' . $user["collab_pageid"] . '" title="' . page_title($user["collab_pageid"]) . '">' . page_title($user["collab_pageid"]) . '</a></span></i></small>
 	</div>
-	<button class="collab-chat" title="Open Chat"' . ($user["uid"]==$authuser->uid?'disabled':'onclick="collab_showChat(\'U' . $user["uid"] . '\', \'' . $user["name"] . '\');"') . '><i class="fas fa-comment"></i></button>
+	<button class="collab-chat" title="Open Chat" onclick="collab_showChat(\'U' . $user["uid"] . '\', \'' . $user["name"] . '\');">
+		<i class="fas fa-comment"></i>
+		<span class="notif-badge">0</span>
+	</button>
 </div>';
 	}
 	
@@ -204,7 +210,10 @@ $TEMPLATES = [
 		' . $room["room_name"] . '<br />
 		<small><i><span class="online">' . $numOnline . '/' .$numMembers . ' online</span></i></small>
 	</div>
-	<button class="collab-chat" title="Open Room" onclick="collab_showChat(\'R' . $room["room_id"] . '\', \'' . $room["room_name"] . '\');"><i class="fas fa-comments"></i></button>
+	<button class="collab-chat" title="Open Room" onclick="collab_showChat(\'R' . $room["room_id"] . '\', \'' . $room["room_name"] . '\');">
+		<i class="fas fa-comments"></i>
+		<span class="notif-badge">0</span>
+	</button>
 </div>';
 
 	}
@@ -242,7 +251,10 @@ $TEMPLATES = [
 		' . $list["list_name"] . '<br />
 		<small><i><span class="done">' . $numComplete . '/' .$numTasks . ' finished</span></i></small>
 	</div>
-	<button class="collab-chat" title="Open List" onclick="collab_showList(\'' . $list["list_id"] . '\', \'' . $list["list_name"] . '\');"><i class="fas fa-clipboard-list"></i></button>
+	<button class="collab-chat" title="Open List" onclick="collab_showList(\'' . $list["list_id"] . '\', \'' . $list["list_name"] . '\');">
+		<i class="fas fa-clipboard-list"></i>
+		<span class="notif-badge">0</span>
+	</button>
 </div>';
 	}
 	
@@ -269,9 +281,18 @@ $TEMPLATES = [
 	return '
 <b>Collaborate</b>
 <hr />
-<button class="collab-lg" onclick="collab_showPage(\'rooms\');" title="Chat Rooms"><i class="fas fa-comments"></i></button><br />
-<button class="collab-lg" onclick="collab_showPage(\'todo\');" title="To-Do Lists"><i class="fas fa-clipboard-list"></i></button><br />
-<button class="collab-lg" onclick="collab_showPage(\'people\');" title="People and Direct Messages"><i class="fas fa-users"></i></button><br />
+<button class="collab-lg" onclick="collab_showPage(\'rooms\');" title="Chat Rooms">
+	<i class="fas fa-comments"></i>
+	<span id="secureMenu_notif-rooms" class="notif-badge">0</span>
+</button><br />
+<button class="collab-lg" onclick="collab_showPage(\'todo\');" title="To-Do Lists">
+	<i class="fas fa-clipboard-list"></i>
+	<span id="secureMenu_notif-todo" class="notif-badge">0</span>
+</button><br />
+<button class="collab-lg" onclick="collab_showPage(\'people\');" title="People and Direct Messages">
+	<i class="fas fa-users"></i>
+	<span id="secureMenu_notif-people" class="notif-badge">0</span>
+</button><br />
 <div id="secureMenu_collab-rooms" class="collab-page">
 	<button class="collab-back" onclick="collab_hidePage(\'rooms\');" title="Go Back"><i class="fas fa-arrow-left"></i></button>
 	<button class="collab-new" onclick="collab_startCreate(\'room\');" title="New Room"><i class="fas fa-plus"></i></button>
@@ -457,12 +478,11 @@ $TEMPLATES = [
 		module_ajax("collab_update", {chat:collab_chat,list:collab_list,delete_entry:id}, collab_update_callback);
 		$("#secureMenu_collab-todo-"+id)[0].remove();
 	}
-	$(document).ready(function() {setInterval(collab_update, 3000);});
+	$(document).ready(function() {setInterval(collab_update, 3000);collab_update();});
 	function collab_update() {
 		module_ajax("collab_update", {chat:collab_chat,list:collab_list}, collab_update_callback);
 	}
 	function collab_update_callback(data) {
-		console.log(data);
 		var data = JSON.parse(data);
 		for (user in data["users"]) {
 			var u = data["users"][user];
@@ -475,18 +495,21 @@ $TEMPLATES = [
 				$("#secureMenu_collab-person-" + u.uid + " .status").addClass("offline");
 				$("#secureMenu_collab-person-" + u.uid + " .page").html("Offline");
 			}
+			$("#secureMenu_collab-person-" + u.uid + " .notif-badge").text(0);
 		}
 		for (room in data["rooms"]) {
 			var r = data["rooms"][room];
 			var percent = r.on*100/r.members;
 			$("#secureMenu_collab-room-" + r.rid + " .status > .online").height("" + percent + "%");
 			$("#secureMenu_collab-room-" + r.rid + " .info .online").html("" + r.on + "/" + r.members + " online");
+			$("#secureMenu_collab-room-" + r.rid + " .notif-badge").text(0);
 		}
 		for (list in data["lists"]) {
 			var l = data["lists"][list];
 			var percent = l.done*100/l.tasks;
 			$("#secureMenu_collab-list-" + l.lid + " .status > .complete").height("" + percent + "%");
 			$("#secureMenu_collab-list-" + l.lid + " .info .done").html("" + l.done + "/" + l.tasks + " finished");
+			$("#secureMenu_collab-list-" + l.lid + " .notif-badge").text(0);
 		}
 		var scrollChat = false;
 		for (msg in data["chat"]) {
@@ -517,6 +540,61 @@ $TEMPLATES = [
 				$("#secureMenu_collab-todo-"+e.id+" label").text(e.label);
 			}
 			$("#secureMenu_collab-todo-"+e.id+" .form-check-input")[0].checked = e.done == 1;
+		}
+		console.log(data["notifs"]);
+		var totalNotifs = data["notifs"].length;
+		var roomNotifs = 0;
+		var todoNotifs = 0;
+		var userNotifs = 0;
+		$(".notif-badge").hide();
+		if (totalNotifs > 0) {
+			$("#secureMenu_trigger > .notif-badge").text(totalNotifs);
+			$("#secureMenu_trigger > .notif-badge").show();
+		} else {
+			$("#secureMenu_trigger > .notif-badge").hide();
+		}
+		for (notif in data["notifs"]) {
+			var n = data["notifs"][notif].toLowerCase();
+			var t = n.substr(0, 1);
+			var i = n.substr(1);
+			switch (t) {
+				case "p":
+					$("#secureMenu_option-account > .notif-badge").show();
+					break;
+				case "u":
+					userNotifs++;
+					$("#secureMenu_collab-person-" + i + " .notif-badge").text(parseInt($("#secureMenu_collab-person-" + i + " .notif-badge").text())+1);
+					$("#secureMenu_collab-person-" + i + " .notif-badge").show();
+					break;
+				case "l":
+					todoNotifs++;
+					$("#secureMenu_collab-list-" + i + " .notif-badge").text(parseInt($("#secureMenu_collab-list-" + i + " .notif-badge").text())+1);
+					$("#secureMenu_collab-list-" + i + " .notif-badge").show();
+					break;
+				case "r":
+					roomNotifs++;
+					$("#secureMenu_collab-room-" + i + " .notif-badge").text(parseInt($("#secureMenu_collab-room-" + i + " .notif-badge").text())+1);
+					$("#secureMenu_collab-room-" + i + " .notif-badge").show();
+					break;
+				default:
+					break;
+			}
+		}
+		if (roomNotifs + todoNotifs + userNotifs > 0) {
+			$("#secureMenu_option-collabTrigger > .notif-badge").text(roomNotifs + todoNotifs + userNotifs);
+			$("#secureMenu_option-collabTrigger > .notif-badge").show();
+		}
+		if (roomNotifs > 0) {
+			$("#secureMenu_notif-rooms").text(roomNotifs);
+			$("#secureMenu_notif-rooms").show();
+		}
+		if (todoNotifs > 0) {
+			$("#secureMenu_notif-todo").text(todoNotifs);
+			$("#secureMenu_notif-todo").show();
+		}
+		if (userNotifs > 0) {
+			$("#secureMenu_notif-people").text(userNotifs);
+			$("#secureMenu_notif-people").show();
 		}
 	}
 </script>';
