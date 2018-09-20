@@ -18,7 +18,7 @@ $TEMPLATES = [
 	foreach ($securepages as $sp) {
 		if (!in_array($sp, $authuser->permissions->page_viewblacklist)) {
 			$spd = new Page($sp);
-			$securePageListing .= '<a href="?p='.$sp.'">'.$spd->title.'</a><br />
+			$securePageListing .= '<a href="/'.$sp.'">'.$spd->title.'</a><br />
 			';
 		}
 	}
@@ -155,7 +155,7 @@ $TEMPLATES = [
 	<div class="status '.($user["collab_status"]>0?'online':'offline'). '"></div>
 	<div class="info">
 		' . ($user["uid"]==$authuser->uid?'<b>':'') . $user["name"] . ($user["uid"]==$authuser->uid?'</b>':'') . '<br />
-		<small><i><span class="page"><a href="?p=' . $user["collab_pageid"] . '" title="' . page_title($user["collab_pageid"]) . '">' . page_title($user["collab_pageid"]) . '</a></span></i></small>
+		<small><i><span class="page"><a href="/' . $user["collab_pageid"] . '" title="' . page_title($user["collab_pageid"]) . '">' . page_title($user["collab_pageid"]) . '</a></span></i></small>
 	</div>
 	<button class="collab-chat" title="Open Chat" onclick="collab_showChat(\'U' . $user["uid"] . '\', \'' . $user["name"] . '\');">
 		<i class="fas fa-comment"></i>
@@ -489,7 +489,7 @@ $TEMPLATES = [
 			if (u.status > 0) {
 				$("#secureMenu_collab-person-" + u.uid + " .status").removeClass("offline");
 				$("#secureMenu_collab-person-" + u.uid + " .status").addClass("online");
-				$("#secureMenu_collab-person-" + u.uid + " .page").html("<a href=\"?p="+u.page_id+"\" title=\""+u.page_title+"\">"+u.page_title+"</a>");
+				$("#secureMenu_collab-person-" + u.uid + " .page").html("<a href=\"/"+u.page_id+"\" title=\""+u.page_title+"\">"+u.page_title+"</a>");
 			} else {
 				$("#secureMenu_collab-person-" + u.uid + " .status").removeClass("online");
 				$("#secureMenu_collab-person-" + u.uid + " .status").addClass("offline");
@@ -541,7 +541,6 @@ $TEMPLATES = [
 			}
 			$("#secureMenu_collab-todo-"+e.id+" .form-check-input")[0].checked = e.done == 1;
 		}
-		console.log(data["notifs"]);
 		var totalNotifs = data["notifs"].length;
 		var roomNotifs = 0;
 		var todoNotifs = 0;
@@ -751,7 +750,7 @@ function dialog_edit_save() {
 			$(".dialog_edit_formfeedback_saved").show();
 			setTimeout(function(){window.location.reload();}, 800);
 		} else {
-			window.location = "?p="+data;
+			window.location = "/"+data;
 		}
 	});
 }
@@ -792,7 +791,7 @@ $(document).keydown(function(event) {
 	}
 	$date = date("l, F j, Y", strtotime($page["revision"]));
 	return '
-<tr><td><a href="?p=' . $pid . '">' . $pid . '</a></td><td>' . urldecode($page["title"]) . '</td><td>' . $date . '</td><td>' . $secure . '</td><td>' . $remove . '</td></tr>';
+<tr><td><a href="/' . $pid . '">' . $pid . '</a></td><td>' . urldecode($page["title"]) . '</td><td>' . $date . '</td><td>' . $secure . '</td><td>' . $remove . '</td></tr>';
 },
 
 
@@ -1450,7 +1449,7 @@ $(document).keydown(function(event) {
 	<p>' . $adminName . ' created an account for you on the
 	<a href="' . $url . '" title="' . $organization . '">' . $organization . ' website.</a>
 	Your current password is <b>password</b> so please change it when you log in for the first time.</p>
-	<a href="' . $url . '?p=secureaccess">Sign In</a>
+	<a href="' . $url . '/secureaccess">Sign In</a>
 </div>
 <p>' . $organization . '</p>';
 }

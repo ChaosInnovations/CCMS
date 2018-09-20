@@ -85,7 +85,7 @@ function loginSubmission() {
 			if (window.location.search.indexOf("&n") == -1) {
 				window.location.reload(true);
 			} else {
-				var url = window.location.origin + window.location.pathname + "?p" + window.location.search.substr(window.location.search.indexOf("&n")+2);
+				var url = BASE_URL + "/" + window.location.search.substr(window.location.search.indexOf("&n")+2);
 				window.location.assign(url);
 			}
 		}
@@ -105,7 +105,7 @@ function loginSubmission() {
 				foreach ($pdatas as $pd) {
 					if ($authuser->permissions->page_viewsecure and !in_array($pd["pageid"], $authuser->permissions->page_viewblacklist)) {
 						$title = urldecode($pd["title"]);
-						$html .= "<a class=\"list-group-item list-group-item-action\" href=\"?p={$pd["pageid"]}\" title=\"{$title}\">{$title}</a>";
+						$html .= "<a class=\"list-group-item list-group-item-action\" href=\"/{$pd["pageid"]}\" title=\"{$title}\">{$title}</a>";
 					}
 				}
 				$html .= "</div>";
@@ -179,7 +179,7 @@ function module_builtin_contactus_submit() {
 					continue;
 				} else {
 					$title = urldecode($pd["title"]);
-					$content  .= "<li><a href=\"?p={$pd["pageid"]}\" title=\"{$title}\">{$title}</a></li>";
+					$content  .= "<li><a href=\"/{$pd["pageid"]}\" title=\"{$title}\">{$title}</a></li>";
 				}
 			}
 			$content .= "</ul>";
