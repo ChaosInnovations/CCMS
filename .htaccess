@@ -3,5 +3,5 @@ RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteRule ^ index.php [L,QSA]
 
-ErrorDocument 403 /index.php?p=notfound
-ErrorDocument 404 /index.php?p=notfound
+ErrorDocument 403 /notfound
+ErrorDocument 404 /notfound
