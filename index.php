@@ -7,11 +7,6 @@ if (file_exists("STATE")) {
 	unlink("STATE");
 }
 
-include "assets/server/pagegen.php";
-include "assets/server/secure.php";
-include "assets/server/mail.php";
-include "assets/server/templates.php";
-
 $url = trim($_SERVER["REQUEST_URI"], "/");
 if (strstr($url, '?')) $url = substr($url, 0, strpos($url, '?'));
 
@@ -25,6 +20,11 @@ if ($pageid == "") {
 }
 
 $https = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] != 'off') ? "https" : "http";
+
+include "assets/server/pagegen.php";
+include "assets/server/secure.php";
+include "assets/server/mail.php";
+include "assets/server/templates.php";
 
 load_jsons();
 

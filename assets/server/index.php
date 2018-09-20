@@ -12,6 +12,8 @@ header("Access-Control-Allow-Origin: http://penderbus.org");
 header("Connection: close");
 if (isset($_GET["func"])) {
 	
+	$https = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] != 'off') ? "https" : "http";
+	
 	include "secure.php";
 	include "pagegen.php";
 	include "mail.php";

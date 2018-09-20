@@ -639,11 +639,14 @@ $TEMPLATES = [
 </div>
 </div>
 <div class="form-group row">
-<label class="col-form-label col-sm-3 col-md-2" for="dialog_edit_pageid">Page ID:</label>
+<label class="col-form-label col-sm-3 col-md-2" for="dialog_edit_pageid">Page URL:</label>
 <div class="input-group col-sm-9 col-md-10">
-<input type="text" id="dialog_edit_pageid" name="pageid" class="form-control border-right-0 border-secondary" title="Page ID" placeholder="Page ID" oninput="dialog_edit_check_pageid();">
+<div class="input-group-prepend">
+<span class="input-group-text" id="basic-addon3">' . $https . '://' . $_SERVER["SERVER_NAME"] . '/</span>
+</div>
+<input type="text" id="dialog_edit_pageid" name="pageid" class="form-control border-right-0" title="Page ID" placeholder="Page ID" oninput="dialog_edit_check_pageid();">
 <div class="input-group-append">
-<div class="input-group-text bg-transparent border-left-0 border-secondary">
+<div class="input-group-text bg-transparent border-left-0">
 <i class="fas fa-times" style="display:none;"></i>
 <i class="fas fa-check" style="display:none;"></i>
 </div>
@@ -653,19 +656,19 @@ $TEMPLATES = [
 <div class="form-group row">
 <label class="col-form-label col-sm-3 col-md-2" for="dialog_edit_pagetitle">Page Title:</label>
 <div class="col-sm-9 col-md-10">
-<input type="text" id="dialog_edit_pagetitle" name="pagetitle" class="form-control border-secondary" title="Page Title" placeholder="Page Title">
+<input type="text" id="dialog_edit_pagetitle" name="pagetitle" class="form-control" title="Page Title" placeholder="Page Title">
 </div>
 </div>
 <div class="form-group row">
 <label class="col-form-label col-sm-3 col-md-2" for="dialog_edit_head"><code>&lt;head&gt;</code>:</label>
 <div class="col-sm-9 col-md-10">
-<textarea id="dialog_edit_head" name="head" class="form-control border-secondary" title="Page Head" placeholder="Page Head" rows="8"></textarea>
+<textarea id="dialog_edit_head" name="head" class="form-control" title="Page Head" placeholder="Page Head" rows="8"></textarea>
 </div>
 </div>
 <div class="form-group row">
 <label class="col-form-label col-sm-3 col-md-2" for="dialog_edit_body"><code>&lt;body&gt;</code>:</label>
 <div class="col-sm-9 col-md-10">
-<textarea id="dialog_edit_body" name="body" class="form-control border-secondary" title="Page Body" placeholder="Page Body" rows="32"></textarea>
+<textarea id="dialog_edit_body" name="body" class="form-control" title="Page Body" placeholder="Page Body" rows="32"></textarea>
 </div>
 </div>
 </form>
