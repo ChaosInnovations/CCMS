@@ -327,7 +327,7 @@ class Page {
 		}
 		$this->body = $this->nav . $this->body . $this->foot;
 		$placeholders = [];
-		preg_match_all("/\{\{.+\}\}/", $this->body, $placeholders);
+		preg_match_all("/\{{2}[^\}]+\}{2}/", $this->body, $placeholders);
 		foreach ($placeholders[0] as $pcode) {
 			if ($pcode != null and $pcode != "") {
 				$pcode_trim = trim($pcode, "{}");
