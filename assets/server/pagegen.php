@@ -177,7 +177,6 @@ function page_title($pid) {
 class Page {
 	
 	public $pageid = "";
-	public $queryerr = "";
 	public $rawtitle = "Empty%20Page";
 	public $title = "Empty Page";
 	public $rawhead = "";
@@ -194,7 +193,6 @@ class Page {
 	public $revision = "";
 	
 	function __construct($pid=null) {
-		global $queryerr;
 		global $conn, $sqlstat, $sqlerr;
 		if ($pid != null) {
 			$pageid = $pid;
@@ -202,7 +200,6 @@ class Page {
 			global $pageid;
 		}
 		$this->pageid = $pageid;
-		$this->queryerr = $queryerr;
 		
 		if ($sqlstat) {
 			$stmt = $conn->prepare("SELECT * FROM content_pages WHERE pageid=:pid;");

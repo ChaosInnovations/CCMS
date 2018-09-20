@@ -1,5 +1,4 @@
 <?php
-
 // Delete setup script and STATE if it still exists (first time launch)
 $firstLaunch = false;
 if (file_exists("STATE")) {
@@ -13,16 +12,19 @@ include "assets/server/secure.php";
 include "assets/server/mail.php";
 include "assets/server/templates.php";
 
+$url = trim($_SERVER["REQUEST_URI"], "/");
+if (strstr($url, '?')) $url = substr($url, 0, strpos($url, '?'));
+
+$pageid = $url;
 if (isset($_GET["p"])) {
 	$pageid = $_GET["p"];
-} else {
+	header("Location: ./" . $pageid);
+}
+if ($pageid == "") {
 	$pageid = "home";
 }
-if (isset($_GET["e"])) {
-	$queryerr = $_GET["e"];
-} else {
-	$queryerr = "";
-}
+
+$https = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] != 'off') ? "https" : "http";
 
 load_jsons();
 
@@ -62,7 +64,7 @@ if (isset($_COOKIE["token"]) and validToken($_COOKIE["token"])) {
 if ($pageid == "") {
 	header("Location: ./");
 } else if (invalidPage()) {
-	header("Location: ?p=notfound&e={$pageid}");
+	$pageid = "notfound";
 }
 $page = new Page($pageid);
 
@@ -141,6 +143,7 @@ $page->resolvePlaceholders();
 		<script src="/assets/site/js/jquery-3.3.1.min.js"></script>
 		<?php
 $page->insertHead();
+echo "<script>var SERVER_NAME = \"{$_SERVER["SERVER_NAME"]}\", SERVER_HTTPS = \"{$https}\";</script>";
 		?>
 		<style>
 			.navbar .nav li * {
@@ -172,7 +175,7 @@ foreach ($msgs as $m) {
 		<script src="/assets/site/js/js.cookie.js"></script>
 		<script src="/assets/site/js/popper.min.js"></script>
 		<script src="/assets/site/css/bootstrap-4.1.1/js/bootstrap.min.js"></script>
-		<script src="/assets/site/js/site-1.0.1.js"></script>
+		<script src="/assets/site/js/site-1.1.0.js"></script>
         <script type="text/javascript" src="/assets/site/js/codemirror/lib/codemirror.js"></script>
         <script type="text/javascript" src="/assets/site/js/codemirror/mode/xml/xml.js"></script>
 		<script type="text/javascript" src="/assets/site/js/codemirror/mode/html/html.js"></script>

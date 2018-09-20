@@ -115,8 +115,7 @@ function loginSubmission() {
 	}
 	
 	function place_queryerr() {
-		global $page;
-		return ($page->queryerr != "") ? "/?p=" . $page->queryerr : $_SERVER['REQUEST_URI'];
+		return $_SERVER['REQUEST_URI'];
 	}
 	
 	function place_contactform() {
