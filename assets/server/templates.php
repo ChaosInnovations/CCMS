@@ -1009,48 +1009,6 @@ $(document).keydown(function(event) {
 							</div>
 						</div>
 						<div class="form-group row">
-							<label class="col-form-label col-sm-3 col-md-2" for="dialog_admin_site_secondaryemail">Secondary Email</label>
-							<div class="col-sm-9 col-md-10">
-								<input type="text" id="dialog_admin_site_secondaryemail" name="secondaryemail" class="form-control" title="Secondary Email" placeholder="Secondary Email" value="' . $secondaryemail . '">
-							</div>
-						</div>
-						<div class="form-group row">
-							<div class="offset-sm-3 offset-md-2 col-sm-9 col-md-10">
-								<input type="submit" class="btn btn-primary" title="Save" value="Save">
-							</div>
-						</div>
-						<h4>Page Defaults</h4>
-						<div class="form-group row">
-							<label class="col-form-label col-sm-3 col-md-2" for="dialog_admin_site_defaulttitle">Default Page Title</label>
-							<div class="col-sm-9 col-md-10">
-								<input type="text" id="dialog_admin_site_defaulttitle" name="defaulttitle" class="form-control" title="Default Page Title" placeholder="Default Page Title">
-							</div>
-						</div>
-						<div class="form-group row">
-							<label class="col-form-label col-sm-3 col-md-2" for="dialog_admin_site_defaulthead">Default Page <code>&lt;head&gt;</code></label>
-							<div class="col-sm-9 col-md-10">
-								<textarea id="dialog_admin_site_defaulthead" name="defaulthead" class="form-control monospace" title="Default Page Head" placeholder="Default Page Head" rows="8"></textarea>
-							</div>
-						</div>
-						<div class="form-group row">
-							<label class="col-form-label col-sm-3 col-md-2" for="dialog_admin_site_defaultbody">Default Page <code>&lt;body&gt;</code></label>
-							<div class="col-sm-9 col-md-10">
-								<textarea id="dialog_admin_site_defaultbody" name="defaultbody" class="form-control monospace" title="Default Page Body" placeholder="Default Page Body" rows="16"></textarea>
-							</div>
-						</div>
-						<div class="form-group row">
-							<label class="col-form-label col-sm-3 col-md-2" for="dialog_admin_site_defaultnav">Default Navigation Header</label>
-							<div class="col-sm-9 col-md-10">
-								<textarea id="dialog_admin_site_defaultnav" name="defaultnav" class="form-control monospace" title="Default Navigation Header" placeholder="Default Navigation Header" rows="16"></textarea>
-							</div>
-						</div>
-						<div class="form-group row">
-							<label class="col-form-label col-sm-3 col-md-2" for="dialog_admin_site_defaultfoot">Default Footer</label>
-							<div class="col-sm-9 col-md-10">
-								<textarea id="dialog_admin_site_defaultfoot" name="defaultfoot" class="form-control monospace" title="Default Footer" placeholder="Default Footer" rows="16"></textarea>
-							</div>
-						</div>
-						<div class="form-group row">
 							<div class="offset-sm-3 offset-md-2 col-sm-9 col-md-10">
 								<input type="submit" class="btn btn-primary" title="Save" value="Save">
 							</div>
@@ -1078,13 +1036,6 @@ $(document).keydown(function(event) {
 },
 
 "secure-modal-admin-script" => function() {
-	
-	$defaulttitle = getconfig("defaulttitle");
-	$defaulthead = getconfig("defaulthead");
-	$defaultbody = getconfig("defaultbody");
-	$defaultnav = getconfig("defaultnav");
-	$defaultfoot = getconfig("defaultfoot");
-	
 	return '
 function dialog_admin_pages_togglesecure(pid) {
 	state = $("#dialog_admin_pages_secure_" + pid).prop("checked");
@@ -1198,51 +1149,9 @@ function dialog_admin_users_reset(uid) {
 	});
 }
 
-var defaulttitle = decodeURIComponent("' . $defaulttitle . '");
-var defaulthead = decodeURIComponent("' . $defaulthead . '");
-var defaultbody = decodeURIComponent("' . $defaultbody . '");
-var defaultnav = decodeURIComponent("' . $defaultnav . '");
-var defaultfoot = decodeURIComponent("' . $defaultfoot . '");
-$("#dialog_admin_site_defaulttitle").val(defaulttitle);
-$("#dialog_admin_site_defaulthead").val(defaulthead);
-$("#dialog_admin_site_defaultbody").val(defaultbody);
-$("#dialog_admin_site_defaultnav").val(defaultnav);
-$("#dialog_admin_site_defaultfoot").val(defaultfoot);
-var cm_admin_site_head = null;
-var cm_admin_site_body = null;
-var cm_admin_site_nav = null;
-var cm_admin_site_foot = null;
-
-$("#dialog_admin").on("shown.bs.modal", function() {
-	if (cm_admin_site_head == null) {
-		cm_admin_site_head = CodeMirror.fromTextArea(document.getElementById("dialog_admin_site_defaulthead"), {
-			lineNumbers: true,
-			mode:  "htmlmixed"
-		});
-		cm_admin_site_body = CodeMirror.fromTextArea(document.getElementById("dialog_admin_site_defaultbody"), {
-			lineNumbers: true,
-			mode:  "htmlmixed"
-		});
-		cm_admin_site_nav = CodeMirror.fromTextArea(document.getElementById("dialog_admin_site_defaultnav"), {
-			lineNumbers: true,
-			mode:  "htmlmixed"
-		});
-		cm_admin_site_foot = CodeMirror.fromTextArea(document.getElementById("dialog_admin_site_defaultfoot"), {
-			lineNumbers: true,
-			mode:  "htmlmixed"
-		});
-	}
-});
-
 function dialog_admin_site_save() {
 	module_ajax("setconfig", {websitetitle: $("#dialog_admin_site_websitetitle").val(),
 	                               primaryemail: $("#dialog_admin_site_primaryemail").val(),
-								   secondaryemail: $("#dialog_admin_site_secondaryemail").val(),
-								   defaulttitle: encodeURIComponent($("#dialog_admin_site_defaulttitle").val()),
-								   defaulthead: encodeURIComponent(cm_admin_site_head.getValue()),
-								   defaultbody: encodeURIComponent(cm_admin_site_body.getValue()),
-								   defaultnav: encodeURIComponent(cm_admin_site_nav.getValue()),
-								   defaultfoot: encodeURIComponent(cm_admin_site_foot.getValue()),
 	                               token: Cookies.get("token")}, function(data){
 		if (data == "TRUE") {
 			window.alert("Website settings saved.");
@@ -1251,14 +1160,6 @@ function dialog_admin_site_save() {
 			window.alert("Couldn\'t save settings.");
 		}
 	});
-}
-
-function dialog_admin_site_reset() {
-	$("#dialog_admin_site_defaulttitle").val(defaulttitle);
-	$("#dialog_admin_site_defaulthead").val(defaulthead);
-	$("#dialog_admin_site_defaultbody").val(defaultbody);
-	$("#dialog_admin_site_defaultnav").val(defaultnav);
-	$("#dialog_admin_site_defaultfoot").val(defaultfoot);
 }';
 },
 

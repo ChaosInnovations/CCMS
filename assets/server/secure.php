@@ -263,24 +263,6 @@ function ajax_setconfig() {
 		if (isset($_POST["primaryemail"])) {
 			setconfig("primaryemail", $_POST["primaryemail"]);
 		}
-		if (isset($_POST["secondaryemail"])) {
-			setconfig("secondaryemail", $_POST["secondaryemail"]);
-		}
-		if (isset($_POST["defaulttitle"])) {
-			setconfig("defaulttitle", $_POST["defaulttitle"]);
-		}
-		if (isset($_POST["defaulthead"])) {
-			setconfig("defaulthead", $_POST["defaulthead"]);			
-		}
-		if (isset($_POST["defaultbody"])) {
-			setconfig("defaultbody", $_POST["defaultbody"]);
-		}
-		if (isset($_POST["defaultnav"])) {
-			setconfig("defaultnav", $_POST["defaultnav"]);
-		}
-		if (isset($_POST["defaultfoot"])) {
-			setconfig("defaultfoot", $_POST["defaultfoot"]);
-		}
 		return "TRUE";
 	} else {
 		return "FALSE";
