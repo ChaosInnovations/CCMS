@@ -27,7 +27,7 @@ $TEMPLATES = [
 	foreach($availablemodules as $m) {
 		$mc = $modules[$m];
 		if (isset($mc->name) && method_exists($mc, "getModal")) {
-			$secure .= '<span onclick="showDialog(\'module_'.$m.'\');">'.$mc->name.'</span><br />
+			$moduleListing .= '<span onclick="showDialog(\'module_'.$m.'\');">'.$mc->name.'</span><br />
 			';
 		}
 	}
