@@ -22,14 +22,19 @@ function ajax_newpage() {
 	}
 	$s = $secure ? "1" : "0";
 	$now = date("Y-m-d");
-	$title = getconfig("pagetitle");
-	$head = getconfig("defaulthead");
-	$body = getconfig("defaultbody");
-	$stmt = $conn->prepare("INSERT INTO content_pages (pageid, title, head, body, revision, secure) VALUES (:pageid, :title, :head, :body, :now, :secure);");
+	
+	$stmt = $conn->prepare("SELECT * FROM content_pages WHERE pageid='_default/page';");
+	$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
+	$template = $stmt->fetchAll()[0];
+	
+	$stmt = $conn->prepare("INSERT INTO content_pages VALUES (:pageid, :title, :head, :body, :usehead, :usetop, :usebottom, :secure, :now);");
 	$stmt->bindParam(":pageid", $npid);
-	$stmt->bindParam(":title", $title);
-	$stmt->bindParam(":head", $head);
-	$stmt->bindParam(":body", $body);
+	$stmt->bindParam(":title", $template["title"]);
+	$stmt->bindParam(":head", $template["head"]);
+	$stmt->bindParam(":body", $template["body"]);
+	$stmt->bindParam(":usehead", $template["usehead"]);
+	$stmt->bindParam(":usetop", $template["usetop"]);
+	$stmt->bindParam(":usebottom", $template["usebottom"]);
 	$stmt->bindParam(":now", $now);
 	$stmt->bindParam(":secure", $s);
 	$stmt->execute();
@@ -111,9 +116,11 @@ function ajax_editpage() {
 	if (!isset($_POST["pageid"]) ||
 	    !isset($_POST["newpageid"]) ||
 		!isset($_POST["title"]) ||
-		!isset($_POST["title"]) ||
+		!isset($_POST["usehead"]) ||
 		!isset($_POST["head"]) ||
-		!isset($_POST["body"])) {
+		!isset($_POST["usetop"]) ||
+		!isset($_POST["body"]) ||
+		!isset($_POST["usebottom"])) {
 		return "FALSE";
 	}
 	
@@ -146,12 +153,15 @@ function ajax_editpage() {
 	}
 	
 	$now = date("Y-m-d");
-	$stmt = $conn->prepare("UPDATE content_pages SET pageid=:pageid, title=:title, head=:head, body=:body, revision=:now WHERE pageid=:oldpid;");
+	$stmt = $conn->prepare("UPDATE content_pages SET pageid=:pageid, title=:title, head=:head, body=:body, usehead=:usehead, usetop=:usetop, usebottom=:usebottom, revision=:now WHERE pageid=:oldpid;");
 	$stmt->bindParam(":pageid", $newpageid);
 	$stmt->bindParam(":oldpid", $page->pageid);
 	$stmt->bindParam(":title", $_POST["title"]);
+	$stmt->bindParam(":usehead", $_POST["usehead"]);
 	$stmt->bindParam(":head", $_POST["head"]);
+	$stmt->bindParam(":usetop", $_POST["usetop"]);
 	$stmt->bindParam(":body", $_POST["body"]);
+	$stmt->bindParam(":usebottom", $_POST["usebottom"]);
 	$stmt->bindParam(":now", $now);
 	$stmt->execute();
 	
@@ -234,7 +244,7 @@ class Page {
 		
 		$securepages = [];
 		if ($sqlstat) {
-			$stmt = $conn->prepare("SELECT pageid FROM content_pages WHERE secure=1;");
+			$stmt = $conn->prepare("SELECT pageid FROM content_pages WHERE secure=1 AND pageid NOT LIKE '_default/%';");
 			$stmt->execute();
 			$stmt->setFetchMode(PDO::FETCH_ASSOC);
 			$ps = $stmt->fetchAll();
@@ -250,7 +260,7 @@ class Page {
 			
 			if ((($this->secure and $authuser->permissions->page_editsecure) or (!$this->secure and $authuser->permissions->page_edit)) and !in_array($this->pageid, $authuser->permissions->page_editblacklist)) {
 				$modals .= $TEMPLATES["secure-modal-start"]("dialog_edit", "Edit Page", "lg");
-				$modals .= $TEMPLATES["secure-modal-edit-bodyfoot"];
+				$modals .= $TEMPLATES["secure-modal-edit-bodyfoot"]($this);
 				$modals .= $TEMPLATES["secure-modal-end"];
 				$script .= $TEMPLATES["secure-modal-edit-script"]($this->pageid, $this->rawtitle, $this->rawhead, $this->rawbody);
 			}
@@ -298,7 +308,7 @@ class Page {
 		if ($this->usetop) {
 			$top = (new Page("_default/top"))->body;
 		}
-		$header = $secure  . $modals . $script . $top;
+		$header = $secure . $modals . $script . $top;
 		return $header;
 	}
 

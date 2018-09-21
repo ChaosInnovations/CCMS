@@ -79,8 +79,6 @@ $TEMPLATES = [
     <hr />
     <div>
 		' . $moduleListing . '
-      <span onclick="showDialog(\'module_hermes\');">Hermes Transit Management Platform</span><br />
-      <span onclick="showDialog(\'module_notices\');">Site Notices</span><br />
     </div>
   </div>' : '') . ($authuser->permissions->page_viewsecure ? '
   <div id="secureMenu_pane-securepage" class="secureMenu-pane collapsed horizontal" style="display:none;">
@@ -627,61 +625,75 @@ $TEMPLATES = [
 //============
 
 // Body
-"secure-modal-edit-bodyfoot" =>
-'
+"secure-modal-edit-bodyfoot" => function($page) {
+	global $https;
+	return '
 <div class="modal-body">
-<form class="form" role="edit" onsubmit="dialog_edit_save();return false;">
-<div class="form-group row">
-<div class="offset-md-2 offset-sm-3 col-md-10 col-sm-9">
-<input type="submit" class="btn btn-primary" title="Save" value="Save">
-<span class="dialog_edit_formfeedback_saved" style="display:none;">Saved!</span>
-<span class="dialog_edit_formfeedback_notsaved" style="display:none;">There was an error saving. Check your connection.</span>
-</div>
-</div>
-<div class="form-group row">
-<label class="col-form-label col-sm-3 col-md-2" for="dialog_edit_pageid">Page URL:</label>
-<div class="input-group col-sm-9 col-md-10">
-<div class="input-group-prepend">
-<span class="input-group-text" id="basic-addon3">' . $https . '://' . $_SERVER["SERVER_NAME"] . '/</span>
-</div>
-<input type="text" id="dialog_edit_pageid" name="pageid" class="form-control border-right-0" title="Page ID" placeholder="Page ID" oninput="dialog_edit_check_pageid();">
-<div class="input-group-append">
-<div class="input-group-text bg-transparent border-left-0">
-<i class="fas fa-times" style="display:none;"></i>
-<i class="fas fa-check" style="display:none;"></i>
-</div>
-</div>
-</div>
-</div>
-<div class="form-group row">
-<label class="col-form-label col-sm-3 col-md-2" for="dialog_edit_pagetitle">Page Title:</label>
-<div class="col-sm-9 col-md-10">
-<input type="text" id="dialog_edit_pagetitle" name="pagetitle" class="form-control" title="Page Title" placeholder="Page Title">
-</div>
-</div>
-<div class="form-group row">
-<label class="col-form-label col-sm-3 col-md-2" for="dialog_edit_head"><code>&lt;head&gt;</code>:</label>
-<div class="col-sm-9 col-md-10">
-<textarea id="dialog_edit_head" name="head" class="form-control" title="Page Head" placeholder="Page Head" rows="8"></textarea>
-</div>
-</div>
-<div class="form-group row">
-<label class="col-form-label col-sm-3 col-md-2" for="dialog_edit_body"><code>&lt;body&gt;</code>:</label>
-<div class="col-sm-9 col-md-10">
-<textarea id="dialog_edit_body" name="body" class="form-control" title="Page Body" placeholder="Page Body" rows="32"></textarea>
-</div>
-</div>
-</form>
+	<form class="form" role="edit" onsubmit="dialog_edit_save();return false;">
+		<div class="form-group row">
+			<div class="offset-md-2 offset-sm-3 col-md-10 col-sm-9">
+				<input type="submit" class="btn btn-primary" title="Save" value="Save" />
+				<span class="dialog_edit_formfeedback_saved" style="display:none;">Saved!</span>
+				<span class="dialog_edit_formfeedback_notsaved" style="display:none;">There was an error saving. Check your connection.</span>
+			</div>
+		</div>
+		<div class="form-group row">
+			<label class="col-form-label col-sm-3 col-md-2" for="dialog_edit_pageid">Page URL:</label>
+			<div class="input-group col-sm-9 col-md-10">
+				<div class="input-group-prepend">
+					<span class="input-group-text" id="basic-addon3">' . $https . '://' . $_SERVER["SERVER_NAME"] . '/</span>
+				</div>
+				<input type="text" id="dialog_edit_pageid" name="pageid" class="form-control border-right-0" title="Page ID" placeholder="Page ID" oninput="dialog_edit_check_pageid();" />
+				<div class="input-group-append">
+					<div class="input-group-text bg-transparent border-left-0">
+						<i class="fas fa-times" style="display:none;"></i>
+						<i class="fas fa-check" style="display:none;"></i>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="form-group row">
+			<label class="col-form-label col-sm-3 col-md-2" for="dialog_edit_pagetitle">Page Title:</label>
+			<div class="col-sm-9 col-md-10">
+				<input type="text" id="dialog_edit_pagetitle" name="pagetitle" class="form-control" title="Page Title" placeholder="Page Title" />
+			</div>
+		</div>
+		<div class="form-group row">
+			<label class="col-form-label col-sm-3 col-md-2" for="dialog_edit_head"><code>&lt;head&gt;</code>:</label>
+			<div class="col-sm-9 col-md-10">
+				<div class="form-check form-check-inline mb-2 mt-2">
+					<input class="form-check-input" type="checkbox" id="dialog_edit_usehead" value=""' . ($page->usehead ? ' checked' : '') . '>
+					<label class="form-check-label" for="dialog_edit_usehead">Also prepend default <code>&lt;head&gt;</code></label>
+				</div>
+				<textarea id="dialog_edit_head" name="head" class="form-control" title="Page Head" placeholder="Page Head" rows="8"></textarea>
+			</div>
+		</div>
+		<div class="form-group row">
+			<label class="col-form-label col-sm-3 col-md-2" for="dialog_edit_body"><code>&lt;body&gt;</code>:</label>
+			<div class="col-sm-9 col-md-10">
+				<div class="form-check form-check-inline mb-2 mt-2">
+					<input class="form-check-input" type="checkbox" id="dialog_edit_usetop" value=""' . ($page->usetop ? ' checked' : '') . '>
+					<label class="form-check-label" for="dialog_edit_usetop">Also prepend default top</label>
+				</div>
+				<textarea id="dialog_edit_body" name="body" class="form-control" title="Page Body" placeholder="Page Body" rows="32"></textarea>
+				<div class="form-check form-check-inline mt-2">
+					<input class="form-check-input" type="checkbox" id="dialog_edit_usebottom" value=""' . ($page->usebottom ? ' checked' : '') . '>
+					<label class="form-check-label" for="dialog_edit_usebottom">Also append default bottom</label>
+				</div>
+			</div>
+		</div>
+	</form>
 </div>' .
 // Foot
 '
 <div class="modal-footer">
-<span class="dialog_edit_formfeedback_saved" style="display:none;">Saved!</span>
-<span class="dialog_edit_formfeedback_notsaved" style="display:none;">There was an error saving. Check your connection.</span>
-<button type="button" class="btn btn-primary" onclick="dialog_edit_save();">Save changes</button>
-<button type="button" class="btn btn-danger" onclick="dialog_edit_reset();">Reset Changes</button>
-<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-</div>',
+	<span class="dialog_edit_formfeedback_saved" style="display:none;">Saved!</span>
+	<span class="dialog_edit_formfeedback_notsaved" style="display:none;">There was an error saving. Check your connection.</span>
+	<button type="button" class="btn btn-primary" onclick="dialog_edit_save();">Save changes</button>
+	<button type="button" class="btn btn-danger" onclick="dialog_edit_reset();">Reset Changes</button>
+	<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+</div>';
+},
 
 // Script
 "secure-modal-edit-script" => function ($pid, $rtitle, $rhead, $rbody) {
@@ -743,8 +755,11 @@ function dialog_edit_save() {
 	module_ajax("editpage", {pageid: pageid,
 								  newpageid: $("#dialog_edit_pageid").val(),
 	                              title: encodeURIComponent($("#dialog_edit_pagetitle").val()),
+								  usehead: $("#dialog_edit_usehead")[0].checked ? 1 : 0,
 								  head: encodeURIComponent(cm_edit_head.getValue()),
+								  usetop: $("#dialog_edit_usetop")[0].checked ? 1 : 0,
 								  body: encodeURIComponent(cm_edit_body.getValue()),
+								  usebottom: $("#dialog_edit_usebottom")[0].checked ? 1 : 0,
 								  token: Cookies.get("token")}, function(data){
 		if (data == "FALSE") {
 			$(".dialog_edit_formfeedback_notsaved").show();
