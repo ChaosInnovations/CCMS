@@ -39,10 +39,10 @@ try {
 }
 
 $mailer = new Mailer();
-$mailer->host = $mail_config->host;
-$mailer->username = $mail_config->user;
-$mailer->password = $mail_config->pass;
-$mailer->from = $mail_config->from;
+$mailer->host = getconfig("email_primary_host");
+$mailer->username = getconfig("email_primary_user");
+$mailer->password = getconfig("email_primary_pass");
+$mailer->from = getconfig("email_primary_from");
 
 if (isset($_COOKIE["token"]) and validToken($_COOKIE["token"])) {
 	$authuser = new AuthUser(uidFromToken($_COOKIE["token"]));
