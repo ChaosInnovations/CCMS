@@ -183,12 +183,9 @@ class Page {
 	public $head = "";
 	public $rawbody = "%3Ch1%3EEmpty%20Page!%3C%2Fh1%3E";
 	public $body = "<h1>Empty Page!</h1>";
-	public $rawnavmod = "";
-	public $navmod = "";
-	public $nav = "";
-	public $rawfootmod = "";
-	public $footmod = "";
-	public $foot = "";
+	public $usehead = true;
+	public $usetop = true;
+	public $usebottom = true;
 	public $secure = false;
 	public $revision = "";
 	
@@ -217,8 +214,6 @@ class Page {
 				$this->title = urldecode($this->rawtitle);
 				$this->head = urldecode($this->rawhead);
 				$this->body = urldecode($this->rawbody);
-				$this->navmod = urldecode($this->rawnavmod);
-				$this->footmod = urldecode($this->rawfootmod);
 				$this->secure = $pdata["secure"];
 				$this->revision = date("l, F j, Y", strtotime($pdata["revision"]));
 			} else {					
@@ -231,7 +226,7 @@ class Page {
 		}
 	}
 	
-	function getHeader() {
+	function getTop() {
 		global $authuser;
 		global $conn, $sqlstat, $sqlerr;
 		global $TEMPLATES;
@@ -299,31 +294,27 @@ class Page {
 			$secure .= $TEMPLATES["secure-menu"]($authuser, $securepages, $availablemodules, $modules);
 		}
 		
-		$base = urldecode(getconfig("defaultnav"));
-		$header = $secure  . $modals . $script . $base;
+		$top = "";
+		if ($this->usetop) {
+			$top = (new Page("_default/top"))->body;
+		}
+		$header = $secure  . $modals . $script . $top;
 		return $header;
 	}
 
-	function getFooter() {
-		$footer = urldecode(getconfig("defaultfoot"));
-		return $footer;
+	function getBottom() {
+		$bottom = "";
+		if ($this->usebottom) {
+			$bottom = (new Page("_default/bottom"))->body;
+		}
+		return $bottom;
 	}
 	
 	function resolvePlaceholders() {
 		global $authuser;
 		global $availablemodules, $modules;
 		
-		if ($this->navmod != "") {
-			$this->nav = urldecode($this->navmod);
-		} else {
-			$this->nav = $this->getHeader();
-		}
-		if ($this->footmod != "") {
-			$this->foot = urldecode($this->footmod);
-		} else {
-			$this->foot = $this->getFooter();
-		}
-		$this->body = $this->nav . $this->body . $this->foot;
+		$this->body = $this->getTop() . $this->body . $this->getBottom();
 		$placeholders = [];
 		preg_match_all("/\{{2}[^\}]+\}{2}/", $this->body, $placeholders);
 		foreach ($placeholders[0] as $pcode) {
@@ -363,8 +354,12 @@ class Page {
 	}
 	
 	function insertHead() {
+		$pre = "";
+		if ($this->usehead) {
+			$pre = (new Page("_default/head"))->head;
+		}
 		$sitetitle = getconfig("websitetitle");
-		echo "<title>{$this->title} | {$sitetitle}</title>{$this->head}";		
+		echo "{$pre}<title>{$this->title} | {$sitetitle}</title>{$this->head}";		
 	}
 	
 	function insertBody() {
