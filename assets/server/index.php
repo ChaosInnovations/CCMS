@@ -39,10 +39,10 @@ if (isset($_GET["func"])) {
 		$authuser = new AuthUser(null);
 	}
 	$mailer = new Mailer();
-	$mailer->host = $mail_config->host;
-	$mailer->username = $mail_config->user;
-	$mailer->password = $mail_config->pass;
-	$mailer->from = $mail_config->from;
+	$mailer->host = getconfig("email_primary_host");
+	$mailer->username = getconfig("email_primary_user");
+	$mailer->password = getconfig("email_primary_pass");
+	$mailer->from = getconfig("email_primary_from");
 	
 	// LOAD MODULES
 	$modulepath = "../server_modules/";
