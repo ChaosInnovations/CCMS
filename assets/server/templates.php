@@ -50,7 +50,7 @@ $TEMPLATES = [
 	  <span class="notif-badge">0</span>
       <span><i class="fas fa-share-alt"></i></span>
     </div>' : '') . '
-    <div id="secureMenu_option-home" title="Home" onclick="location.assign(\'./\');" class="secureMenu-icon">
+    <div id="secureMenu_option-home" title="Home" onclick="location.assign(\'/\');" class="secureMenu-icon">
       <span><i class="fas fa-home"></i></span>
     </div>
   </div>
