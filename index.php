@@ -18,6 +18,8 @@ if (isset($_GET["p"])) {
 
 $https = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] != 'off') ? "https" : "http";
 
+date_default_timezone_set("UTC");
+
 include "assets/server/pagegen.php";
 include "assets/server/secure.php";
 include "assets/server/mail.php";

@@ -14,6 +14,8 @@ if (isset($_GET["func"])) {
 	
 	$https = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] != 'off') ? "https" : "http";
 	
+	date_default_timezone_set("UTC");
+	
 	include "secure.php";
 	include "pagegen.php";
 	include "mail.php";

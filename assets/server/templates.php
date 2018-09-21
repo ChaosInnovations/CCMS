@@ -143,14 +143,14 @@ $TEMPLATES = [
 	$list = '';
 	
 	// User statuses
-	$stmt = $conn->prepare("SELECT uid, name, collab_status, collab_pageid FROM users ORDER BY name ASC;");
+	$stmt = $conn->prepare("SELECT uid, name, collab_lastseen, collab_pageid FROM users ORDER BY name ASC;");
 	$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
 	$users = $stmt->fetchAll();
 	
 	foreach ($users as $user) {
 		$list .= '
 <div id="secureMenu_collab-person-' . $user["uid"] . '" class="collab-person">
-	<div class="status '.($user["collab_status"]>0?'online':'offline'). '"></div>
+	<div class="status '.(strtotime($user["collab_lastseen"])>strtotime("now")-10?'online':'offline'). '"></div>
 	<div class="info">
 		' . ($user["uid"]==$authuser->uid?'<b>':'') . $user["name"] . ($user["uid"]==$authuser->uid?'</b>':'') . '<br />
 		<small><i><span class="page"><a href="/' . $user["collab_pageid"] . '" title="' . page_title($user["collab_pageid"]) . '">' . page_title($user["collab_pageid"]) . '</a></span></i></small>
@@ -183,7 +183,7 @@ $TEMPLATES = [
 			$stmt = $conn->prepare("SELECT uid FROM users;");
 			$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
 			$numMembers = count($stmt->fetchAll());
-			$stmt = $conn->prepare("SELECT uid FROM users WHERE collab_status>0;");
+			$stmt = $conn->prepare("SELECT uid FROM users WHERE collab_lastseen>SUBTIME(UTC_TIMESTAMP, '0:0:10');");
 			$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
 			$numOnline = count($stmt->fetchAll());
 		} else {
@@ -191,7 +191,7 @@ $TEMPLATES = [
 			if (!in_array($authuser->uid, $members)) {
 				continue;
 			}
-			$stmt = $conn->prepare("SELECT uid FROM users WHERE collab_status>0;");
+			$stmt = $conn->prepare("SELECT uid FROM users WHERE collab_lastseen>SUBTIME(UTC_TIMESTAMP, '0:0:10');");
 			$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
 			$users = $stmt->fetchAll();
 			foreach ($users as $user) {
@@ -484,14 +484,14 @@ $TEMPLATES = [
 		var data = JSON.parse(data);
 		for (user in data["users"]) {
 			var u = data["users"][user];
-			if (u.status > 0) {
+			if (u.online) {
 				$("#secureMenu_collab-person-" + u.uid + " .status").removeClass("offline");
 				$("#secureMenu_collab-person-" + u.uid + " .status").addClass("online");
 				$("#secureMenu_collab-person-" + u.uid + " .page").html("<a href=\"/"+u.page_id+"\" title=\""+u.page_title+"\">"+u.page_title+"</a>");
 			} else {
 				$("#secureMenu_collab-person-" + u.uid + " .status").removeClass("online");
 				$("#secureMenu_collab-person-" + u.uid + " .status").addClass("offline");
-				$("#secureMenu_collab-person-" + u.uid + " .page").html("Offline");
+				$("#secureMenu_collab-person-" + u.uid + " .page").html("<a href=\"/"+u.page_id+"\" title=\""+u.page_title+"\">Last seen "+u.lastseen_informal+"</a>");
 			}
 			$("#secureMenu_collab-person-" + u.uid + " .notif-badge").text(0);
 		}
