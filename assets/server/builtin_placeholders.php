@@ -82,10 +82,10 @@ function loginSubmission() {
 		if (data != "FALSE") {
 			var d = new Date(Date.now()+(3600000*24*30));
 			document.cookie = "token="+data+"; expires="+d.toUTCString()+"; path=/";
-			if (window.location.search.indexOf("&n") == -1) {
+			if (window.location.search.indexOf("?n") == -1) {
 				window.location.reload(true);
 			} else {
-				var url = BASE_URL + "/" + window.location.search.substr(window.location.search.indexOf("&n")+2);
+				var url = BASE_URL + "/" + window.location.search.substr(window.location.search.indexOf("?n")+3);
 				window.location.assign(url);
 			}
 		}

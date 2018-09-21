@@ -13,7 +13,7 @@ if (strstr($url, '?')) $url = substr($url, 0, strpos($url, '?'));
 $pageid = $url;
 if (isset($_GET["p"])) {
 	$pageid = $_GET["p"];
-	header("Location: ./" . $pageid);
+	header("Location: /" . $pageid);
 }
 if ($pageid == "") {
 	$pageid = "home";
@@ -62,7 +62,7 @@ if (isset($_COOKIE["token"]) and validToken($_COOKIE["token"])) {
 
 
 if ($pageid == "") {
-	header("Location: ./");
+	header("Location: /");
 } else if (invalidPage()) {
 	$pageid = "notfound";
 }
@@ -98,7 +98,7 @@ if ($page->secure || $pageid == "secureaccess") {
 */
 
 if (($page->secure and !$authuser->permissions->page_viewsecure) or ($authuser->permissions->page_viewsecure and in_array($page->pageid, $authuser->permissions->page_viewblacklist))) {
-	header("Location: ?p=secureaccess&n={$pageid}");
+	header("Location: /secureaccess?n={$pageid}");
 }
 // LOAD MODULES
 $modulepath = "assets/server_modules/";
