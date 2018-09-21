@@ -22,7 +22,7 @@ function ajax_newpage() {
 	}
 	$s = $secure ? "1" : "0";
 	$now = date("Y-m-d");
-	$title = getconfig("defaulttitle");
+	$title = getconfig("pagetitle");
 	$head = getconfig("defaulthead");
 	$body = getconfig("defaultbody");
 	$stmt = $conn->prepare("INSERT INTO content_pages (pageid, title, head, body, revision, secure) VALUES (:pageid, :title, :head, :body, :now, :secure);");
@@ -211,8 +211,9 @@ class Page {
 				$this->rawtitle = $pdata["title"];
 				$this->rawhead = $pdata["head"];
 				$this->rawbody = $pdata["body"];
-				$this->rawnavmod = $pdata["navmod"];
-				$this->rawfootmod = $pdata["footmod"];
+				$this->usehead = $pdata["usehead"];
+				$this->usetop = $pdata["usetop"];
+				$this->usebottom = $pdata["usebottom"];
 				$this->title = urldecode($this->rawtitle);
 				$this->head = urldecode($this->rawhead);
 				$this->body = urldecode($this->rawbody);

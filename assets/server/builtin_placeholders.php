@@ -99,7 +99,7 @@ function loginSubmission() {
 			$html .= "<h6 class=\"card-subtitle mb-2 text-muted\">You now have access to these pages:</h6>";
 			if ($sqlstat) {
 				$html .= "<div class=\"list-group\">";
-				$stmt = $conn->prepare("SELECT pageid, title FROM content_pages WHERE secure=1 ORDER BY pageid ASC");
+				$stmt = $conn->prepare("SELECT pageid, title FROM content_pages WHERE secure=1 AND pageid NOT LIKE '_default/%' ORDER BY pageid ASC;");
 				$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
 				$pdatas = $stmt->fetchAll();
 				foreach ($pdatas as $pd) {
@@ -168,8 +168,8 @@ function module_builtin_contactus_submit() {
 		global $conn, $sqlstat, $sqlerr;
 		global $authuser;
 		if ($sqlstat) {
-			$content = "<div>";
-			$stmt = $conn->prepare("SELECT pageid, title, secure FROM content_pages ORDER BY pageid ASC;");
+			$content = "<ul>";
+			$stmt = $conn->prepare("SELECT pageid, title, secure FROM content_pages WHERE pageid NOT LIKE '_default/%' ORDER BY pageid ASC;");
 			$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
 			$pdatas = $stmt->fetchAll();
 			foreach ($pdatas as $pd) {

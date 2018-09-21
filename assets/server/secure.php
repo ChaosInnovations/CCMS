@@ -64,9 +64,14 @@ function load_jsons() {
 function getconfig($property) {
 	global $conn, $sqlstat, $sqlerr;
 	if ($sqlstat) {
-		$stmt = $conn->prepare("SELECT * FROM config;");
+		$stmt = $conn->prepare("SELECT * FROM config WHERE property=:property;");
+		$stmt->bindParam(":property", $property);
 		$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
-		return $stmt->fetchAll()[0][$property];
+		$result = $stmt->fetchAll();
+		if (count($result) != 1) {
+			return "";
+		}
+		return $result[0]["value"];
 	} else {
 		return $sqlerr;
 	}
