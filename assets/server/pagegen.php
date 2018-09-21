@@ -46,7 +46,7 @@ function ajax_removepage() {
 		return "FALSE";
 	}
 	$pid = $_POST["pid"];
-	if (in_array($pid, ["home", "notfound", "secureaccess"])) {
+	if (in_array($pid, ["home", "notfound", "secureaccess"]) || substr($pid, 0, 9) === "_default/") {
 		return "SPECIAL";
 	}
 	if (!$authuser->permissions->admin_managepages) {
@@ -71,7 +71,7 @@ function ajax_securepage() {
 		return "FALSE";
 	}
 	$pid = $_POST["pid"];
-	if (in_array($pid, ["home", "notfound", "secureaccess"])) {
+	if (in_array($pid, ["home", "notfound", "secureaccess"]) || substr($pid, 0, 9) === "_default/") {
 		return "SPECIAL";
 	}
 	if (!$authuser->permissions->admin_managepages) {
@@ -97,7 +97,7 @@ function ajax_checkpid() {
 		return "FALSE";
 	}
 	if ($_POST["check"] != $_POST["pageid"] &&
-	    in_array($_POST["pageid"], ["home", "notfound", "secureaccess"])) {
+	    in_array($_POST["pageid"], ["home", "notfound", "secureaccess"]) || substr($_POST["pageid"], 0, 9) === "_default/") {
 		return "FALSE";
 	}
 	
@@ -132,7 +132,7 @@ function ajax_editpage() {
 	
 	$newpageid = $_POST["newpageid"];
 	
-	if (!($newpageid == $page->pageid || !in_array($page->pageid, ["home", "notfound", "secureaccess"]))) {
+	if (!($newpageid == $page->pageid || !(in_array($page->pageid, ["home", "notfound", "secureaccess"]) || substr($page->pageid, 0, 9) === "_default/"))) {
 		return "FALSE";
 	}
 	
@@ -389,7 +389,7 @@ function invalidPage($pid=null) {
 	} else {
 		$pages = ["home", "notfound", "secureaccess"];
 	}
-	return !in_array($pageid, $pages);
+	return !(in_array($pageid, $pages) || substr($pageid, 0, 9) === "_default/");
 }
 
 ?>
