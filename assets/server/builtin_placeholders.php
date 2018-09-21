@@ -175,8 +175,6 @@ function module_builtin_contactus_submit() {
 			foreach ($pdatas as $pd) {
 				if ($pd["secure"] == "1" and !$authuser->permissions->page_viewsecure or in_array($pd["pageid"], $authuser->permissions->page_viewblacklist)) {
 					continue;
-				} else if ($pd["pageid"] == "notfound") {
-					continue;
 				} else {
 					$title = urldecode($pd["title"]);
 					$content  .= "<li><a href=\"/{$pd["pageid"]}\" title=\"{$title}\">{$title}</a></li>";

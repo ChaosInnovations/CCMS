@@ -15,9 +15,6 @@ if (isset($_GET["p"])) {
 	$pageid = $_GET["p"];
 	header("Location: /" . $pageid);
 }
-if ($pageid == "") {
-	$pageid = "home";
-}
 
 $https = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] != 'off') ? "https" : "http";
 
@@ -61,10 +58,8 @@ if (isset($_COOKIE["token"]) and validToken($_COOKIE["token"])) {
 }
 
 
-if ($pageid == "") {
-	header("Location: /");
-} else if (invalidPage()) {
-	$pageid = "notfound";
+if (invalidPage($pageid)) {
+	$pageid = "_default/notfound";
 }
 $page = new Page($pageid);
 

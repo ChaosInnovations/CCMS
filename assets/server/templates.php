@@ -703,7 +703,7 @@ var pagetitle = decodeURIComponent("' . $rtitle . '");
 var head = decodeURIComponent("' . $rhead . '");
 var body = decodeURIComponent("' . $rbody . '");
 $("#dialog_edit_pageid").val(pageid);
-if (["home", "notfound", "secureaccess"].includes(pageid) || pageid.startsWith("_default/")) {
+if (["home", "secureaccess"].includes(pageid) || pageid.startsWith("_default/")) {
 	$("#dialog_edit_pageid").attr("disabled", "disabled");
 }
 $("#dialog_edit_pagetitle").val(pagetitle);
@@ -803,7 +803,7 @@ $(document).keydown(function(event) {
 <input type="checkbox" id="dialog_admin_pages_secure_' . $pid . '" onclick="dialog_admin_pages_togglesecure(\'' . $pid . '\');"' . $check . '>';
 	$remove = '
 <button class="btn btn-outline-danger" title="Delete Page" onclick="dialog_admin_pages_delete(\'' . $pid . '\');"><i class="fas fa-trash"></i></button>';
-	if (in_array($page["pageid"], ["home", "notfound", "secureaccess"])) {
+	if (in_array($page["pageid"], ["home", "secureaccess"])) {
 		$secure = '';
 		$remove = '';
 	}
@@ -1093,7 +1093,7 @@ function dialog_admin_pages_togglesecure(pid) {
 			$("#dialog_admin-pages_secure_" + pid).prop("checked", !state);
 			window.alert("Couldn\'t change secure state.");
 		} else if (data == "SPECIAL") {
-			window.alert("Can\'t change security of \'home,\' \'notfound,\' or \'secureaccess\' pages!");
+			window.alert("Can\'t change security of \'home,\' \'default,\' or \'secureaccess\' pages!");
 		} else {
 			console.log(data);
 			console.log("Changed security of \'" + pid + ".\'");
@@ -1109,7 +1109,7 @@ function dialog_admin_pages_delete(pid) {
 		if (data == "FALSE") {
 			window.alert("Couldn\'t delete page.");
 		} else if (data == "SPECIAL") {
-			window.alert("Can\'t delete \'home,\' \'notfound,\' or \'secureaccess\' pages!");
+			window.alert("Can\'t delete \'home,\' \'default,\' or \'secureaccess\' pages!");
 		} else {
 			window.location.reload(true);
 		}

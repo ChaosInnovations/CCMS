@@ -401,8 +401,8 @@ class AuthUser {
 										   $this->permissions->page_edit or
 										   $this->permissions->page_delete);
 			//Also need to read blacklists
-			$this->permissions->page_viewblacklist = explode(";", $udata[0]["permviewbl"]);
-			$this->permissions->page_editblacklist = explode(";", $udata[0]["permeditbl"]);
+			$this->permissions->page_viewblacklist = preg_split('@;@', $udata[0]["permviewbl"], NULL, PREG_SPLIT_NO_EMPTY);
+			$this->permissions->page_editblacklist = preg_split('@;@', $udata[0]["permeditbl"], NULL, PREG_SPLIT_NO_EMPTY);
 		}
 	}
 	
