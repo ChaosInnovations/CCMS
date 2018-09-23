@@ -355,7 +355,8 @@ class AuthUser {
 	public $rawperms = "";
 	public $permissions = null;
 	public $notify = true;
-		
+	public $online = false;
+	
 	function __construct($uid) {
 		global $conn, $sqlstat, $sqlerr;
 		
@@ -371,6 +372,7 @@ class AuthUser {
 			$this->email = $udata[0]["email"];
 			$this->name = $udata[0]["name"];
 			$this->notify = $udata[0]["notify"];
+			$this->online = strtotime($udata["collab_lastseen"])>strtotime("now")-10;
 			$this->registerdate = date("l, F j, Y", strtotime($udata[0]["registered"]));
 			$rawperm = $udata[0]["permissions"];
 			$this->rawperms = $rawperm;
