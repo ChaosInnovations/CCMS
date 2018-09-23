@@ -8,7 +8,9 @@ function notify($uid, $what) {
 	$stmt->bindParam(":uid", $uid);
 	$stmt->execute();
 	
-	// TODO: Insert email notification here
+	//$body = $TEMPLATES["email-notif-{$type}"]();
+	//$mail = $notifMailer->compose([[$email, $name]], $subject, $body, "");
+	//$mail->send()
 	
 }
 
