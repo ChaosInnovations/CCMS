@@ -21,6 +21,13 @@ $baseUrl = $https . "://" . $_SERVER["SERVER_NAME"];
 
 date_default_timezone_set("UTC");
 
+// Prevent caching
+header("Expires: 0");
+header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT");
+header("Cache-Control: no-store, no-cache, must-revalidate");
+header("Cache-Control: post-check=0, pre-check=0", false);
+header("Pragma: no-cache");
+
 include "assets/server/pagegen.php";
 include "assets/server/secure.php";
 include "assets/server/mail.php";
@@ -70,13 +77,6 @@ if (invalidPage($pageid)) {
 	$pageid = "_default/notfound";
 }
 $page = new Page($pageid);
-
-// Prevent caching
-header("Expires: 0");
-header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT");
-header("Cache-Control: no-store, no-cache, must-revalidate");
-header("Cache-Control: post-check=0, pre-check=0", false);
-header("Pragma: no-cache");
 
 // Force HTTPS if this is a secure page or secureaccess, otherwise force HTTP:
 /*
