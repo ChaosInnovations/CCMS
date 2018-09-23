@@ -21,8 +21,6 @@ if (isset($_GET["func"])) {
 	include "mail.php";
     include "templates.php";
 	include "collab.php";
-	
-	load_jsons();
 
 	$conn = null;
 	$sqlstat = true;
