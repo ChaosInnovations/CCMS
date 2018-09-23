@@ -55,7 +55,7 @@ function ajax_newtoken() {
 }
 
 function load_jsons() {
-	global $db_config, $mail_config, $ccms_info;
+	global $db_config, $ccms_info;
 	$db_config = json_decode(file_get_contents("db-config.json", true));
 	$ccms_info = json_decode(file_get_contents("ccms-info.json", true));
 }

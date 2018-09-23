@@ -26,6 +26,8 @@ include "assets/server/secure.php";
 include "assets/server/mail.php";
 include "assets/server/templates.php";
 
+load_jsons();
+
 $conn = null;
 $sqlstat = true;
 $sqlerr = "";
