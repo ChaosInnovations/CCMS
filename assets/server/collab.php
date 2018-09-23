@@ -23,7 +23,7 @@ function notify($uid, $what) {
 		// Chat
 		$body = $TEMPLATES["email-notif-chat"]($authuser->name, $recvuser->name);
 		$mail = $notifMailer->compose([[$recvuser->email, $recvuser->name]], "{$recvuser->name} sent a message", $body, "");
-		$mail->send()
+		$mail->send();
 	}
 	
 	//$body = $TEMPLATES["email-notif-{$type}"]();
