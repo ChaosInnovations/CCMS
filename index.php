@@ -17,6 +17,7 @@ if (isset($_GET["p"])) {
 }
 
 $https = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] != 'off') ? "https" : "http";
+$baseUrl = $https . "://" . $_SERVER["SERVER_NAME"];
 
 date_default_timezone_set("UTC");
 

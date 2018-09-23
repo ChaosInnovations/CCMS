@@ -93,6 +93,7 @@ function ajax_newuser() {
 	global $authuser;
 	global $TEMPLATES;
 	global $mailer;
+	global $baseUrl;
 	
 	if (!$sqlstat) {
 		return "FALSE";
@@ -109,7 +110,7 @@ function ajax_newuser() {
 		// Only owners can change users
 		return "FALSE";
 	}
-	$body = $TEMPLATES["email-newuser"]($_POST["name"], $authuser->name, "http://penderbus.org/", getconfig("websitetitle"));
+	$body = $TEMPLATES["email-newuser"]($_POST["name"], $authuser->name, $baseUrl, getconfig("websitetitle"));
 	$mail = $notifMailer->compose([[$_POST["email"], $_POST["name"]]], "Account Created", $body, "");
 	// comment below for testing
 	
