@@ -289,7 +289,7 @@ function ajax_edituser() {
 		$stmt->bindParam(":uid", $authuser->uid);
 		$stmt->execute();
 	}
-	if (isset($_POST["notify"]) {
+	if (isset($_POST["notify"])) {
 		$stmt = $conn->prepare("UPDATE users SET notify=:notify WHERE uid=:uid;");
 		$stmt->bindParam(":notify", $_POST["notify"]);
 		$stmt->bindParam(":uid", $authuser->uid);
