@@ -1,12 +1,30 @@
 <?php
 
 function notify($uid, $what) {
-	global $conn;
+	global $conn, $authuser; // authuser is sender
+	if ($authuser->uid == $uid) {
+		return;
+	}
+	$recvuser = new AuthUser($uid);
 	$what .= ";";
 	$stmt = $conn->prepare("UPDATE users SET collab_notifs = CONCAT(`collab_notifs`,:what) WHERE uid=:uid;");
 	$stmt->bindParam(":what", $what);
 	$stmt->bindParam(":uid", $uid);
 	$stmt->execute();
+	
+	if ($authuser->online) {
+		// Don't email if online already
+		return;
+	}
+	
+	$nType = substr($what, 0, 1);
+	
+	if ($nType == "R" || $nType == "U") {
+		// Chat
+		$body = $TEMPLATES["email-notif-chat"]($authuser->name, $recvuser->name);
+		$mail = $notifMailer->compose([[$recvuser->email, $recvuser->name]], "{$recvuser->name} sent a message", $body, "");
+		$mail->send()
+	}
 	
 	//$body = $TEMPLATES["email-notif-{$type}"]();
 	//$mail = $notifMailer->compose([[$email, $name]], $subject, $body, "");
