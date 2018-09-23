@@ -117,9 +117,10 @@ function ajax_newuser() {
 		return "FALSE";
 	}
 	
+	
 	$now = date("Y-m-d");
 	$pwd = hash("sha512", "password");
-	$stmt = $conn->prepare("INSERT INTO users VALUES (:uid, :email, :name, :now, :perms, '', '', 0, NULL);");
+	$stmt = $conn->prepare("INSERT INTO users VALUES (:uid, :email, :name, :now, :perms, '', '', 0, NULL, '');");
 	$stmt->bindParam(":uid", $uid);
 	$stmt->bindParam(":email", $_POST["email"]);
 	$stmt->bindParam(":name", $_POST["name"]);
