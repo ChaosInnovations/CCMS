@@ -120,7 +120,7 @@ function ajax_newuser() {
 	
 	$now = date("Y-m-d");
 	$pwd = hash("sha512", "password");
-	$stmt = $conn->prepare("INSERT INTO users VALUES (:uid, :email, :name, :now, :perms, '', '', 0, NULL, '');");
+	$stmt = $conn->prepare("INSERT INTO users VALUES (:uid, :email, :name, :now, :perms, '', '', 0, NULL, '', 1);");
 	$stmt->bindParam(":uid", $uid);
 	$stmt->bindParam(":email", $_POST["email"]);
 	$stmt->bindParam(":name", $_POST["name"]);
@@ -274,35 +274,45 @@ function ajax_edituser() {
 	global $conn, $sqlstat, $sqlerr;
 	global $authuser;
 	
-	if ($sqlstat and $authuser->uid != null) {
-		if (isset($_POST["name"])) {
-			$stmt = $conn->prepare("UPDATE users SET name=:name WHERE uid=:uid;");
-			$stmt->bindParam(":name", $_POST["name"]);
-			$stmt->bindParam(":uid", $authuser->uid);
-			$stmt->execute();
-		}
-		if (isset($_POST["permissions"]) and $authuser->permissions->owner) {
-			$stmt = $conn->prepare("UPDATE users SET permissions=:new WHERE uid=:uid;");
-			$stmt->bindParam(":new", $_POST["permissions"]);
-			$stmt->bindParam(":uid", $_POST["uid"]);
-			$stmt->execute();
-		}
-		if (isset($_POST["permviewbl"]) and $authuser->permissions->owner) {
-			$stmt = $conn->prepare("UPDATE users SET permviewbl=:new WHERE uid=:uid;");
-			$stmt->bindParam(":new", $_POST["permviewbl"]);
-			$stmt->bindParam(":uid", $_POST["uid"]);
-			$stmt->execute();
-		}
-		if (isset($_POST["permeditbl"]) and $authuser->permissions->owner) {
-			$stmt = $conn->prepare("UPDATE users SET permeditbl=:new WHERE uid=:uid;");
-			$stmt->bindParam(":new", $_POST["permeditbl"]);
-			$stmt->bindParam(":uid", $_POST["uid"]);
-			$stmt->execute();
-		}
-		return "TRUE";
-	} else {
+	if (!$sqlstat) {
 		return "FALSE";
 	}
+	
+	if ($authuser->uid == null) {
+		return "FALSE";
+	}
+	
+	if (isset($_POST["name"])) {
+		$stmt = $conn->prepare("UPDATE users SET name=:name WHERE uid=:uid;");
+		$stmt->bindParam(":name", $_POST["name"]);
+		$stmt->bindParam(":uid", $authuser->uid);
+		$stmt->execute();
+	}
+	if (isset($_POST["notify"]) {
+		$stmt = $conn->prepare("UPDATE users SET notify=:notify WHERE uid=:uid;");
+		$stmt->bindParam(":notify", $_POST["notify"]);
+		$stmt->bindParam(":uid", $authuser->uid);
+		$stmt->execute();
+	}
+	if (isset($_POST["permissions"]) and $authuser->permissions->owner) {
+		$stmt = $conn->prepare("UPDATE users SET permissions=:new WHERE uid=:uid;");
+		$stmt->bindParam(":new", $_POST["permissions"]);
+		$stmt->bindParam(":uid", $_POST["uid"]);
+		$stmt->execute();
+	}
+	if (isset($_POST["permviewbl"]) and $authuser->permissions->owner) {
+		$stmt = $conn->prepare("UPDATE users SET permviewbl=:new WHERE uid=:uid;");
+		$stmt->bindParam(":new", $_POST["permviewbl"]);
+		$stmt->bindParam(":uid", $_POST["uid"]);
+		$stmt->execute();
+	}
+	if (isset($_POST["permeditbl"]) and $authuser->permissions->owner) {
+		$stmt = $conn->prepare("UPDATE users SET permeditbl=:new WHERE uid=:uid;");
+		$stmt->bindParam(":new", $_POST["permeditbl"]);
+		$stmt->bindParam(":uid", $_POST["uid"]);
+		$stmt->execute();
+	}
+	return "TRUE";
 }
 
 class UserPermissions {
@@ -343,6 +353,7 @@ class AuthUser {
 	public $registerdate = "";
 	public $rawperms = "";
 	public $permissions = null;
+	public $notify = true;
 		
 	function __construct($uid) {
 		global $conn, $sqlstat, $sqlerr;
@@ -358,6 +369,7 @@ class AuthUser {
 			$this->uid = $uid;
 			$this->email = $udata[0]["email"];
 			$this->name = $udata[0]["name"];
+			$this->notify = $udata[0]["notify"];
 			$this->registerdate = date("l, F j, Y", strtotime($udata[0]["registered"]));
 			$rawperm = $udata[0]["permissions"];
 			$this->rawperms = $rawperm;

@@ -1179,6 +1179,14 @@ function dialog_admin_site_save() {
 		</div>
 		<div class="form-group row">
 			<div class="offset-sm-3 offset-md-2 col-sm-9 col-md-10">
+				<div class="form-check form-check-inline mb-2 mt-2">
+					<input class="form-check-input" type="checkbox" id="dialog_account_notify" value=""' . ($authuser->notify ? ' checked' : '') . '>
+					<label class="form-check-label" for="dialog_account_notify">I want to receive notifications via email</label>
+				</div>
+			</div>
+		</div>
+		<div class="form-group row">
+			<div class="offset-sm-3 offset-md-2 col-sm-9 col-md-10">
 				<button class="btn btn-primary" type="submit">Save</button>
 				<span class="dialog_account_formfeedback_saved" style="display:none;">Saved!</span>
 				<span class="dialog_account_formfeedback_notsaved" style="display:none;">Couldn\'t save! Check your connection.</span>
@@ -1253,7 +1261,7 @@ function dialog_admin_site_save() {
 "secure-modal-account-script" =>
 '
 function dialog_account_save() {
-	module_ajax("edituser", {name: $("#dialog_account_name").val()}, function (data) {
+	module_ajax("edituser", {name: $("#dialog_account_name").val(), notify: $("#dialog_account_notify")[0].checked ? 1 : 0}, function (data) {
 		if (data == "TRUE") {
 			$(".dialog_account_formfeedback_saved").removeClass("hidden");
 			setTimeout(function(){$(".dialog_account_formfeedback_saved").addClass("hidden");window.location.reload(true);}, 800);
