@@ -626,7 +626,7 @@ $TEMPLATES = [
 
 // Body
 "secure-modal-edit-bodyfoot" => function($page) {
-	global $https;
+	global $baseUrl;
 	return '
 <div class="modal-body">
 	<form class="form" role="edit" onsubmit="dialog_edit_save();return false;">
@@ -641,7 +641,7 @@ $TEMPLATES = [
 			<label class="col-form-label col-sm-3 col-md-2" for="dialog_edit_pageid">Page URL:</label>
 			<div class="input-group col-sm-9 col-md-10">
 				<div class="input-group-prepend">
-					<span class="input-group-text" id="basic-addon3">' . $https . '://' . $_SERVER["SERVER_NAME"] . '/</span>
+					<span class="input-group-text" id="basic-addon3">' . $baseUrl . '/</span>
 				</div>
 				<input type="text" id="dialog_edit_pageid" name="pageid" class="form-control border-right-0" title="Page ID" placeholder="Page ID" oninput="dialog_edit_check_pageid();" />
 				<div class="input-group-append">
