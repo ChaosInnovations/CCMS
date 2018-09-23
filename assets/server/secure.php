@@ -372,7 +372,7 @@ class AuthUser {
 			$this->email = $udata[0]["email"];
 			$this->name = $udata[0]["name"];
 			$this->notify = $udata[0]["notify"];
-			$this->online = strtotime($udata["collab_lastseen"])>strtotime("now")-10;
+			$this->online = strtotime($udata[0]["collab_lastseen"])>strtotime("now")-10;
 			$this->registerdate = date("l, F j, Y", strtotime($udata[0]["registered"]));
 			$rawperm = $udata[0]["permissions"];
 			$this->rawperms = $rawperm;
