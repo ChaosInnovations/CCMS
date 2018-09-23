@@ -1,7 +1,7 @@
 <?php
 
 function notify($uid, $what) {
-	global $conn, $authuser; // authuser is sender
+	global $conn, $authuser, $notifMailer, $TEMPLATES; // authuser is sender
 	if ($authuser->uid == $uid) {
 		return;
 	}
@@ -21,7 +21,19 @@ function notify($uid, $what) {
 	
 	if ($nType == "R" || $nType == "U") {
 		// Chat
-		$body = $TEMPLATES["email-notif-chat"]($authuser->name, $recvuser->name);
+		$rn = "";
+		if ($nType == "U") {
+			$rn = $recvuser->name;
+		}
+		else
+		{
+			$rid = substr($what, 1);
+			$stmt = $conn->prepare("SELECT room_name FROM collab_rooms WHERE room_id=:rid;");
+			$stmt->bindParam(":rid", $rid);
+			$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
+			$rn = $stmt->fetchAll()[0]["room_name"];
+		}
+		$body = $TEMPLATES["email-notif-chat"]($authuser->name, $rn);
 		$mail = $notifMailer->compose([[$recvuser->email, $recvuser->name]], "{$recvuser->name} sent a message", $body, "");
 		$mail->send();
 	}

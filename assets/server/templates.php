@@ -1384,8 +1384,8 @@ $(document).keydown(function(event) {
 "email-notif-chat" => function($senderName, $recipientName) {
 	return '
 <div>
-	<h2>[Sender Name] sent a message to [Recipient Name].</h2>
-	<h4>Please log in to see and reply to [Sender Name]\'s message.</h4>
+	<h2>' . $senderName . ' sent a message to ' . $recipientName . '.</h2>
+	<h4>Please log in to see and reply to ' . $senderName . '\'s message.</h4>
 </div>
 <p>This mailbox is not monitored; please don\t reply to this email.</p>
 <small>To stop receiving these emails, change your account\'s notification settings.</small>';

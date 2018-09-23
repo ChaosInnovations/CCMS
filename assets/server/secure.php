@@ -92,7 +92,7 @@ function ajax_newuser() {
 	global $conn, $sqlstat, $sqlerr;
 	global $authuser;
 	global $TEMPLATES;
-	global $mailer;
+	global $notifMailer;
 	global $baseUrl;
 	
 	if (!$sqlstat) {
