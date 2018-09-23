@@ -45,6 +45,11 @@ $mailer->host = getconfig("email_primary_host");
 $mailer->username = getconfig("email_primary_user");
 $mailer->password = getconfig("email_primary_pass");
 $mailer->from = getconfig("email_primary_from");
+$notifMailer = new Mailer();
+$notifMailer->host = getconfig("email_notifs_host");
+$notifMailer->username = getconfig("email_notifs_user");
+$notifMailer->password = getconfig("email_notifs_pass");
+$notifMailer->from = getconfig("email_notifs_from");
 
 if (isset($_COOKIE["token"]) and validToken($_COOKIE["token"])) {
 	$authuser = new AuthUser(uidFromToken($_COOKIE["token"]));

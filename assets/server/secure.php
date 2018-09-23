@@ -110,7 +110,7 @@ function ajax_newuser() {
 		return "FALSE";
 	}
 	$body = $TEMPLATES["email-newuser"]($_POST["name"], $authuser->name, "http://penderbus.org/", getconfig("websitetitle"));
-	$mail = $mailer->compose([[$_POST["email"], $_POST["name"]]], "Account Created", $body, "");
+	$mail = $notifMailer->compose([[$_POST["email"], $_POST["name"]]], "Account Created", $body, "");
 	// comment below for testing
 	
 	if (!$mail->send()) {

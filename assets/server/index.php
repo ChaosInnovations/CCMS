@@ -45,6 +45,11 @@ if (isset($_GET["func"])) {
 	$mailer->username = getconfig("email_primary_user");
 	$mailer->password = getconfig("email_primary_pass");
 	$mailer->from = getconfig("email_primary_from");
+	$notifMailer = new Mailer();
+	$notifMailer->host = getconfig("email_notifs_host");
+	$notifMailer->username = getconfig("email_notifs_user");
+	$notifMailer->password = getconfig("email_notifs_pass");
+	$notifMailer->from = getconfig("email_notifs_from");
 	
 	// LOAD MODULES
 	$modulepath = "../server_modules/";
