@@ -13,7 +13,7 @@ if (strstr($url, '?')) $url = substr($url, 0, strpos($url, '?'));
 $pageid = $url;
 if (isset($_GET["p"])) {
 	$pageid = $_GET["p"];
-	header("Location: /" . $pageid);
+	//header("Location: /" . $pageid);
 }
 
 $https = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] != 'off') ? "https" : "http";
