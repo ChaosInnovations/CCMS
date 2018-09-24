@@ -34,8 +34,11 @@ function notify($uid, $what) {
 			$rn = $stmt->fetchAll()[0]["room_name"];
 		}
 		$body = $TEMPLATES["email-notif-chat"]($authuser->name, $rn);
-		$mail = $notifMailer->compose([[$recvuser->email, $recvuser->name]], "{$recvuser->name} sent a message", $body, "");
+		$oldFrom = $notifMailer->$from;
+		$notifMailer->$from = $authuser->name;
+		$mail = $notifMailer->compose([[$recvuser->email, $recvuser->name]], "{$authuser->name} sent a message", $body, "");
 		$mail->send();
+		$notifMailer->$from = $oldFrom;
 	}
 	
 	//$body = $TEMPLATES["email-notif-{$type}"]();

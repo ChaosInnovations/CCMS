@@ -24,7 +24,7 @@ class Mailer {
 		$mail->isSMTP();
 		$mail->Host = $this->host;
 		//$mail->Port = $this->port;
-		//$mail->SMTPAuth = $this->SMTPAuth;
+		$mail->SMTPAuth = $this->SMTPAuth;
 		$mail->Username = $this->username;
 		$mail->Password = $this->password;
 		//$mail->SMTPSecure = $this->SMTPSecure;
