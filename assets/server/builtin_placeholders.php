@@ -39,7 +39,7 @@ class builtin_placeholders {
 		</div>
 	</div>
 	<div class="form-group">
-		<input type="submit" class="btn btn-success" title="Log In" value="Log In">
+		<input id="loginbutton" type="submit" class="btn btn-success" title="Log In" value="Log In">
 	</div>
 </form>
 <script>
@@ -84,7 +84,7 @@ function loginSubmission() {
 		return false;
 	}
 	isLoggingIn = true;
-	$("#tester")[0].disabled = true;
+	$("#loginbutton")[0].disabled = true;
 	module_ajax("newtoken", {email: $("#loginemail").val(), password: $("#loginpass").val()}, function(data) {
 		if (data != "FALSE") {
 			var d = new Date(Date.now()+(3600000*24*30));
@@ -96,7 +96,8 @@ function loginSubmission() {
 				window.location.assign(url);
 			}
 		} else {
-			$("#tester")[0].disabled = false;
+			$("#loginbutton")[0].disabled = false;
+			isLoggingIn = false;
 		}
 	});
 	return false;
