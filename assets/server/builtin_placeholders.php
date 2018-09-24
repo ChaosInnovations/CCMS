@@ -43,6 +43,8 @@ class builtin_placeholders {
 	</div>
 </form>
 <script>
+var isLoggingIn = false;
+
 function loginCheckEmail() {
 	module_ajax("checkuser", {email: $("#loginemail").val()}, function (data) {
 		if (data == "TRUE") {
@@ -78,6 +80,11 @@ function loginCheckPass() {
 }
 
 function loginSubmission() {
+	if (isLoggingIn) {
+		return false;
+	}
+	isLoggingIn = true;
+	$("#tester")[0].disabled = true;
 	module_ajax("newtoken", {email: $("#loginemail").val(), password: $("#loginpass").val()}, function(data) {
 		if (data != "FALSE") {
 			var d = new Date(Date.now()+(3600000*24*30));
@@ -88,6 +95,8 @@ function loginSubmission() {
 				var url = BASE_URL + "/" + window.location.search.substr(window.location.search.indexOf("?n")+3);
 				window.location.assign(url);
 			}
+		} else {
+			$("#tester")[0].disabled = false;
 		}
 	});
 	return false;
@@ -213,7 +222,7 @@ function module_builtin_contactus_submit() {
 		$body .= "{$_POST["message"]}\n\n";
 		$body .= "This message was send using the online Contact form.";
 		
-		$mail = $mailer->compose([[getconfig("primaryemail")]], "Message from {$_POST["name"]}", $htmlbody, $body);
+		$mail = $mailer->compose([[$mailer->user]], "Message from {$_POST["name"]}", $htmlbody, $body);
 		if (!$mail->send()) {
 			return "FALSE";
 		}
