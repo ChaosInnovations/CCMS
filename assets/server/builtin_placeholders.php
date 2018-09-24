@@ -211,7 +211,7 @@ function module_builtin_contactus_submit() {
 		$body .= "================================\n\n";
 		$body .= "Message:\n";
 		$body .= "{$_POST["message"]}\n\n";
-		$body .= "This message was send using the online Contact form.",
+		$body .= "This message was send using the online Contact form.";
 		
 		$mail = $mailer->compose([[getconfig("primaryemail")]], "Message from {$_POST["name"]}", $htmlbody, $body);
 		if (!$mail->send()) {
