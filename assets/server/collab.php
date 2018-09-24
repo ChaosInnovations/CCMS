@@ -12,8 +12,8 @@ function notify($uid, $what) {
 	$stmt->bindParam(":uid", $uid);
 	$stmt->execute();
 	
-	if ($recvuser->online) {
-		// Don't email if online already
+	if ($recvuser->online || !$recvuser->notify) {
+		// Don't email if online already or has disabled email notifications.
 		return;
 	}
 	
@@ -27,7 +27,7 @@ function notify($uid, $what) {
 		}
 		else
 		{
-			$rid = substr($what, 1);
+			$rid = substr($what, 1, strlen($what)-2);
 			$stmt = $conn->prepare("SELECT room_name FROM collab_rooms WHERE room_id=:rid;");
 			$stmt->bindParam(":rid", $rid);
 			$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
