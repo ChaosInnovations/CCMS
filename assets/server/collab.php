@@ -12,7 +12,7 @@ function notify($uid, $what) {
 	$stmt->bindParam(":uid", $uid);
 	$stmt->execute();
 	
-	if ($authuser->online) {
+	if ($recvuser->online) {
 		// Don't email if online already
 		return;
 	}
@@ -23,7 +23,7 @@ function notify($uid, $what) {
 		// Chat
 		$rn = "";
 		if ($nType == "U") {
-			$rn = $recvuser->name;
+			$rn = "you";
 		}
 		else
 		{
@@ -34,11 +34,11 @@ function notify($uid, $what) {
 			$rn = $stmt->fetchAll()[0]["room_name"];
 		}
 		$body = $TEMPLATES["email-notif-chat"]($authuser->name, $rn);
-		$oldFrom = $notifMailer->$from;
-		$notifMailer->$from = $authuser->name;
+		$oldFrom = $notifMailer->from;
+		$notifMailer->from = $authuser->name;
 		$mail = $notifMailer->compose([[$recvuser->email, $recvuser->name]], "{$authuser->name} sent a message", $body, "");
 		$mail->send();
-		$notifMailer->$from = $oldFrom;
+		$notifMailer->from = $oldFrom;
 	}
 	
 	//$body = $TEMPLATES["email-notif-{$type}"]();
