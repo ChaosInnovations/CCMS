@@ -1,14 +1,49 @@
 <?php
 
 function notify($uid, $what) {
-	global $conn;
+	global $conn, $authuser, $notifMailer, $TEMPLATES; // authuser is sender
+	if ($authuser->uid == $uid) {
+		return;
+	}
+	$recvuser = new AuthUser($uid);
 	$what .= ";";
 	$stmt = $conn->prepare("UPDATE users SET collab_notifs = CONCAT(`collab_notifs`,:what) WHERE uid=:uid;");
 	$stmt->bindParam(":what", $what);
 	$stmt->bindParam(":uid", $uid);
 	$stmt->execute();
 	
-	// TODO: Insert email notification here
+	if ($recvuser->online || !$recvuser->notify) {
+		// Don't email if online already or has disabled email notifications.
+		return;
+	}
+	
+	$nType = substr($what, 0, 1);
+	
+	if ($nType == "R" || $nType == "U") {
+		// Chat
+		$rn = "";
+		if ($nType == "U") {
+			$rn = "you";
+		}
+		else
+		{
+			$rid = substr($what, 1, strlen($what)-2);
+			$stmt = $conn->prepare("SELECT room_name FROM collab_rooms WHERE room_id=:rid;");
+			$stmt->bindParam(":rid", $rid);
+			$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
+			$rn = $stmt->fetchAll()[0]["room_name"];
+		}
+		$body = $TEMPLATES["email-notif-chat"]($authuser->name, $rn);
+		$oldFrom = $notifMailer->from;
+		$notifMailer->from = $authuser->name;
+		$mail = $notifMailer->compose([[$recvuser->email, $recvuser->name]], "{$authuser->name} sent a message", $body, "");
+		$mail->send();
+		$notifMailer->from = $oldFrom;
+	}
+	
+	//$body = $TEMPLATES["email-notif-{$type}"]();
+	//$mail = $notifMailer->compose([[$email, $name]], $subject, $body, "");
+	//$mail->send()
 	
 }
 
@@ -25,8 +60,8 @@ function ajax_collab_update() {
 	global $conn;
 	global $authuser;
 	
-	// Watchdog keepalive
-	$stmt = $conn->prepare("UPDATE users SET collab_status=10 WHERE uid=:uid;");
+	// Keepalive
+	$stmt = $conn->prepare("UPDATE users SET collab_lastseen=UTC_TIMESTAMP WHERE uid=:uid;");
 	$stmt->bindParam(":uid", $authuser->uid);
 	$stmt->execute();
 	
@@ -168,11 +203,32 @@ function ajax_collab_update() {
 	$update = ["users"=>[],"rooms"=>[],"lists"=>[],"todo"=>[],"chat"=>[],"notifs"=>[]];
 	
 	// User statuses
-	$stmt = $conn->prepare("SELECT uid, collab_status, collab_pageid FROM users;");
+	$stmt = $conn->prepare("SELECT uid, collab_lastseen, collab_pageid FROM users;");
 	$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
 	$users = $stmt->fetchAll();
 	foreach($users as $user) {
-		$data = ["uid"=>$user["uid"],"status"=>$user["collab_status"],"page_id"=>$user["collab_pageid"],"page_title"=>page_title($user["collab_pageid"])];
+		$elapsed = strtotime("now") - strtotime($user["collab_lastseen"]);
+		$elapsed_minutes = floor($elapsed / 60);
+		$elapsed_hours = floor($elapsed_minutes / 60);
+		$elapsed_days = floor($elapsed_hours / 24);
+		$elapsed_weeks = floor($elapsed_days / 7);
+		$ls2 = "a moment ago";
+		if ($elapsed >= 60) {
+			$ls2 = "" . $elapsed_minutes . " minute" . ($elapsed_minutes==1?"":"s") . " ago";
+		}
+		if ($elapsed_minutes >= 60) {
+			$ls2 = "" . $elapsed_hours . " hour" . ($elapsed_hours==1?"":"s") . " ago";
+		}
+		if ($elapsed_hours >= 24) {
+			$ls2 = "" . $elapsed_days . " day" . ($elapsed_days==1?"":"s") . " ago";
+		}
+		if ($elapsed_days >= 7) {
+			$ls2 = "" . $elapsed_weeks . " week" . ($elapsed_weeks==1?"":"s") . " ago";
+		}
+		if ($elapsed_weeks >= 100) {
+			$ls2 = "a long time ago";
+		}
+		$data = ["uid"=>$user["uid"],"online"=>strtotime($user["collab_lastseen"])>strtotime("now")-10,"lastseen"=>$user["collab_lastseen"],"lastseen_informal"=>$ls2,"page_id"=>$user["collab_pageid"],"page_title"=>page_title($user["collab_pageid"])];
 		array_push($update["users"], $data);
 	}
 	
@@ -188,7 +244,7 @@ function ajax_collab_update() {
 			$stmt = $conn->prepare("SELECT uid FROM users;");
 			$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
 			$numMembers = count($stmt->fetchAll());
-			$stmt = $conn->prepare("SELECT uid FROM users WHERE collab_status>0;");
+			$stmt = $conn->prepare("SELECT uid FROM users WHERE collab_lastseen>SUBTIME(UTC_TIMESTAMP, '0:0:10');");
 			$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
 			$numOnline = count($stmt->fetchAll());
 		} else {
@@ -196,7 +252,7 @@ function ajax_collab_update() {
 			if (!in_array($authuser->uid, $members)) {
 				continue;
 			}
-			$stmt = $conn->prepare("SELECT uid FROM users WHERE collab_status>0;");
+			$stmt = $conn->prepare("SELECT uid FROM users WHERE collab_lastseen>SUBTIME(UTC_TIMESTAMP, '0:0:10');");
 			$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
 			$users = $stmt->fetchAll();
 			foreach ($users as $user) {
@@ -315,35 +371,6 @@ function ajax_collab_update() {
 	}
 	
 	return json_encode($update);
-}
-
-function ajax_collab_watchdog() {
-	global $conn;
-	// will run every 2 seconds for 5 minutes (150 times).
-	$start = microtime(true);
-	set_time_limit(300);
-	for ($i = 0; $i < 149; ++$i) {
-		$stmt = $conn->prepare("UPDATE users SET collab_status=collab_status-1 WHERE collab_status>0;");
-		$stmt->execute();
-		time_sleep_until($start + $i + 2);
-	}
-}
-
-function collab_watchdog($args) {
-	global $conn;
-	$newdate = date("Y-m-d H:i:00", time()+60-60*60*5); // + 5 minutes
-	$stmt = $conn->prepare("INSERT INTO schedule (after, function, args) VALUES (:next, 'collab_watchdog', :args);");
-	$stmt->bindParam(":next", $newdate);
-	$stmt->bindParam(":args", json_encode($args));
-	$stmt->execute();
-	// will run every 2 seconds for 1 minute (30 times).
-	$start = microtime(true);
-	set_time_limit(60);
-	for ($i = 0; $i < 29; ++$i) {
-		$stmt = $conn->prepare("UPDATE users SET collab_status=collab_status-1 WHERE collab_status>0;");
-		$stmt->execute();
-		time_sleep_until($start + $i*2 + 2);
-	}
 }
 
 ?>

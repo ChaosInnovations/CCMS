@@ -27,7 +27,7 @@ $TEMPLATES = [
 	foreach($availablemodules as $m) {
 		$mc = $modules[$m];
 		if (isset($mc->name) && method_exists($mc, "getModal")) {
-			$secure .= '<span onclick="showDialog(\'module_'.$m.'\');">'.$mc->name.'</span><br />
+			$moduleListing .= '<span onclick="showDialog(\'module_'.$m.'\');">'.$mc->name.'</span><br />
 			';
 		}
 	}
@@ -50,7 +50,7 @@ $TEMPLATES = [
 	  <span class="notif-badge">0</span>
       <span><i class="fas fa-share-alt"></i></span>
     </div>' : '') . '
-    <div id="secureMenu_option-home" title="Home" onclick="location.assign(\'./\');" class="secureMenu-icon">
+    <div id="secureMenu_option-home" title="Home" onclick="location.assign(\'/\');" class="secureMenu-icon">
       <span><i class="fas fa-home"></i></span>
     </div>
   </div>
@@ -79,8 +79,6 @@ $TEMPLATES = [
     <hr />
     <div>
 		' . $moduleListing . '
-      <span onclick="showDialog(\'module_hermes\');">Hermes Transit Management Platform</span><br />
-      <span onclick="showDialog(\'module_notices\');">Site Notices</span><br />
     </div>
   </div>' : '') . ($authuser->permissions->page_viewsecure ? '
   <div id="secureMenu_pane-securepage" class="secureMenu-pane collapsed horizontal" style="display:none;">
@@ -145,14 +143,14 @@ $TEMPLATES = [
 	$list = '';
 	
 	// User statuses
-	$stmt = $conn->prepare("SELECT uid, name, collab_status, collab_pageid FROM users ORDER BY name ASC;");
+	$stmt = $conn->prepare("SELECT uid, name, collab_lastseen, collab_pageid FROM users ORDER BY name ASC;");
 	$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
 	$users = $stmt->fetchAll();
 	
 	foreach ($users as $user) {
 		$list .= '
 <div id="secureMenu_collab-person-' . $user["uid"] . '" class="collab-person">
-	<div class="status '.($user["collab_status"]>0?'online':'offline'). '"></div>
+	<div class="status '.(strtotime($user["collab_lastseen"])>strtotime("now")-10?'online':'offline'). '"></div>
 	<div class="info">
 		' . ($user["uid"]==$authuser->uid?'<b>':'') . $user["name"] . ($user["uid"]==$authuser->uid?'</b>':'') . '<br />
 		<small><i><span class="page"><a href="/' . $user["collab_pageid"] . '" title="' . page_title($user["collab_pageid"]) . '">' . page_title($user["collab_pageid"]) . '</a></span></i></small>
@@ -185,7 +183,7 @@ $TEMPLATES = [
 			$stmt = $conn->prepare("SELECT uid FROM users;");
 			$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
 			$numMembers = count($stmt->fetchAll());
-			$stmt = $conn->prepare("SELECT uid FROM users WHERE collab_status>0;");
+			$stmt = $conn->prepare("SELECT uid FROM users WHERE collab_lastseen>SUBTIME(UTC_TIMESTAMP, '0:0:10');");
 			$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
 			$numOnline = count($stmt->fetchAll());
 		} else {
@@ -193,7 +191,7 @@ $TEMPLATES = [
 			if (!in_array($authuser->uid, $members)) {
 				continue;
 			}
-			$stmt = $conn->prepare("SELECT uid FROM users WHERE collab_status>0;");
+			$stmt = $conn->prepare("SELECT uid FROM users WHERE collab_lastseen>SUBTIME(UTC_TIMESTAMP, '0:0:10');");
 			$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
 			$users = $stmt->fetchAll();
 			foreach ($users as $user) {
@@ -486,14 +484,14 @@ $TEMPLATES = [
 		var data = JSON.parse(data);
 		for (user in data["users"]) {
 			var u = data["users"][user];
-			if (u.status > 0) {
+			if (u.online) {
 				$("#secureMenu_collab-person-" + u.uid + " .status").removeClass("offline");
 				$("#secureMenu_collab-person-" + u.uid + " .status").addClass("online");
 				$("#secureMenu_collab-person-" + u.uid + " .page").html("<a href=\"/"+u.page_id+"\" title=\""+u.page_title+"\">"+u.page_title+"</a>");
 			} else {
 				$("#secureMenu_collab-person-" + u.uid + " .status").removeClass("online");
 				$("#secureMenu_collab-person-" + u.uid + " .status").addClass("offline");
-				$("#secureMenu_collab-person-" + u.uid + " .page").html("Offline");
+				$("#secureMenu_collab-person-" + u.uid + " .page").html("<a href=\"/"+u.page_id+"\" title=\""+u.page_title+"\">Last seen "+u.lastseen_informal+"</a>");
 			}
 			$("#secureMenu_collab-person-" + u.uid + " .notif-badge").text(0);
 		}
@@ -627,61 +625,75 @@ $TEMPLATES = [
 //============
 
 // Body
-"secure-modal-edit-bodyfoot" =>
-'
+"secure-modal-edit-bodyfoot" => function($page) {
+	global $baseUrl;
+	return '
 <div class="modal-body">
-<form class="form" role="edit" onsubmit="dialog_edit_save();return false;">
-<div class="form-group row">
-<div class="offset-md-2 offset-sm-3 col-md-10 col-sm-9">
-<input type="submit" class="btn btn-primary" title="Save" value="Save">
-<span class="dialog_edit_formfeedback_saved" style="display:none;">Saved!</span>
-<span class="dialog_edit_formfeedback_notsaved" style="display:none;">There was an error saving. Check your connection.</span>
-</div>
-</div>
-<div class="form-group row">
-<label class="col-form-label col-sm-3 col-md-2" for="dialog_edit_pageid">Page URL:</label>
-<div class="input-group col-sm-9 col-md-10">
-<div class="input-group-prepend">
-<span class="input-group-text" id="basic-addon3">' . $https . '://' . $_SERVER["SERVER_NAME"] . '/</span>
-</div>
-<input type="text" id="dialog_edit_pageid" name="pageid" class="form-control border-right-0" title="Page ID" placeholder="Page ID" oninput="dialog_edit_check_pageid();">
-<div class="input-group-append">
-<div class="input-group-text bg-transparent border-left-0">
-<i class="fas fa-times" style="display:none;"></i>
-<i class="fas fa-check" style="display:none;"></i>
-</div>
-</div>
-</div>
-</div>
-<div class="form-group row">
-<label class="col-form-label col-sm-3 col-md-2" for="dialog_edit_pagetitle">Page Title:</label>
-<div class="col-sm-9 col-md-10">
-<input type="text" id="dialog_edit_pagetitle" name="pagetitle" class="form-control" title="Page Title" placeholder="Page Title">
-</div>
-</div>
-<div class="form-group row">
-<label class="col-form-label col-sm-3 col-md-2" for="dialog_edit_head"><code>&lt;head&gt;</code>:</label>
-<div class="col-sm-9 col-md-10">
-<textarea id="dialog_edit_head" name="head" class="form-control" title="Page Head" placeholder="Page Head" rows="8"></textarea>
-</div>
-</div>
-<div class="form-group row">
-<label class="col-form-label col-sm-3 col-md-2" for="dialog_edit_body"><code>&lt;body&gt;</code>:</label>
-<div class="col-sm-9 col-md-10">
-<textarea id="dialog_edit_body" name="body" class="form-control" title="Page Body" placeholder="Page Body" rows="32"></textarea>
-</div>
-</div>
-</form>
+	<form class="form" role="edit" onsubmit="dialog_edit_save();return false;">
+		<div class="form-group row">
+			<div class="offset-md-2 offset-sm-3 col-md-10 col-sm-9">
+				<input type="submit" class="btn btn-primary" title="Save" value="Save" />
+				<span class="dialog_edit_formfeedback_saved" style="display:none;">Saved!</span>
+				<span class="dialog_edit_formfeedback_notsaved" style="display:none;">There was an error saving. Check your connection.</span>
+			</div>
+		</div>
+		<div class="form-group row">
+			<label class="col-form-label col-sm-3 col-md-2" for="dialog_edit_pageid">Page URL:</label>
+			<div class="input-group col-sm-9 col-md-10">
+				<div class="input-group-prepend">
+					<span class="input-group-text" id="basic-addon3">' . $baseUrl . '/</span>
+				</div>
+				<input type="text" id="dialog_edit_pageid" name="pageid" class="form-control border-right-0" title="Page ID" placeholder="Page ID" oninput="dialog_edit_check_pageid();" />
+				<div class="input-group-append">
+					<div class="input-group-text bg-transparent border-left-0">
+						<i class="fas fa-times" style="display:none;"></i>
+						<i class="fas fa-check" style="display:none;"></i>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="form-group row">
+			<label class="col-form-label col-sm-3 col-md-2" for="dialog_edit_pagetitle">Page Title:</label>
+			<div class="col-sm-9 col-md-10">
+				<input type="text" id="dialog_edit_pagetitle" name="pagetitle" class="form-control" title="Page Title" placeholder="Page Title" />
+			</div>
+		</div>
+		<div class="form-group row">
+			<label class="col-form-label col-sm-3 col-md-2" for="dialog_edit_head"><code>&lt;head&gt;</code>:</label>
+			<div class="col-sm-9 col-md-10">
+				<div class="form-check form-check-inline mb-2 mt-2">
+					<input class="form-check-input" type="checkbox" id="dialog_edit_usehead" value=""' . ($page->usehead ? ' checked' : '') . '>
+					<label class="form-check-label" for="dialog_edit_usehead">Also prepend default <code>&lt;head&gt;</code></label>
+				</div>
+				<textarea id="dialog_edit_head" name="head" class="form-control" title="Page Head" placeholder="Page Head" rows="8"></textarea>
+			</div>
+		</div>
+		<div class="form-group row">
+			<label class="col-form-label col-sm-3 col-md-2" for="dialog_edit_body"><code>&lt;body&gt;</code>:</label>
+			<div class="col-sm-9 col-md-10">
+				<div class="form-check form-check-inline mb-2 mt-2">
+					<input class="form-check-input" type="checkbox" id="dialog_edit_usetop" value=""' . ($page->usetop ? ' checked' : '') . '>
+					<label class="form-check-label" for="dialog_edit_usetop">Also prepend default top</label>
+				</div>
+				<textarea id="dialog_edit_body" name="body" class="form-control" title="Page Body" placeholder="Page Body" rows="32"></textarea>
+				<div class="form-check form-check-inline mt-2">
+					<input class="form-check-input" type="checkbox" id="dialog_edit_usebottom" value=""' . ($page->usebottom ? ' checked' : '') . '>
+					<label class="form-check-label" for="dialog_edit_usebottom">Also append default bottom</label>
+				</div>
+			</div>
+		</div>
+	</form>
 </div>' .
 // Foot
 '
 <div class="modal-footer">
-<span class="dialog_edit_formfeedback_saved" style="display:none;">Saved!</span>
-<span class="dialog_edit_formfeedback_notsaved" style="display:none;">There was an error saving. Check your connection.</span>
-<button type="button" class="btn btn-primary" onclick="dialog_edit_save();">Save changes</button>
-<button type="button" class="btn btn-danger" onclick="dialog_edit_reset();">Reset Changes</button>
-<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-</div>',
+	<span class="dialog_edit_formfeedback_saved" style="display:none;">Saved!</span>
+	<span class="dialog_edit_formfeedback_notsaved" style="display:none;">There was an error saving. Check your connection.</span>
+	<button type="button" class="btn btn-primary" onclick="dialog_edit_save();">Save changes</button>
+	<button type="button" class="btn btn-danger" onclick="dialog_edit_reset();">Reset Changes</button>
+	<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+</div>';
+},
 
 // Script
 "secure-modal-edit-script" => function ($pid, $rtitle, $rhead, $rbody) {
@@ -691,7 +703,7 @@ var pagetitle = decodeURIComponent("' . $rtitle . '");
 var head = decodeURIComponent("' . $rhead . '");
 var body = decodeURIComponent("' . $rbody . '");
 $("#dialog_edit_pageid").val(pageid);
-if (pageid == "home" || pageid == "notfound" || pageid == "secureaccess") {
+if (["home", "secureaccess"].includes(pageid) || pageid.startsWith("_default/")) {
 	$("#dialog_edit_pageid").attr("disabled", "disabled");
 }
 $("#dialog_edit_pagetitle").val(pagetitle);
@@ -743,8 +755,11 @@ function dialog_edit_save() {
 	module_ajax("editpage", {pageid: pageid,
 								  newpageid: $("#dialog_edit_pageid").val(),
 	                              title: encodeURIComponent($("#dialog_edit_pagetitle").val()),
+								  usehead: $("#dialog_edit_usehead")[0].checked ? 1 : 0,
 								  head: encodeURIComponent(cm_edit_head.getValue()),
+								  usetop: $("#dialog_edit_usetop")[0].checked ? 1 : 0,
 								  body: encodeURIComponent(cm_edit_body.getValue()),
+								  usebottom: $("#dialog_edit_usebottom")[0].checked ? 1 : 0,
 								  token: Cookies.get("token")}, function(data){
 		if (data == "FALSE") {
 			$(".dialog_edit_formfeedback_notsaved").show();
@@ -788,7 +803,7 @@ $(document).keydown(function(event) {
 <input type="checkbox" id="dialog_admin_pages_secure_' . $pid . '" onclick="dialog_admin_pages_togglesecure(\'' . $pid . '\');"' . $check . '>';
 	$remove = '
 <button class="btn btn-outline-danger" title="Delete Page" onclick="dialog_admin_pages_delete(\'' . $pid . '\');"><i class="fas fa-trash"></i></button>';
-	if (in_array($page["pageid"], ["home", "notfound", "secureaccess"])) {
+	if (in_array($page["pageid"], ["home", "secureaccess"])) {
 		$secure = '';
 		$remove = '';
 	}
@@ -994,48 +1009,6 @@ $(document).keydown(function(event) {
 							</div>
 						</div>
 						<div class="form-group row">
-							<label class="col-form-label col-sm-3 col-md-2" for="dialog_admin_site_secondaryemail">Secondary Email</label>
-							<div class="col-sm-9 col-md-10">
-								<input type="text" id="dialog_admin_site_secondaryemail" name="secondaryemail" class="form-control" title="Secondary Email" placeholder="Secondary Email" value="' . $secondaryemail . '">
-							</div>
-						</div>
-						<div class="form-group row">
-							<div class="offset-sm-3 offset-md-2 col-sm-9 col-md-10">
-								<input type="submit" class="btn btn-primary" title="Save" value="Save">
-							</div>
-						</div>
-						<h4>Page Defaults</h4>
-						<div class="form-group row">
-							<label class="col-form-label col-sm-3 col-md-2" for="dialog_admin_site_defaulttitle">Default Page Title</label>
-							<div class="col-sm-9 col-md-10">
-								<input type="text" id="dialog_admin_site_defaulttitle" name="defaulttitle" class="form-control" title="Default Page Title" placeholder="Default Page Title">
-							</div>
-						</div>
-						<div class="form-group row">
-							<label class="col-form-label col-sm-3 col-md-2" for="dialog_admin_site_defaulthead">Default Page <code>&lt;head&gt;</code></label>
-							<div class="col-sm-9 col-md-10">
-								<textarea id="dialog_admin_site_defaulthead" name="defaulthead" class="form-control monospace" title="Default Page Head" placeholder="Default Page Head" rows="8"></textarea>
-							</div>
-						</div>
-						<div class="form-group row">
-							<label class="col-form-label col-sm-3 col-md-2" for="dialog_admin_site_defaultbody">Default Page <code>&lt;body&gt;</code></label>
-							<div class="col-sm-9 col-md-10">
-								<textarea id="dialog_admin_site_defaultbody" name="defaultbody" class="form-control monospace" title="Default Page Body" placeholder="Default Page Body" rows="16"></textarea>
-							</div>
-						</div>
-						<div class="form-group row">
-							<label class="col-form-label col-sm-3 col-md-2" for="dialog_admin_site_defaultnav">Default Navigation Header</label>
-							<div class="col-sm-9 col-md-10">
-								<textarea id="dialog_admin_site_defaultnav" name="defaultnav" class="form-control monospace" title="Default Navigation Header" placeholder="Default Navigation Header" rows="16"></textarea>
-							</div>
-						</div>
-						<div class="form-group row">
-							<label class="col-form-label col-sm-3 col-md-2" for="dialog_admin_site_defaultfoot">Default Footer</label>
-							<div class="col-sm-9 col-md-10">
-								<textarea id="dialog_admin_site_defaultfoot" name="defaultfoot" class="form-control monospace" title="Default Footer" placeholder="Default Footer" rows="16"></textarea>
-							</div>
-						</div>
-						<div class="form-group row">
 							<div class="offset-sm-3 offset-md-2 col-sm-9 col-md-10">
 								<input type="submit" class="btn btn-primary" title="Save" value="Save">
 							</div>
@@ -1063,13 +1036,6 @@ $(document).keydown(function(event) {
 },
 
 "secure-modal-admin-script" => function() {
-	
-	$defaulttitle = getconfig("defaulttitle");
-	$defaulthead = getconfig("defaulthead");
-	$defaultbody = getconfig("defaultbody");
-	$defaultnav = getconfig("defaultnav");
-	$defaultfoot = getconfig("defaultfoot");
-	
 	return '
 function dialog_admin_pages_togglesecure(pid) {
 	state = $("#dialog_admin_pages_secure_" + pid).prop("checked");
@@ -1078,7 +1044,7 @@ function dialog_admin_pages_togglesecure(pid) {
 			$("#dialog_admin-pages_secure_" + pid).prop("checked", !state);
 			window.alert("Couldn\'t change secure state.");
 		} else if (data == "SPECIAL") {
-			window.alert("Can\'t change security of \'home,\' \'notfound,\' or \'secureaccess\' pages!");
+			window.alert("Can\'t change security of \'home,\' \'default,\' or \'secureaccess\' pages!");
 		} else {
 			console.log(data);
 			console.log("Changed security of \'" + pid + ".\'");
@@ -1094,7 +1060,7 @@ function dialog_admin_pages_delete(pid) {
 		if (data == "FALSE") {
 			window.alert("Couldn\'t delete page.");
 		} else if (data == "SPECIAL") {
-			window.alert("Can\'t delete \'home,\' \'notfound,\' or \'secureaccess\' pages!");
+			window.alert("Can\'t delete \'home,\' \'default,\' or \'secureaccess\' pages!");
 		} else {
 			window.location.reload(true);
 		}
@@ -1183,51 +1149,9 @@ function dialog_admin_users_reset(uid) {
 	});
 }
 
-var defaulttitle = decodeURIComponent("' . $defaulttitle . '");
-var defaulthead = decodeURIComponent("' . $defaulthead . '");
-var defaultbody = decodeURIComponent("' . $defaultbody . '");
-var defaultnav = decodeURIComponent("' . $defaultnav . '");
-var defaultfoot = decodeURIComponent("' . $defaultfoot . '");
-$("#dialog_admin_site_defaulttitle").val(defaulttitle);
-$("#dialog_admin_site_defaulthead").val(defaulthead);
-$("#dialog_admin_site_defaultbody").val(defaultbody);
-$("#dialog_admin_site_defaultnav").val(defaultnav);
-$("#dialog_admin_site_defaultfoot").val(defaultfoot);
-var cm_admin_site_head = null;
-var cm_admin_site_body = null;
-var cm_admin_site_nav = null;
-var cm_admin_site_foot = null;
-
-$("#dialog_admin").on("shown.bs.modal", function() {
-	if (cm_admin_site_head == null) {
-		cm_admin_site_head = CodeMirror.fromTextArea(document.getElementById("dialog_admin_site_defaulthead"), {
-			lineNumbers: true,
-			mode:  "htmlmixed"
-		});
-		cm_admin_site_body = CodeMirror.fromTextArea(document.getElementById("dialog_admin_site_defaultbody"), {
-			lineNumbers: true,
-			mode:  "htmlmixed"
-		});
-		cm_admin_site_nav = CodeMirror.fromTextArea(document.getElementById("dialog_admin_site_defaultnav"), {
-			lineNumbers: true,
-			mode:  "htmlmixed"
-		});
-		cm_admin_site_foot = CodeMirror.fromTextArea(document.getElementById("dialog_admin_site_defaultfoot"), {
-			lineNumbers: true,
-			mode:  "htmlmixed"
-		});
-	}
-});
-
 function dialog_admin_site_save() {
 	module_ajax("setconfig", {websitetitle: $("#dialog_admin_site_websitetitle").val(),
 	                               primaryemail: $("#dialog_admin_site_primaryemail").val(),
-								   secondaryemail: $("#dialog_admin_site_secondaryemail").val(),
-								   defaulttitle: encodeURIComponent($("#dialog_admin_site_defaulttitle").val()),
-								   defaulthead: encodeURIComponent(cm_admin_site_head.getValue()),
-								   defaultbody: encodeURIComponent(cm_admin_site_body.getValue()),
-								   defaultnav: encodeURIComponent(cm_admin_site_nav.getValue()),
-								   defaultfoot: encodeURIComponent(cm_admin_site_foot.getValue()),
 	                               token: Cookies.get("token")}, function(data){
 		if (data == "TRUE") {
 			window.alert("Website settings saved.");
@@ -1236,14 +1160,6 @@ function dialog_admin_site_save() {
 			window.alert("Couldn\'t save settings.");
 		}
 	});
-}
-
-function dialog_admin_site_reset() {
-	$("#dialog_admin_site_defaulttitle").val(defaulttitle);
-	$("#dialog_admin_site_defaulthead").val(defaulthead);
-	$("#dialog_admin_site_defaultbody").val(defaultbody);
-	$("#dialog_admin_site_defaultnav").val(defaultnav);
-	$("#dialog_admin_site_defaultfoot").val(defaultfoot);
 }';
 },
 
@@ -1259,6 +1175,14 @@ function dialog_admin_site_reset() {
 			<label class="col-form-label col-sm-3 col-md-2" for="dialog_account_name">Name</label>
 			<div class="col-sm-9 col-md-10">
 				<input name="name" title="Name" class="form-control" id="dialog_account_name" type="text" placeholder="Name" value="' . $authuser->name . '" />
+			</div>
+		</div>
+		<div class="form-group row">
+			<div class="offset-sm-3 offset-md-2 col-sm-9 col-md-10">
+				<div class="form-check form-check-inline mb-2 mt-2">
+					<input class="form-check-input" type="checkbox" id="dialog_account_notify" value=""' . ($authuser->notify ? ' checked' : '') . '>
+					<label class="form-check-label" for="dialog_account_notify">I want to receive notifications via email</label>
+				</div>
 			</div>
 		</div>
 		<div class="form-group row">
@@ -1337,7 +1261,7 @@ function dialog_admin_site_reset() {
 "secure-modal-account-script" =>
 '
 function dialog_account_save() {
-	module_ajax("edituser", {name: $("#dialog_account_name").val()}, function (data) {
+	module_ajax("edituser", {name: $("#dialog_account_name").val(), notify: $("#dialog_account_notify")[0].checked ? 1 : 0}, function (data) {
 		if (data == "TRUE") {
 			$(".dialog_account_formfeedback_saved").removeClass("hidden");
 			setTimeout(function(){$(".dialog_account_formfeedback_saved").addClass("hidden");window.location.reload(true);}, 800);
@@ -1455,6 +1379,16 @@ $(document).keydown(function(event) {
 	<a href="' . $url . '/secureaccess">Sign In</a>
 </div>
 <p>' . $organization . '</p>';
+},
+
+"email-notif-chat" => function($senderName, $recipientName) {
+	return '
+<div>
+	<h2>' . $senderName . ' sent a message to ' . $recipientName . '.</h2>
+	<h4>Please log in to see and reply to ' . $senderName . '\'s message.</h4>
+</div>
+<p>This mailbox is not monitored; please don\'t reply to this email.</p>
+<small>To stop receiving these emails, change your account\'s notification settings.</small>';
 }
 
 

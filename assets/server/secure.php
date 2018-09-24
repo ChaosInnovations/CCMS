@@ -55,18 +55,22 @@ function ajax_newtoken() {
 }
 
 function load_jsons() {
-	global $db_config, $mail_config, $ccms_info;
+	global $db_config, $ccms_info;
 	$db_config = json_decode(file_get_contents("db-config.json", true));
-	$mail_config = json_decode(file_get_contents("mail-config.json", true));
 	$ccms_info = json_decode(file_get_contents("ccms-info.json", true));
 }
 
 function getconfig($property) {
 	global $conn, $sqlstat, $sqlerr;
 	if ($sqlstat) {
-		$stmt = $conn->prepare("SELECT * FROM config;");
+		$stmt = $conn->prepare("SELECT * FROM config WHERE property=:property;");
+		$stmt->bindParam(":property", $property);
 		$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
-		return $stmt->fetchAll()[0][$property];
+		$result = $stmt->fetchAll();
+		if (count($result) != 1) {
+			return "";
+		}
+		return $result[0]["value"];
 	} else {
 		return $sqlerr;
 	}
@@ -88,7 +92,8 @@ function ajax_newuser() {
 	global $conn, $sqlstat, $sqlerr;
 	global $authuser;
 	global $TEMPLATES;
-	global $mailer;
+	global $notifMailer;
+	global $baseUrl;
 	
 	if (!$sqlstat) {
 		return "FALSE";
@@ -105,17 +110,18 @@ function ajax_newuser() {
 		// Only owners can change users
 		return "FALSE";
 	}
-	$body = $TEMPLATES["email-newuser"]($_POST["name"], $authuser->name, "http://penderbus.org/", getconfig("websitetitle"));
-	$mail = $mailer->compose([[$_POST["email"], $_POST["name"]]], "Account Created", $body, "");
+	$body = $TEMPLATES["email-newuser"]($_POST["name"], $authuser->name, $baseUrl, getconfig("websitetitle"));
+	$mail = $notifMailer->compose([[$_POST["email"], $_POST["name"]]], "Account Created", $body, "");
 	// comment below for testing
 	
 	if (!$mail->send()) {
 		return "FALSE";
 	}
 	
+	
 	$now = date("Y-m-d");
 	$pwd = hash("sha512", "password");
-	$stmt = $conn->prepare("INSERT INTO users VALUES (:uid, :email, :name, :now, :perms, '', '', 0, NULL);");
+	$stmt = $conn->prepare("INSERT INTO users VALUES (:uid, :email, :name, :now, :perms, '', '', 0, NULL, '', 1);");
 	$stmt->bindParam(":uid", $uid);
 	$stmt->bindParam(":email", $_POST["email"]);
 	$stmt->bindParam(":name", $_POST["name"]);
@@ -259,24 +265,6 @@ function ajax_setconfig() {
 		if (isset($_POST["primaryemail"])) {
 			setconfig("primaryemail", $_POST["primaryemail"]);
 		}
-		if (isset($_POST["secondaryemail"])) {
-			setconfig("secondaryemail", $_POST["secondaryemail"]);
-		}
-		if (isset($_POST["defaulttitle"])) {
-			setconfig("defaulttitle", $_POST["defaulttitle"]);
-		}
-		if (isset($_POST["defaulthead"])) {
-			setconfig("defaulthead", $_POST["defaulthead"]);			
-		}
-		if (isset($_POST["defaultbody"])) {
-			setconfig("defaultbody", $_POST["defaultbody"]);
-		}
-		if (isset($_POST["defaultnav"])) {
-			setconfig("defaultnav", $_POST["defaultnav"]);
-		}
-		if (isset($_POST["defaultfoot"])) {
-			setconfig("defaultfoot", $_POST["defaultfoot"]);
-		}
 		return "TRUE";
 	} else {
 		return "FALSE";
@@ -287,35 +275,45 @@ function ajax_edituser() {
 	global $conn, $sqlstat, $sqlerr;
 	global $authuser;
 	
-	if ($sqlstat and $authuser->uid != null) {
-		if (isset($_POST["name"])) {
-			$stmt = $conn->prepare("UPDATE users SET name=:name WHERE uid=:uid;");
-			$stmt->bindParam(":name", $_POST["name"]);
-			$stmt->bindParam(":uid", $authuser->uid);
-			$stmt->execute();
-		}
-		if (isset($_POST["permissions"]) and $authuser->permissions->owner) {
-			$stmt = $conn->prepare("UPDATE users SET permissions=:new WHERE uid=:uid;");
-			$stmt->bindParam(":new", $_POST["permissions"]);
-			$stmt->bindParam(":uid", $_POST["uid"]);
-			$stmt->execute();
-		}
-		if (isset($_POST["permviewbl"]) and $authuser->permissions->owner) {
-			$stmt = $conn->prepare("UPDATE users SET permviewbl=:new WHERE uid=:uid;");
-			$stmt->bindParam(":new", $_POST["permviewbl"]);
-			$stmt->bindParam(":uid", $_POST["uid"]);
-			$stmt->execute();
-		}
-		if (isset($_POST["permeditbl"]) and $authuser->permissions->owner) {
-			$stmt = $conn->prepare("UPDATE users SET permeditbl=:new WHERE uid=:uid;");
-			$stmt->bindParam(":new", $_POST["permeditbl"]);
-			$stmt->bindParam(":uid", $_POST["uid"]);
-			$stmt->execute();
-		}
-		return "TRUE";
-	} else {
+	if (!$sqlstat) {
 		return "FALSE";
 	}
+	
+	if ($authuser->uid == null) {
+		return "FALSE";
+	}
+	
+	if (isset($_POST["name"])) {
+		$stmt = $conn->prepare("UPDATE users SET name=:name WHERE uid=:uid;");
+		$stmt->bindParam(":name", $_POST["name"]);
+		$stmt->bindParam(":uid", $authuser->uid);
+		$stmt->execute();
+	}
+	if (isset($_POST["notify"])) {
+		$stmt = $conn->prepare("UPDATE users SET notify=:notify WHERE uid=:uid;");
+		$stmt->bindParam(":notify", $_POST["notify"]);
+		$stmt->bindParam(":uid", $authuser->uid);
+		$stmt->execute();
+	}
+	if (isset($_POST["permissions"]) and $authuser->permissions->owner) {
+		$stmt = $conn->prepare("UPDATE users SET permissions=:new WHERE uid=:uid;");
+		$stmt->bindParam(":new", $_POST["permissions"]);
+		$stmt->bindParam(":uid", $_POST["uid"]);
+		$stmt->execute();
+	}
+	if (isset($_POST["permviewbl"]) and $authuser->permissions->owner) {
+		$stmt = $conn->prepare("UPDATE users SET permviewbl=:new WHERE uid=:uid;");
+		$stmt->bindParam(":new", $_POST["permviewbl"]);
+		$stmt->bindParam(":uid", $_POST["uid"]);
+		$stmt->execute();
+	}
+	if (isset($_POST["permeditbl"]) and $authuser->permissions->owner) {
+		$stmt = $conn->prepare("UPDATE users SET permeditbl=:new WHERE uid=:uid;");
+		$stmt->bindParam(":new", $_POST["permeditbl"]);
+		$stmt->bindParam(":uid", $_POST["uid"]);
+		$stmt->execute();
+	}
+	return "TRUE";
 }
 
 class UserPermissions {
@@ -356,7 +354,9 @@ class AuthUser {
 	public $registerdate = "";
 	public $rawperms = "";
 	public $permissions = null;
-		
+	public $notify = true;
+	public $online = false;
+	
 	function __construct($uid) {
 		global $conn, $sqlstat, $sqlerr;
 		
@@ -371,6 +371,8 @@ class AuthUser {
 			$this->uid = $uid;
 			$this->email = $udata[0]["email"];
 			$this->name = $udata[0]["name"];
+			$this->notify = $udata[0]["notify"];
+			$this->online = strtotime($udata[0]["collab_lastseen"])>strtotime("now")-10;
 			$this->registerdate = date("l, F j, Y", strtotime($udata[0]["registered"]));
 			$rawperm = $udata[0]["permissions"];
 			$this->rawperms = $rawperm;
@@ -396,8 +398,8 @@ class AuthUser {
 										   $this->permissions->page_edit or
 										   $this->permissions->page_delete);
 			//Also need to read blacklists
-			$this->permissions->page_viewblacklist = explode(";", $udata[0]["permviewbl"]);
-			$this->permissions->page_editblacklist = explode(";", $udata[0]["permeditbl"]);
+			$this->permissions->page_viewblacklist = preg_split('@;@', $udata[0]["permviewbl"], NULL, PREG_SPLIT_NO_EMPTY);
+			$this->permissions->page_editblacklist = preg_split('@;@', $udata[0]["permeditbl"], NULL, PREG_SPLIT_NO_EMPTY);
 		}
 	}
 	

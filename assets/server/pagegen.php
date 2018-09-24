@@ -22,14 +22,19 @@ function ajax_newpage() {
 	}
 	$s = $secure ? "1" : "0";
 	$now = date("Y-m-d");
-	$title = getconfig("defaulttitle");
-	$head = getconfig("defaulthead");
-	$body = getconfig("defaultbody");
-	$stmt = $conn->prepare("INSERT INTO content_pages (pageid, title, head, body, revision, secure) VALUES (:pageid, :title, :head, :body, :now, :secure);");
+	
+	$stmt = $conn->prepare("SELECT * FROM content_pages WHERE pageid='_default/page';");
+	$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
+	$template = $stmt->fetchAll()[0];
+	
+	$stmt = $conn->prepare("INSERT INTO content_pages VALUES (:pageid, :title, :head, :body, :usehead, :usetop, :usebottom, :secure, :now);");
 	$stmt->bindParam(":pageid", $npid);
-	$stmt->bindParam(":title", $title);
-	$stmt->bindParam(":head", $head);
-	$stmt->bindParam(":body", $body);
+	$stmt->bindParam(":title", $template["title"]);
+	$stmt->bindParam(":head", $template["head"]);
+	$stmt->bindParam(":body", $template["body"]);
+	$stmt->bindParam(":usehead", $template["usehead"]);
+	$stmt->bindParam(":usetop", $template["usetop"]);
+	$stmt->bindParam(":usebottom", $template["usebottom"]);
 	$stmt->bindParam(":now", $now);
 	$stmt->bindParam(":secure", $s);
 	$stmt->execute();
@@ -46,7 +51,7 @@ function ajax_removepage() {
 		return "FALSE";
 	}
 	$pid = $_POST["pid"];
-	if (in_array($pid, ["home", "notfound", "secureaccess"])) {
+	if (in_array($pid, ["", "secureaccess"]) || substr($pid, 0, 9) === "_default/") {
 		return "SPECIAL";
 	}
 	if (!$authuser->permissions->admin_managepages) {
@@ -71,7 +76,7 @@ function ajax_securepage() {
 		return "FALSE";
 	}
 	$pid = $_POST["pid"];
-	if (in_array($pid, ["home", "notfound", "secureaccess"])) {
+	if (in_array($pid, ["", "secureaccess"]) || substr($pid, 0, 9) === "_default/") {
 		return "SPECIAL";
 	}
 	if (!$authuser->permissions->admin_managepages) {
@@ -97,7 +102,7 @@ function ajax_checkpid() {
 		return "FALSE";
 	}
 	if ($_POST["check"] != $_POST["pageid"] &&
-	    in_array($_POST["pageid"], ["home", "notfound", "secureaccess"])) {
+	    in_array($_POST["pageid"], ["", "secureaccess"]) || substr($_POST["pageid"], 0, 9) === "_default/") {
 		return "FALSE";
 	}
 	
@@ -111,9 +116,11 @@ function ajax_editpage() {
 	if (!isset($_POST["pageid"]) ||
 	    !isset($_POST["newpageid"]) ||
 		!isset($_POST["title"]) ||
-		!isset($_POST["title"]) ||
+		!isset($_POST["usehead"]) ||
 		!isset($_POST["head"]) ||
-		!isset($_POST["body"])) {
+		!isset($_POST["usetop"]) ||
+		!isset($_POST["body"]) ||
+		!isset($_POST["usebottom"])) {
 		return "FALSE";
 	}
 	
@@ -132,7 +139,7 @@ function ajax_editpage() {
 	
 	$newpageid = $_POST["newpageid"];
 	
-	if (!($newpageid == $page->pageid || !in_array($page->pageid, ["home", "notfound", "secureaccess"]))) {
+	if (!($newpageid == $page->pageid || !(in_array($page->pageid, ["", "secureaccess"]) || substr($page->pageid, 0, 9) === "_default/"))) {
 		return "FALSE";
 	}
 	
@@ -146,12 +153,15 @@ function ajax_editpage() {
 	}
 	
 	$now = date("Y-m-d");
-	$stmt = $conn->prepare("UPDATE content_pages SET pageid=:pageid, title=:title, head=:head, body=:body, revision=:now WHERE pageid=:oldpid;");
+	$stmt = $conn->prepare("UPDATE content_pages SET pageid=:pageid, title=:title, head=:head, body=:body, usehead=:usehead, usetop=:usetop, usebottom=:usebottom, revision=:now WHERE pageid=:oldpid;");
 	$stmt->bindParam(":pageid", $newpageid);
 	$stmt->bindParam(":oldpid", $page->pageid);
 	$stmt->bindParam(":title", $_POST["title"]);
+	$stmt->bindParam(":usehead", $_POST["usehead"]);
 	$stmt->bindParam(":head", $_POST["head"]);
+	$stmt->bindParam(":usetop", $_POST["usetop"]);
 	$stmt->bindParam(":body", $_POST["body"]);
+	$stmt->bindParam(":usebottom", $_POST["usebottom"]);
 	$stmt->bindParam(":now", $now);
 	$stmt->execute();
 	
@@ -183,12 +193,9 @@ class Page {
 	public $head = "";
 	public $rawbody = "%3Ch1%3EEmpty%20Page!%3C%2Fh1%3E";
 	public $body = "<h1>Empty Page!</h1>";
-	public $rawnavmod = "";
-	public $navmod = "";
-	public $nav = "";
-	public $rawfootmod = "";
-	public $footmod = "";
-	public $foot = "";
+	public $usehead = true;
+	public $usetop = true;
+	public $usebottom = true;
 	public $secure = false;
 	public $revision = "";
 	
@@ -211,13 +218,12 @@ class Page {
 				$this->rawtitle = $pdata["title"];
 				$this->rawhead = $pdata["head"];
 				$this->rawbody = $pdata["body"];
-				$this->rawnavmod = $pdata["navmod"];
-				$this->rawfootmod = $pdata["footmod"];
+				$this->usehead = $pdata["usehead"];
+				$this->usetop = $pdata["usetop"];
+				$this->usebottom = $pdata["usebottom"];
 				$this->title = urldecode($this->rawtitle);
 				$this->head = urldecode($this->rawhead);
 				$this->body = urldecode($this->rawbody);
-				$this->navmod = urldecode($this->rawnavmod);
-				$this->footmod = urldecode($this->rawfootmod);
 				$this->secure = $pdata["secure"];
 				$this->revision = date("l, F j, Y", strtotime($pdata["revision"]));
 			} else {					
@@ -230,7 +236,7 @@ class Page {
 		}
 	}
 	
-	function getHeader() {
+	function getTop() {
 		global $authuser;
 		global $conn, $sqlstat, $sqlerr;
 		global $TEMPLATES;
@@ -238,7 +244,7 @@ class Page {
 		
 		$securepages = [];
 		if ($sqlstat) {
-			$stmt = $conn->prepare("SELECT pageid FROM content_pages WHERE secure=1;");
+			$stmt = $conn->prepare("SELECT pageid FROM content_pages WHERE secure=1 AND pageid NOT LIKE '_default/%';");
 			$stmt->execute();
 			$stmt->setFetchMode(PDO::FETCH_ASSOC);
 			$ps = $stmt->fetchAll();
@@ -254,7 +260,7 @@ class Page {
 			
 			if ((($this->secure and $authuser->permissions->page_editsecure) or (!$this->secure and $authuser->permissions->page_edit)) and !in_array($this->pageid, $authuser->permissions->page_editblacklist)) {
 				$modals .= $TEMPLATES["secure-modal-start"]("dialog_edit", "Edit Page", "lg");
-				$modals .= $TEMPLATES["secure-modal-edit-bodyfoot"];
+				$modals .= $TEMPLATES["secure-modal-edit-bodyfoot"]($this);
 				$modals .= $TEMPLATES["secure-modal-end"];
 				$script .= $TEMPLATES["secure-modal-edit-script"]($this->pageid, $this->rawtitle, $this->rawhead, $this->rawbody);
 			}
@@ -298,31 +304,27 @@ class Page {
 			$secure .= $TEMPLATES["secure-menu"]($authuser, $securepages, $availablemodules, $modules);
 		}
 		
-		$base = urldecode(getconfig("defaultnav"));
-		$header = $secure  . $modals . $script . $base;
+		$top = "";
+		if ($this->usetop) {
+			$top = (new Page("_default/top"))->body;
+		}
+		$header = $secure . $modals . $script . $top;
 		return $header;
 	}
 
-	function getFooter() {
-		$footer = urldecode(getconfig("defaultfoot"));
-		return $footer;
+	function getBottom() {
+		$bottom = "";
+		if ($this->usebottom) {
+			$bottom = (new Page("_default/bottom"))->body;
+		}
+		return $bottom;
 	}
 	
 	function resolvePlaceholders() {
 		global $authuser;
 		global $availablemodules, $modules;
 		
-		if ($this->navmod != "") {
-			$this->nav = urldecode($this->navmod);
-		} else {
-			$this->nav = $this->getHeader();
-		}
-		if ($this->footmod != "") {
-			$this->foot = urldecode($this->footmod);
-		} else {
-			$this->foot = $this->getFooter();
-		}
-		$this->body = $this->nav . $this->body . $this->foot;
+		$this->body = $this->getTop() . $this->body . $this->getBottom();
 		$placeholders = [];
 		preg_match_all("/\{{2}[^\}]+\}{2}/", $this->body, $placeholders);
 		foreach ($placeholders[0] as $pcode) {
@@ -362,8 +364,12 @@ class Page {
 	}
 	
 	function insertHead() {
+		$pre = "";
+		if ($this->usehead) {
+			$pre = (new Page("_default/head"))->head;
+		}
 		$sitetitle = getconfig("websitetitle");
-		echo "<title>{$this->title} | {$sitetitle}</title>{$this->head}";		
+		echo "{$pre}<title>{$this->title} | {$sitetitle}</title>{$this->head}";		
 	}
 	
 	function insertBody() {
@@ -391,9 +397,9 @@ function invalidPage($pid=null) {
 			array_push($pages, $p["pageid"]);
 		}
 	} else {
-		$pages = ["home", "notfound", "secureaccess"];
+		$pages = ["", "secureaccess"];
 	}
-	return !in_array($pageid, $pages);
+	return !(in_array($pageid, $pages) || substr($pageid, 0, 9) === "_default/");
 }
 
 ?>

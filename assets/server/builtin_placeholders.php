@@ -82,10 +82,10 @@ function loginSubmission() {
 		if (data != "FALSE") {
 			var d = new Date(Date.now()+(3600000*24*30));
 			document.cookie = "token="+data+"; expires="+d.toUTCString()+"; path=/";
-			if (window.location.search.indexOf("&n") == -1) {
+			if (window.location.search.indexOf("?n") == -1) {
 				window.location.reload(true);
 			} else {
-				var url = BASE_URL + "/" + window.location.search.substr(window.location.search.indexOf("&n")+2);
+				var url = BASE_URL + "/" + window.location.search.substr(window.location.search.indexOf("?n")+3);
 				window.location.assign(url);
 			}
 		}
@@ -99,7 +99,7 @@ function loginSubmission() {
 			$html .= "<h6 class=\"card-subtitle mb-2 text-muted\">You now have access to these pages:</h6>";
 			if ($sqlstat) {
 				$html .= "<div class=\"list-group\">";
-				$stmt = $conn->prepare("SELECT pageid, title FROM content_pages WHERE secure=1 ORDER BY pageid ASC");
+				$stmt = $conn->prepare("SELECT pageid, title FROM content_pages WHERE secure=1 AND pageid NOT LIKE '_default/%' ORDER BY pageid ASC;");
 				$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
 				$pdatas = $stmt->fetchAll();
 				foreach ($pdatas as $pd) {
@@ -168,14 +168,12 @@ function module_builtin_contactus_submit() {
 		global $conn, $sqlstat, $sqlerr;
 		global $authuser;
 		if ($sqlstat) {
-			$content = "<div>";
-			$stmt = $conn->prepare("SELECT pageid, title, secure FROM content_pages ORDER BY pageid ASC;");
+			$content = "<ul>";
+			$stmt = $conn->prepare("SELECT pageid, title, secure FROM content_pages WHERE pageid NOT LIKE '_default/%' ORDER BY pageid ASC;");
 			$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
 			$pdatas = $stmt->fetchAll();
 			foreach ($pdatas as $pd) {
 				if ($pd["secure"] == "1" and !$authuser->permissions->page_viewsecure or in_array($pd["pageid"], $authuser->permissions->page_viewblacklist)) {
-					continue;
-				} else if ($pd["pageid"] == "notfound") {
 					continue;
 				} else {
 					$title = urldecode($pd["title"]);
@@ -196,19 +194,31 @@ function module_builtin_contactus_submit() {
 	
 	function ajax_contactform() {
 		global $authuser, $mailer;
-		if (isset($_POST["name"]) and isset($_POST["reply"]) and isset($_POST["message"])) {
-			$subject = "Message from {$_POST["name"]}";
-			$htmlbody = "<h1>Message from {$_POST["name"]}</h1><h3>Reply: {$_POST["reply"]}</h3><h4>Message:</h4><p>{$_POST["message"]}</p>";
-			$body = "Message from {$_POST["name"]}\n\nReply: {$_POST["reply"]}\n\nMessage:\n\n{$_POST["message"]}";
-			$mail = $mailer->compose([[getconfig("primaryemail")]], $subject, $htmlbody, $body);
-			if ($mail->send()) {
-				return "TRUE";
-			} else {
-				return "FALSE";
-			}
-		} else {
+		if (!isset($_POST["name"]) ||
+		    !isset($_POST["reply"]) ||
+			!isset($_POST["message"])) {
 			return "FALSE";
 		}
+		
+		$htmlbody  = "<h2>Message from {$_POST["name"]}</h2>";
+		$htmlbody .= "<h4>Reply: {$_POST["reply"]}</h4>";
+		$htmlbody .= "<p><strong>Message:</strong></p>";
+		$htmlbody .= "<p>{$_POST["message"]}</p>";
+		$htmlbody .= "<small>This message was sent using the online Contact form.</small>";
+		
+		$body  = "Message from {$_POST["name"]}\n";
+		$body .= "Reply: {$_POST["reply"]}\n";
+		$body .= "================================\n\n";
+		$body .= "Message:\n";
+		$body .= "{$_POST["message"]}\n\n";
+		$body .= "This message was send using the online Contact form.";
+		
+		$mail = $mailer->compose([[getconfig("primaryemail")]], "Message from {$_POST["name"]}", $htmlbody, $body);
+		if (!$mail->send()) {
+			return "FALSE";
+		}
+		
+		return "TRUE";
 	}
 }
 

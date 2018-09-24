@@ -13,13 +13,20 @@ if (strstr($url, '?')) $url = substr($url, 0, strpos($url, '?'));
 $pageid = $url;
 if (isset($_GET["p"])) {
 	$pageid = $_GET["p"];
-	header("Location: ./" . $pageid);
-}
-if ($pageid == "") {
-	$pageid = "home";
+	//header("Location: /" . $pageid);
 }
 
 $https = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] != 'off') ? "https" : "http";
+$baseUrl = $https . "://" . $_SERVER["SERVER_NAME"];
+
+date_default_timezone_set("UTC");
+
+// Prevent caching
+header("Expires: 0");
+header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT");
+header("Cache-Control: no-store, no-cache, must-revalidate");
+header("Cache-Control: post-check=0, pre-check=0", false);
+header("Pragma: no-cache");
 
 include "assets/server/pagegen.php";
 include "assets/server/secure.php";
@@ -42,10 +49,15 @@ try {
 }
 
 $mailer = new Mailer();
-$mailer->host = $mail_config->host;
-$mailer->username = $mail_config->user;
-$mailer->password = $mail_config->pass;
-$mailer->from = $mail_config->from;
+$mailer->host = getconfig("email_primary_host");
+$mailer->username = getconfig("email_primary_user");
+$mailer->password = getconfig("email_primary_pass");
+$mailer->from = getconfig("email_primary_from");
+$notifMailer = new Mailer();
+$notifMailer->host = getconfig("email_notifs_host");
+$notifMailer->username = getconfig("email_notifs_user");
+$notifMailer->password = getconfig("email_notifs_pass");
+$notifMailer->from = getconfig("email_notifs_from");
 
 if (isset($_COOKIE["token"]) and validToken($_COOKIE["token"])) {
 	$authuser = new AuthUser(uidFromToken($_COOKIE["token"]));
@@ -61,19 +73,10 @@ if (isset($_COOKIE["token"]) and validToken($_COOKIE["token"])) {
 }
 
 
-if ($pageid == "") {
-	header("Location: ./");
-} else if (invalidPage()) {
-	$pageid = "notfound";
+if (invalidPage($pageid)) {
+	$pageid = "_default/notfound";
 }
 $page = new Page($pageid);
-
-// Prevent caching
-header("Expires: 0");
-header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT");
-header("Cache-Control: no-store, no-cache, must-revalidate");
-header("Cache-Control: post-check=0, pre-check=0", false);
-header("Pragma: no-cache");
 
 // Force HTTPS if this is a secure page or secureaccess, otherwise force HTTP:
 /*
@@ -98,7 +101,7 @@ if ($page->secure || $pageid == "secureaccess") {
 */
 
 if (($page->secure and !$authuser->permissions->page_viewsecure) or ($authuser->permissions->page_viewsecure and in_array($page->pageid, $authuser->permissions->page_viewblacklist))) {
-	header("Location: ?p=secureaccess&n={$pageid}");
+	header("Location: /secureaccess?n={$pageid}");
 }
 // LOAD MODULES
 $modulepath = "assets/server_modules/";
