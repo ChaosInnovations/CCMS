@@ -47,11 +47,17 @@ function ajax_newtoken() {
 	if (!isset($_POST["email"]) or !isset($_POST["password"])) {
 		return "FALSE";
 	}
-	$uid = md5($_POST["email"]);
+	$uid = md5(fix_email($_POST["email"]));
 	if (!checkPassword($uid, $_POST["password"])) {
 		return "FALSE";
 	}
 	return new_token($uid);
+}
+
+function fix_email($email) {
+	$email = strtolower($email);
+	$email = preg_replace('/\s+/', '', $email);
+	return $email;
 }
 
 function load_jsons() {
@@ -101,7 +107,7 @@ function ajax_newuser() {
 	if (!isset($_POST["email"]) or !isset($_POST["name"]) or !isset($_POST["permissions"])) {
 		return "FALSE";
 	}
-	$uid = md5($_POST["email"]);
+	$uid = md5(fix_email($_POST["email"]));
 	if (validUser($uid)) {
 		// User already exists.
 		return "FALSE";
@@ -111,19 +117,19 @@ function ajax_newuser() {
 		return "FALSE";
 	}
 	$body = $TEMPLATES["email-newuser"]($_POST["name"], $authuser->name, $baseUrl, getconfig("websitetitle"));
-	$mail = $notifMailer->compose([[$_POST["email"], $_POST["name"]]], "Account Created", $body, "");
+	$mail = $notifMailer->compose([[fix_email($_POST["email"]), $_POST["name"]]], "Account Created", $body, "");
 	// comment below for testing
 	
 	if (!$mail->send()) {
 		return "FALSE";
 	}
 	
-	
+	$email = fix_email($_POST["email"]);
 	$now = date("Y-m-d");
 	$pwd = hash("sha512", "password");
 	$stmt = $conn->prepare("INSERT INTO users VALUES (:uid, :email, :name, :now, :perms, '', '', 0, NULL, '', 1, 0);");
 	$stmt->bindParam(":uid", $uid);
-	$stmt->bindParam(":email", $_POST["email"]);
+	$stmt->bindParam(":email", $email);
 	$stmt->bindParam(":name", $_POST["name"]);
 	$stmt->bindParam(":now", $now);
 	$stmt->bindParam(":perms", $_POST["permissions"]);
@@ -174,7 +180,7 @@ function ajax_checkpass() {
 	}
 	$uid = $authuser->uid;
 	if (isset($_POST["email"])) {
-		$uid = md5($_POST["email"]);
+		$uid = md5(fix_email($_POST["email"]));
 	}
 	if ($uid == null) {
 		return "FALSE";
@@ -205,7 +211,7 @@ function ajax_checkuser() {
 	if (!$_POST["email"]) {
 		return "FALSE";
 	}
-	if (!validUser(md5($_POST["email"]))) {
+	if (!validUser(md5(fix_email($_POST["email"])))) {
 		return "FALSE";
 	}
 	return "TRUE";
@@ -369,7 +375,7 @@ class AuthUser {
 			$udata = $stmt->fetchAll();
 			
 			$this->uid = $uid;
-			$this->email = $udata[0]["email"];
+			$this->email = fix_email($udata[0]["email"]);
 			$this->name = $udata[0]["name"];
 			$this->notify = $udata[0]["notify"] && strtotime($udata[0]["last_notif"])<strtotime("now")-(30*60); // 30-minute cooldown
 			$this->online = strtotime($udata[0]["collab_lastseen"])>strtotime("now")-10;
