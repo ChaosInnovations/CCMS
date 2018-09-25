@@ -15,9 +15,9 @@ class builtin_placeholders {
 			$html = '
 <form id="loginform" class="form" onsubmit="return loginSubmission();">
 	<div class="form-group">
-		<label class="col-form-label" for="loginemail">Current Password</label>
+		<label class="col-form-label" for="loginemail">Email Address</label>
 		<div class="input-group">
-			<input type="text" id="loginemail" autocomplete="username" class="form-control border-right-0 border-secondary" title="Email" placeholder="Email Address" oninput="loginCheckEmail();">
+			<input type="email" id="loginemail" autocomplete="email" class="form-control border-right-0 border-secondary" title="Email" placeholder="Email Address" oninput="loginCheckEmail();">
 			<div class="input-group-append">
 				<div class="input-group-text bg-transparent border-left-0 border-secondary">
 					<i class="fas fa-times" style="display:none;"></i>
