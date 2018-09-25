@@ -13,9 +13,14 @@ function notify($uid, $what) {
 	$stmt->execute();
 	
 	if ($recvuser->online || !$recvuser->notify) {
-		// Don't email if online already or has disabled email notifications.
+		// Don't email if online already or has disabled email notifications/within notification cooldown.
 		return;
 	}
+	
+	// Reset recipient's notification cooldown
+	$stmt = $conn->prepare("UPDATE users SET last_notif=UTC_TIMESTAMP WHERE uid=:uid;");
+	$stmt->bindParam(":uid", $recvuser->uid);
+	$stmt->execute();
 	
 	$nType = substr($what, 0, 1);
 	

@@ -121,7 +121,7 @@ function ajax_newuser() {
 	
 	$now = date("Y-m-d");
 	$pwd = hash("sha512", "password");
-	$stmt = $conn->prepare("INSERT INTO users VALUES (:uid, :email, :name, :now, :perms, '', '', 0, NULL, '', 1);");
+	$stmt = $conn->prepare("INSERT INTO users VALUES (:uid, :email, :name, :now, :perms, '', '', 0, NULL, '', 1, 0);");
 	$stmt->bindParam(":uid", $uid);
 	$stmt->bindParam(":email", $_POST["email"]);
 	$stmt->bindParam(":name", $_POST["name"]);
@@ -371,7 +371,7 @@ class AuthUser {
 			$this->uid = $uid;
 			$this->email = $udata[0]["email"];
 			$this->name = $udata[0]["name"];
-			$this->notify = $udata[0]["notify"];
+			$this->notify = $udata[0]["notify"] && strtotime($udata[0]["last_notif"])<strtotime("now")-(30*60); // 30-minute cooldown
 			$this->online = strtotime($udata[0]["collab_lastseen"])>strtotime("now")-10;
 			$this->registerdate = date("l, F j, Y", strtotime($udata[0]["registered"]));
 			$rawperm = $udata[0]["permissions"];
