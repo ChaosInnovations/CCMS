@@ -324,8 +324,8 @@ function setupFrontend() {
 	<body>
 		<h1>Setup CCMS</h1>
 		<div id="step1">
-		<h2>Step <span id="step">1</span> of 4: <span id="stepname">Database</span></h2>
-		<div id="stepProgress"><progress value="1" max="4"></progress></div>
+		<h2>Step <span id="step">1</span> of 2: <span id="stepname">Database</span></h2>
+		<div id="stepProgress"><progress value="1" max="2"></progress></div>
 		<div id="formErrors"></div>
 		<form id="setupForm" onsubmit="return false;">
 			<div id="pg1frm">
@@ -336,24 +336,10 @@ function setupFrontend() {
 				<button onclick="gotoPage(\'2\');">Next</button>
 			</div>
 			<div id="pg2frm" class="hide">
-				<p>Only SMTP is currently supported.</p>
-				<b>From: </b><input id="em-from" type="text" placeholder="From" value=""></input><br />
-				<b>Host: </b><input id="em-host" type="text" placeholder="Host" value=""></input><br />
-				<b>Username/Email Address: </b><input id="em-user" type="text" placeholder="Username" value=""></input><br />
-				<b>Password: </b><input id="em-pass" type="text" placeholder="Password" value=""></input><br />
-				<button onclick="gotoPage(\'1\');">Previous</button>
-				<button onclick="gotoPage(\'3\');">Next</button>
-			</div>
-			<div id="pg3frm" class="hide">
-				<b>Website Title: </b><input id="st-name" type="text" placeholder="Title" value="New Website"></input><br />
-				<button onclick="gotoPage(\'2\');">Previous</button>
-				<button onclick="gotoPage(\'4\');">Next</button>
-			</div>
-			<div id="pg4frm" class="hide">
 			    <b>Name: </b><input id="admin-name" type="text" placeholder="Admin Name" value=""></input><br />
 				<b>Email Address: </b><input id="admin-email" type="text" placeholder="Admin Email" value=""></input><br />
 				<b>Password: </b><input id="admin-pass" type="text" placeholder="Admin Password" value=""></input><br />
-				<button onclick="gotoPage(\'3\');">Previous</button>
+				<button onclick="gotoPage(\'1\');">Previous</button>
 				<button onclick="processForm();">Finish</button>
 			</div>
 		</form>
@@ -367,7 +353,7 @@ function gotoPage(page) {
 	document.getElementById("pg4frm").className = "hide";
 	document.getElementById("pg"+page+"frm").className = "";
 	document.getElementById("step").innerHTML = page;
-	document.getElementById("stepname").innerHTML = ["","Database","Email","Website","Administrator Account"][page];
+	document.getElementById("stepname").innerHTML = ["","Database","Administrator Account"][page];
 	document.getElementById("stepProgress").innerHTML = \'<progress value="\'+page+\'" max="4"></progress>\';
 	return false;
 }
@@ -403,16 +389,11 @@ function raiseError(code) {
 function processForm() {
 	// 1. Evaluate data
 	// 1.0 Get data
-	var data = {"db":{"host":null,"user":null,"pass":null,"data":null},"email":{"host":null,"user":null,"pass":null},"title":null,"admin":{"name":null,"email":null,"pass":null}};
+	var data = {"db":{"host":null,"user":null,"pass":null,"data":null},"admin":{"name":null,"email":null,"pass":null}};
 	data["db"]["host"] = document.getElementById("db-host").value;
 	data["db"]["user"] = document.getElementById("db-user").value;
 	data["db"]["pass"] = document.getElementById("db-pass").value;
 	data["db"]["data"] = document.getElementById("db-db").value;
-	data["email"]["from"] = document.getElementById("em-from").value;
-	data["email"]["host"] = document.getElementById("em-host").value;
-	data["email"]["user"] = document.getElementById("em-user").value;
-	data["email"]["pass"] = document.getElementById("em-pass").value;
-	data["title"] = document.getElementById("st-name").value;
 	data["admin"]["name"] = document.getElementById("admin-name").value;
 	data["admin"]["email"] = document.getElementById("admin-email").value;
 	data["admin"]["pass"] = document.getElementById("admin-pass").value;
@@ -437,84 +418,14 @@ function processForm() {
 }
 
 // Form processing:
-// 1. Evaluate data
-// 1.1 Check that fields are non-empty
-// 1.2 Check database credentials
-// 1.3 Check email credentials
-// 2. Write db-config.json
-// 3. Write mail-config.json
-// 4. Drop any existing database tables
-// 5. Create default db tables
-// 6. Populate `config` table
-// 7. Populate `users` and `access` table
-// 8. Send confirmation email to admin email
-// 9. Redirect to index.php (should do a self-check and if OK, delete setup.php and STATE)
+// 1. Write provisioning file
+// 2. Redirect to index.php (should do a self-check and if OK, delete setup.php and STATE)
 
 function saveSetup() {
 	if (!isset($_POST["data"])) {
 		return "ERR";
 	}
-	$data = json_decode($_POST["data"]);
-	$dbConfig = [];
-	$mailConfig = [];
-	// {"db":{"host":null,"user":null,"pass":null,"data":null},"email":{"host":null,"user":null,"pass":null},"title":null,"admin":{"name":null,"email":null,"pass":null}};
-	
-	// 2 Save setup
-	// 2.1 Write db-config.json
-	$dbConfig["host"] = $data->db->host;
-	$dbConfig["user"] = $data->db->user;
-	$dbConfig["pass"] = $data->db->pass;
-	$dbConfig["database"] = $data->db->data;
-	file_put_contents("./assets/server/db-config.json", json_encode($dbConfig));
-	// 2.2 Write mail-config.json
-	$mailConfig = $data->email;
-	file_put_contents("./assets/server/mail-config.json", json_encode($mailConfig));
-	// 2.3 Setup database
-	$conn = null;
-	$sqlstat = true;
-	try {
-		$conn = new PDO("mysql:host=" . $data->db->host . ";dbname=" . $data->db->data, $data->db->user, $data->db->pass);
-		$conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-	} catch(PDOException $e) {
-		$sqlstat = false;
-	}
-	if (!$sqlstat) {
-		return "ERR";
-	}
-	// 2.3.1 Drop any existing database tables
-	$stmt = $conn->prepare("SHOW TABLES;");
-	$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
-	$tbls = $stmt->fetchAll();
-	foreach($tbls as $tbl) {
-		$tblName = $tbl["Tables_in_" . $data->db->data];
-		$conn->exec("DROP TABLE `" . $tblName . "`;");
-	}
-	// 2.3.2 Create default db tables
-	$conn->exec("CREATE TABLE `config` (`websitetitle` text NOT NULL,`primaryemail` text NOT NULL,`secondaryemail` text,`creationdate` date DEFAULT NULL,`defaulthead` mediumtext,`defaulttitle` text,`defaultbody` longtext,`defaultnav` mediumtext,`defaultfoot` mediumtext) ENGINE=InnoDB DEFAULT CHARSET=latin1;");
-	$conn->exec("CREATE TABLE `users` (`uid` char(32) NOT NULL,`email` tinytext NOT NULL,`name` tinytext NOT NULL,`registered` date NOT NULL,`permissions` text NOT NULL,`permviewbl` text NOT NULL,`permeditbl` text NOT NULL) ENGINE=InnoDB DEFAULT CHARSET=latin1;ALTER TABLE `users` ADD UNIQUE KEY `uid` (`uid`);");
-	$conn->exec("CREATE TABLE `access` (`uid` char(32) NOT NULL,`pwd` char(128) NOT NULL) ENGINE=InnoDB DEFAULT CHARSET=latin1;ALTER TABLE `access` ADD UNIQUE KEY `uid` (`uid`);");
-	$conn->exec("CREATE TABLE `tokens` (`uid` char(32) NOT NULL,`tid` char(32) NOT NULL,`source_ip` varchar(45) NOT NULL,`start` date NOT NULL,`expire` date NOT NULL,`forcekill` tinyint(1) NOT NULL) ENGINE=InnoDB DEFAULT CHARSET=latin1;ALTER TABLE `tokens` ADD UNIQUE KEY `tid` (`tid`);");
-	$conn->exec("CREATE TABLE `content_pages` (`pageid` varchar(255) NOT NULL,`title` text NOT NULL,`head` longtext NOT NULL,`body` longtext NOT NULL,`navmod` mediumtext NOT NULL,`footmod` mediumtext NOT NULL,`secure` tinyint(1) NOT NULL,`revision` date NOT NULL) ENGINE=InnoDB DEFAULT CHARSET=latin1;ALTER TABLE `content_pages` ADD UNIQUE KEY `pageid` (`pageid`);");
-	$conn->exec("CREATE TABLE `schedule` (`index` INT NOT NULL AUTO_INCREMENT, after DATETIME DEFAULT CURRENT_TIMESTAMP, function TINYTEXT, args TEXT, UNIQUE KEY (`index`));");
-	// 2.3.3 Populate `config` and `content_pages` tables
-	$stmt = $conn->prepare("INSERT INTO `config` VALUES (:name, :email, NULL, '" . date("Y-m-d") . "', NULL, NULL, NULL, NULL, NULL);");
-	$stmt->bindParam(":name", $data->title);
-	$stmt->bindParam(":email", $data->admin->email);
-	$stmt->execute();
-	$conn->exec("INSERT INTO `content_pages` VALUES ('home', 'Home%20Page', '', 'Empty%3Cbr%20%2F%3E%3Ca%20href%3D%22%3Fp%3Dsecureaccess%22%3ESign%20in%3C%2Fa%3E', '', '', 0, '2017-01-29'),('notfound', 'Page%20not%20found!', '', 'Page not Found: %7B%7Bqueryerr%7D%7D', '', '', 0, '2017-01-29'),('secureaccess', 'Secure%20Access%20Portal', '', '%7B%7Bloginform%7D%7D', '', '', 0, '2017-01-29');");
-	// 2.3.4 Populate `users` and `access` tables
-	$uid = md5($data->admin->email);
-	$pwdHash = hash("sha512", $data->admin->pass);
-	$stmt = $conn->prepare("INSERT INTO `users` VALUES (:uid, :email, :name, '" . date("Y-m-d") . "', 'owner;', '', '');");
-	$stmt->bindParam(":uid", $uid);
-	$stmt->bindParam(":email", $data->admin->email);
-	$stmt->bindParam(":name", $data->admin->name);
-	$stmt->execute();
-	$stmt = $conn->prepare("INSERT INTO `access` VALUES (:uid, :pwd);");
-	$stmt->bindParam(":uid", $uid);
-	$stmt->bindParam(":pwd", $pwdHash);
-	$stmt->execute();
-	// 2.4 Send confirmation email to admin email
+	file_put_contents("provisioning.json", json_encode($_POST["data"]));
 	return "OK";
 }
 
