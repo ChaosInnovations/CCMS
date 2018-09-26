@@ -1,8 +1,10 @@
 SET time_zone = "+00:00";
 
+/*
 --------------------------
 -- Drop Existing Tables --
 --------------------------
+*/
 
 DROP TABLE IF EXISTS `access`;
 DROP TABLE IF EXISTS `collab_chat`;
@@ -15,12 +17,14 @@ DROP TABLE IF EXISTS `schedule`;
 DROP TABLE IF EXISTS `tokens`;
 DROP TABLE IF EXISTS `users`;
 
+/*
 -------------------
 -- Create Tables --
 -------------------
+*/
 
--- User Tables
--- stores user info
+/*-- User Tables*/
+/* -- stores user info */
 CREATE TABLE `users` (
   `uid` char(32) NOT NULL,UNIQUE KEY `uid` (`uid`),
   `email` tinytext NOT NULL,
@@ -35,12 +39,12 @@ CREATE TABLE `users` (
   `notify` tinyint(1) NOT NULL DEFAULT '1',
   `last_notif` datetime NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
--- stores uid/pwdhash pairs
+/* -- stores uid/pwdhash pairs */
 CREATE TABLE `access` (
   `uid` char(32) NOT NULL,UNIQUE KEY `uid` (`uid`),
   `pwd` char(128) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
--- stores tokens`
+/* -- stores tokens` */
 CREATE TABLE `tokens` (
   `uid` char(32) NOT NULL,
   `tid` char(32) NOT NULL,UNIQUE KEY `tid` (`tid`),
@@ -50,13 +54,13 @@ CREATE TABLE `tokens` (
   `forcekill` tinyint(1) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
--- Site & Page Tables
--- stores primary site properties
+/* -- Site & Page Tables */
+/* -- stores primary site properties */
 CREATE TABLE `config` (
   `property` varchar(256) NOT NULL,UNIQUE KEY `property` (`property`),
   `value` varchar(256) NOT NULL DEFAULT ''
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
--- stores page content
+/* -- stores page content */
 CREATE TABLE `content_pages` (
   `pageid` varchar(255) NOT NULL,UNIQUE KEY `pageid` (`pageid`),
   `title` text NOT NULL,
@@ -68,28 +72,28 @@ CREATE TABLE `content_pages` (
   `secure` tinyint(1) NOT NULL,
   `revision` date NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
--- stores scheduled tasks
+/* -- stores scheduled tasks */
 CREATE TABLE `schedule` (
-  `index` int(11) NOT NULL AUTO_INCREMENT,ADD UNIQUE KEY `index` (`index`),
+  `index` int(11) NOT NULL AUTO_INCREMENT,UNIQUE KEY `index` (`index`),
   `after` datetime DEFAULT CURRENT_TIMESTAMP,
   `function` tinytext,
   `args` text
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
--- Collaboration Tables
--- stores chat rooms
+/* -- Collaboration Tables */
+/* -- stores chat rooms */
 CREATE TABLE `collab_rooms` (
-  `room_id` char(32) NOT NULL,UNIQUE KEY `room_id_2` (`room_id`),
+  `room_id` char(32) NOT NULL,UNIQUE KEY `room_id` (`room_id`),
   `room_name` tinytext NOT NULL,
   `room_members` text NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
--- stores todo lists
+/* -- stores todo lists */
 CREATE TABLE `collab_lists` (
   `list_id` char(32) NOT NULL,UNIQUE KEY `list_id` (`list_id`),
   `list_name` tinytext NOT NULL,
   `list_participants` text NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
--- stores chat messages
+/* -- stores chat messages */
 CREATE TABLE `collab_chat` (
   `chat_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,UNIQUE KEY `chat_id` (`chat_id`),
   `chat_from` char(32) NOT NULL,
@@ -97,7 +101,7 @@ CREATE TABLE `collab_chat` (
   `chat_body` text NOT NULL,
   `chat_sent` datetime NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
--- stores todo items
+/* -- stores todo items */
 CREATE TABLE `collab_todo` (
   `todo_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,UNIQUE KEY `todo_id` (`todo_id`),
   `list_id` char(32) NOT NULL,
@@ -105,10 +109,12 @@ CREATE TABLE `collab_todo` (
   `todo_done` tinyint(1) NOT NULL DEFAULT '0'
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
+/* 
 ----------------------------
 -- Insert Default Entries --
 ----------------------------
-
+*/
+ 
 INSERT INTO `config` VALUES('creationdate', UTC_DATE);
 INSERT INTO `config` VALUES('email_notifs_from', '');
 INSERT INTO `config` VALUES('email_notifs_host', '');
@@ -133,6 +139,8 @@ INSERT INTO `collab_lists` VALUES('6fbde1fc117640048beb18f9d28cb39e', 'Example T
 INSERT INTO `collab_todo` VALUES(NULL, '6fbde1fc117640048beb18f9d28cb39e', 'Read this item', 0);
 INSERT INTO `collab_todo` VALUES(NULL, '6fbde1fc117640048beb18f9d28cb39e', 'Send a message', 1);
 
+/*
 ---------
 -- End --
 ---------
+*/

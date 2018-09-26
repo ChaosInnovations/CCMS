@@ -349,12 +349,10 @@ function setupFrontend() {
 function gotoPage(page) {
 	document.getElementById("pg1frm").className = "hide";
 	document.getElementById("pg2frm").className = "hide";
-	document.getElementById("pg3frm").className = "hide";
-	document.getElementById("pg4frm").className = "hide";
 	document.getElementById("pg"+page+"frm").className = "";
 	document.getElementById("step").innerHTML = page;
 	document.getElementById("stepname").innerHTML = ["","Database","Administrator Account"][page];
-	document.getElementById("stepProgress").innerHTML = \'<progress value="\'+page+\'" max="4"></progress>\';
+	document.getElementById("stepProgress").innerHTML = \'<progress value="\'+page+\'" max="2"></progress>\';
 	return false;
 }
 
@@ -425,7 +423,7 @@ function saveSetup() {
 	if (!isset($_POST["data"])) {
 		return "ERR";
 	}
-	file_put_contents("provisioning.json", json_encode($_POST["data"]));
+	file_put_contents("provisioning.json", $_POST["data"]);
 	return "OK";
 }
 
