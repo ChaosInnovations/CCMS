@@ -3,28 +3,55 @@
 if (file_exists("STATE") && file_get_contents("STATE") == "5:0" &&
     file_exists("provisioning.json") && file_exists("database.sql")) {
 	// Provision
-	// [here]
-	// Write database [here]
+	$provisionData = json_decode(file_get_contents("provisioning.json"));
+	// {"db":{"host":null,"user":null,"pass":null,"data":null},"admin":{"name":null,"email":null,"pass":null}};
+	$dbConfig = [];
+	$dbConfig["host"] = $provisionData->db->host;
+	$dbConfig["user"] = $provisionData->db->user;
+	$dbConfig["pass"] = $provisionData->db->pass;
+	$dbConfig["database"] = $provisionData->db->data;
+	file_put_contents("./assets/server/db-config.json", json_encode($dbConfig));
+	
+	// Write database
 	$conn = null;
 	try {
-		$conn = new PDO("mysql:host=" . $db_config->host . ";dbname=" . $db_config->database, $db_config->user, $db_config->pass);
+		$conn = new PDO("mysql:host=" . $dbConfig["host"] . ";dbname=" . $dbConfig["database"], $dbConfig["user"], $dbConfig["pass"]);
 		$conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 	} catch(PDOException $e) {
-		$sqlstat = false;
-		$sqlerr = $e;
-		array_push($msgs, $e);
-	}
-	if (!$sqlstat) {
 		echo("Something went wrong!");
 		die();
 	}
+	
 	// Run statements from database.sql
+	$dbSrc = file_get_contents("database.sql");
+	$stmt = $conn->prepare($dbSrc);
+	if (!$stmt->execute()) {
+		echo("Something went wrong!");
+		die();
+	}
+	
+	// Add Admin account
+	$uid = md5($provisionData->admin->email);
+	$pwdHash = hash("sha512", $provisionData->admin->pass);
+	$stmt = $conn->prepare("INSERT INTO `users` (uid, email, name, registered, permissions) VALUES (:uid, :email, :name, UTC_TIMESTAMP, 'owner;');");
+	$stmt->bindParam(":uid", $uid);
+	$stmt->bindParam(":email", $provisionData->admin->email);
+	$stmt->bindParam(":name", $provisionData->admin->name);
+	$stmt->execute();
+	$stmt = $conn->prepare("INSERT INTO `access` (uid, pwd) VALUES (:uid, :pwd);");
+	$stmt->bindParam(":uid", $uid);
+	$stmt->bindParam(":pwd", $pwdHash);
+	$stmt->execute();
 	
 	// Remove setup files
 	unlink("setup.php");
 	unlink("STATE");
 	unlink("provisioning.json");
 	unlink("database.sql");
+	
+	// Reload
+	header("Location: /");
+	die();
 }
 
 $url = trim($_SERVER["REQUEST_URI"], "/");

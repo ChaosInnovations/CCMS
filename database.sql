@@ -22,7 +22,7 @@ DROP TABLE IF EXISTS `users`;
 -- User Tables
 -- stores user info
 CREATE TABLE `users` (
-  `uid` char(32) NOT NULL,UNIQUE  `uid` (`uid`),
+  `uid` char(32) NOT NULL,UNIQUE KEY `uid` (`uid`),
   `email` tinytext NOT NULL,
   `name` tinytext NOT NULL,
   `registered` date NOT NULL,
@@ -37,13 +37,13 @@ CREATE TABLE `users` (
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 -- stores uid/pwdhash pairs
 CREATE TABLE `access` (
-  `uid` char(32) NOT NULL,UNIQUE `uid` (`uid`),
+  `uid` char(32) NOT NULL,UNIQUE KEY `uid` (`uid`),
   `pwd` char(128) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 -- stores tokens`
 CREATE TABLE `tokens` (
   `uid` char(32) NOT NULL,
-  `tid` char(32) NOT NULL,UNIQUE  `tid` (`tid`),
+  `tid` char(32) NOT NULL,UNIQUE KEY `tid` (`tid`),
   `source_ip` varchar(45) NOT NULL,
   `start` date NOT NULL,
   `expire` date NOT NULL,
@@ -53,12 +53,12 @@ CREATE TABLE `tokens` (
 -- Site & Page Tables
 -- stores primary site properties
 CREATE TABLE `config` (
-  `property` varchar(256) NOT NULL,UNIQUE  `property` (`property`),
+  `property` varchar(256) NOT NULL,UNIQUE KEY `property` (`property`),
   `value` varchar(256) NOT NULL DEFAULT ''
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 -- stores page content
 CREATE TABLE `content_pages` (
-  `pageid` varchar(255) NOT NULL,UNIQUE  `pageid` (`pageid`),
+  `pageid` varchar(255) NOT NULL,UNIQUE KEY `pageid` (`pageid`),
   `title` text NOT NULL,
   `head` longtext NOT NULL,
   `body` longtext NOT NULL,
@@ -70,7 +70,7 @@ CREATE TABLE `content_pages` (
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 -- stores scheduled tasks
 CREATE TABLE `schedule` (
-  `index` int(11) NOT NULL AUTO_INCREMENT,ADD UNIQUE  `index` (`index`),
+  `index` int(11) NOT NULL AUTO_INCREMENT,ADD UNIQUE KEY `index` (`index`),
   `after` datetime DEFAULT CURRENT_TIMESTAMP,
   `function` tinytext,
   `args` text
@@ -79,19 +79,19 @@ CREATE TABLE `schedule` (
 -- Collaboration Tables
 -- stores chat rooms
 CREATE TABLE `collab_rooms` (
-  `room_id` char(32) NOT NULL,UNIQUE `room_id_2` (`room_id`),
+  `room_id` char(32) NOT NULL,UNIQUE KEY `room_id_2` (`room_id`),
   `room_name` tinytext NOT NULL,
   `room_members` text NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 -- stores todo lists
 CREATE TABLE `collab_lists` (
-  `list_id` char(32) NOT NULL,UNIQUE `list_id` (`list_id`),
+  `list_id` char(32) NOT NULL,UNIQUE KEY `list_id` (`list_id`),
   `list_name` tinytext NOT NULL,
   `list_participants` text NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 -- stores chat messages
 CREATE TABLE `collab_chat` (
-  `chat_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,UNIQUE `chat_id` (`chat_id`),
+  `chat_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,UNIQUE KEY `chat_id` (`chat_id`),
   `chat_from` char(32) NOT NULL,
   `chat_to` char(33) NOT NULL,
   `chat_body` text NOT NULL,
@@ -99,7 +99,7 @@ CREATE TABLE `collab_chat` (
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 -- stores todo items
 CREATE TABLE `collab_todo` (
-  `todo_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,UNIQUE `todo_id` (`todo_id`),
+  `todo_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,UNIQUE KEY `todo_id` (`todo_id`),
   `list_id` char(32) NOT NULL,
   `todo_label` tinytext NOT NULL,
   `todo_done` tinyint(1) NOT NULL DEFAULT '0'
@@ -109,7 +109,7 @@ CREATE TABLE `collab_todo` (
 -- Insert Default Entries --
 ----------------------------
 
-INSERT INTO `config` VALUES('creationdate', '2018-07-23');
+INSERT INTO `config` VALUES('creationdate', UTC_DATE);
 INSERT INTO `config` VALUES('email_notifs_from', '');
 INSERT INTO `config` VALUES('email_notifs_host', '');
 INSERT INTO `config` VALUES('email_notifs_pass', '');
