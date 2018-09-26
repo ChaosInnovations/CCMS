@@ -1,10 +1,30 @@
 <?php
 // Delete setup script and STATE if it still exists (first time launch)
-$firstLaunch = false;
-if (file_exists("STATE")) {
-	$firstLaunch = true;
+if (file_exists("STATE") && file_get_contents("STATE") == "5:0" &&
+    file_exists("provisioning.json") && file_exists("database.sql")) {
+	// Provision
+	// [here]
+	// Write database [here]
+	$conn = null;
+	try {
+		$conn = new PDO("mysql:host=" . $db_config->host . ";dbname=" . $db_config->database, $db_config->user, $db_config->pass);
+		$conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+	} catch(PDOException $e) {
+		$sqlstat = false;
+		$sqlerr = $e;
+		array_push($msgs, $e);
+	}
+	if (!$sqlstat) {
+		echo("Something went wrong!");
+		die();
+	}
+	// Run statements from database.sql
+	
+	// Remove setup files
 	unlink("setup.php");
 	unlink("STATE");
+	unlink("provisioning.json");
+	unlink("database.sql");
 }
 
 $url = trim($_SERVER["REQUEST_URI"], "/");
