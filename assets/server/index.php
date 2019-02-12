@@ -27,7 +27,7 @@ include "pagegen.php";
 include "mail.php";
 include "templates.php";
 include "collab.php";
-include "vendor/autoload.php";
+//include "vendor/autoload.php";
 
 load_jsons();
 
