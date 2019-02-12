@@ -22,9 +22,9 @@ class Page
     public function __construct(string $pid=null)
     {
         global $conn, $sqlstat, $sqlerr, $pageid;
-        
+
         $this->pageid = $pid == null ? $pageid : $pid;
-        
+
         $this->title = $pageid;
         $this->body = "
             <div class='container-fluid'>
@@ -35,20 +35,20 @@ class Page
                 </div>
             </div>
         ";
-        
+
         if (!sqlstat) {
             return;
         }
-                
+
         $stmt = $conn->prepare("SELECT * FROM content_pages WHERE pageid=:pid;");
         $stmt->bindParam(":pid", $pageid);
         $stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
         $pages = $stmt->fetchAll();
-        
+
         if (count($pages) != 1) {
             return;
         }
-        
+
         $pdata = $pdatas[0];
         $this->rawtitle = $pdata["title"];
         $this->rawhead = $pdata["head"];
@@ -77,12 +77,12 @@ class Page
                 array_push($securepages, $p["pageid"]);
             }
         }
-        
+
         $top = "";
         if ($this->usetop) {
             $top = (new Page("_default/top"))->body;
         }
-        
+
         if (!$authuser->permissions->toolbar) {
             return $top;
         }
@@ -90,7 +90,7 @@ class Page
         $modals = "<div id=\"modals\">";
         $script = "<script>";
         $secure = "";
-        
+
         $secure .= $TEMPLATES["secure-menu"]($authuser, $securepages, $availablemodules, $modules);
 
         // Edit menu
@@ -108,29 +108,29 @@ class Page
                 $this->rawbody
             );
         }
-        
+
         // Page manager menu
         if ($authuser->permissions->admin_managepages) {
             $stmt = $conn->prepare("SELECT pageid, title, secure, revision FROM content_pages ORDER BY pageid ASC;");
             $stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
             $pages = $stmt->fetchAll();
-            
+
             $stmt = $conn->prepare("SELECT * FROM users;");
             $stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
             $users = $stmt->fetchAll();
-            
+
             $modals .= $TEMPLATES["secure-modal-start"]("dialog_admin", "Administration", "lg");
             $modals .= $TEMPLATES["secure-modal-admin-bodyfoot"]($authuser, $pages, $users);
             $script .= $TEMPLATES["secure-modal-admin-script"]();
             $modals .= $TEMPLATES["secure-modal-end"];
         }
-        
+
         // Account menu
         $modals .= $TEMPLATES["secure-modal-start"]("dialog_account", "Account Details", "lg");
         $modals .= $TEMPLATES["secure-modal-account-bodyfoot"]($authuser);
         $modals .= $TEMPLATES["secure-modal-end"];
         $script .= $TEMPLATES["secure-modal-account-script"];
-        
+
         // Module menus
         if ($authuser->permissions->admin_managesite) {
             foreach ($availablemodules as $m) {
@@ -158,7 +158,7 @@ class Page
         if (!$this->usebottom) {
             return "";
         }
-        
+
         return (new Page("_default/bottom"))->body;
     }
 
@@ -167,17 +167,17 @@ class Page
         global $authuser, $availablemodules, $modules;
 
         $this->body = $this->getTop() . $this->body . $this->getBottom();
-        
+
         $placeholders = [];
         preg_match_all("/\{{2}[^\}]+\}{2}/", $this->body, $placeholders);
-        
+
         foreach ($placeholders[0] as $pcode) {
             if ($pcode == null || $pcode == "") {
                 continue;
             }
-            
+
             $pcode_trim = trim($pcode, "{}");
-            
+
             $placeparts = explode(">", $pcode_trim, 2);
             $module = "builtin";
             $func = $placeparts[0];
@@ -185,14 +185,14 @@ class Page
                 $module = $placeparts[0];
                 $func = $placeparts[1];
             }
-            
+
             $funcparts = explode(":", $func, 2);
             $func = "place_" . $funcparts[0];
             $args = [];
             if (count($funcparts) == 2) {
                 $args = explode(";", $funcparts[1]);
             }
-            
+
             if (!in_array($module, $availablemodules)) {
                 $content = "
                     <script>
@@ -202,7 +202,7 @@ class Page
                 $this->body = str_replace($pcode, $content, $this->body);
                 continue;
             }
-            
+
             if (!method_exists($modules[$module], $func)) {
                 $content = "
                     <script>
@@ -212,7 +212,7 @@ class Page
                 $this->body = str_replace($pcode, $content, $this->body);
                 continue;
             }
-            
+
             try {
                 $content = $modules[$module]->$func($args);
             } catch (Exception $e) {
