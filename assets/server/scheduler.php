@@ -65,9 +65,6 @@
 	$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
 	$jobs = $stmt->fetchAll();
 	foreach ($jobs as $job) {
-		$stmt = $conn->prepare("DELETE FROM schedule WHERE `index`=:idx;");
-		$stmt->bindParam(":idx", $job["index"]);
-		$stmt->execute();
 		$args = json_decode($job["args"], true);
 		if (in_array($job["function"], get_defined_functions()["user"])) {
 			$func = $job["function"];
@@ -87,6 +84,9 @@
 				}
 			}
 		}
+		$stmt = $conn->prepare("DELETE FROM schedule WHERE `index`=:idx;");
+		$stmt->bindParam(":idx", $job["index"]);
+		$stmt->execute();
 	}
 	
 ?>
