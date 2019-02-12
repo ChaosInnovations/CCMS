@@ -201,7 +201,7 @@ class Page {
 	
 	function __construct($pid=null) {
 		global $conn, $sqlstat, $sqlerr;
-		if ($pid != null) {
+		if ($pid !== null) {
 			$pageid = $pid;
 		} else {
 			global $pageid;
