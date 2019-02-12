@@ -107,7 +107,7 @@ $notifMailer->password = getconfig("email_notifs_pass");
 $notifMailer->from = getconfig("email_notifs_from");
 
 if (isset($_COOKIE["token"]) and validToken($_COOKIE["token"])) {
-	$authuser = new AuthUser(uidFromToken($_COOKIE["token"]));
+	$authuser = new User(uidFromToken($_COOKIE["token"]));
 	if ($pageid != "notfound") {
 		$stmt = $conn->prepare("UPDATE users SET collab_pageid=:pid WHERE uid=:uid;");
 		$stmt->bindParam(":pid", $pageid);
@@ -116,7 +116,7 @@ if (isset($_COOKIE["token"]) and validToken($_COOKIE["token"])) {
 	}
 } else {
 	setcookie("token", "0", 1);
-	$authuser = new AuthUser(null);
+	$authuser = new User(null);
 }
 
 

@@ -42,10 +42,10 @@ try {
 	$sqlerr = $e;
 }
 if (isset($_POST["token"]) and validToken($_POST["token"])) {
-	$authuser = new AuthUser(uidFromToken($_POST["token"]));
+	$authuser = new User(uidFromToken($_POST["token"]));
 } else {
 	setcookie("token", "0", 1);
-	$authuser = new AuthUser(null);
+	$authuser = new User(null);
 }
 $mailer = new Mailer();
 $mailer->host = getconfig("email_primary_host");
