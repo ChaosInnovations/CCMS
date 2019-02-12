@@ -1,5 +1,7 @@
 <?php
 
+use \Lib\CCMS\Page;
+
 function ajax_newpage() {
 	global $conn, $sqlstat, $authuser;
 	if (isset($_POST["s"]) and $_POST["s"] and !$authuser->permissions->page_createsecure) {

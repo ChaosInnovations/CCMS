@@ -1,4 +1,14 @@
 <?php
+
+namespace CCMS;
+
+require "autoload.php";
+
+use \PDO;
+use \Mailer;
+use \builtin_placeholders;
+use \Lib\CCMS\Security\User;
+
 if (!isset($_GET["func"])) {
 	header("Location: /");
 	echo "<script>window.location = '../../';</script>";

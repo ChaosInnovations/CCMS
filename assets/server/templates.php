@@ -1,5 +1,8 @@
 <?php
 
+use \Lib\CCMS\Page;
+use \Lib\CCMS\Security\User;
+
 // TODO: groupings
 
 $TEMPLATES = [
@@ -822,7 +825,7 @@ $(document).keydown(function(event) {
 
 "secure-modal-admin-userrow" => function ($user, $uid) {
 	global $TEMPLATES;
-	$auser = new AuthUser($user["uid"]);
+	$auser = new User($user["uid"]);
 	$permissions = '
 <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#dialog_admin_users_' . $user["uid"] . '_perms" aria-expanded="false" aria-controls="dialog_admin_users_' . $user["uid"] . '_perms">Show/Hide</button>
 <div class="collapse" id="dialog_admin_users_' . $user["uid"] . '_perms">

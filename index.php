@@ -1,4 +1,15 @@
 <?php
+
+namespace CCMS;
+
+require "assets/server/autoload.php";
+
+use \PDO;
+use \Mailer;
+use \builtin_placeholders;
+use \Lib\CCMS\Page;
+use \Lib\CCMS\Security\User;
+
 // Delete setup script and STATE if it still exists (first time launch)
 if (file_exists("STATE") && file_get_contents("STATE") == "5:0" &&
     file_exists("provisioning.json") && file_exists("database.sql")) {
@@ -119,13 +130,13 @@ if (isset($_COOKIE["token"]) and validToken($_COOKIE["token"])) {
 	$authuser = new User(null);
 }
 
-
 if (invalidPage($pageid)) {
 	$pageid = "_default/notfound";
 }
 $page = new Page($pageid);
 
 // Force HTTPS
+/*
 $httpsURL = 'https://'.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
 if(!isset($_SERVER['HTTPS']) || $_SERVER['HTTPS']!=='on'){
 	if(count($_POST)>0) {
@@ -135,6 +146,7 @@ if(!isset($_SERVER['HTTPS']) || $_SERVER['HTTPS']!=='on'){
 	header("Location: {$httpsURL}");
 	exit();
 }
+*/
 
 if (($page->secure and !$authuser->permissions->page_viewsecure) or ($authuser->permissions->page_viewsecure and in_array($page->pageid, $authuser->permissions->page_viewblacklist))) {
 	header("Location: /secureaccess?n={$pageid}");
