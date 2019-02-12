@@ -112,9 +112,4 @@ if (in_array("ajax_" . $_GET["func"], get_defined_functions()["user"])) {
 	}
 	echo $result;
 }
-
-$size = ob_get_length();
-header("Content-Length: {$size}");
-ob_end_flush();
-flush();
 ?>
