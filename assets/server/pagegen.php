@@ -340,7 +340,7 @@ class Page {
 				}
 				$funcparts = explode(":", $func, 2);
 				$func = "place_" . $funcparts[0];
-				$args = null;
+				$args = [];
 				if (count($funcparts) == 2) {
 					$args = explode(";", $funcparts[1]);
 				}
