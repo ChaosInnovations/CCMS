@@ -703,7 +703,7 @@ var pagetitle = decodeURIComponent("' . $rtitle . '");
 var head = decodeURIComponent("' . $rhead . '");
 var body = decodeURIComponent("' . $rbody . '");
 $("#dialog_edit_pageid").val(pageid);
-if (["home", "secureaccess"].includes(pageid) || pageid.startsWith("_default/")) {
+if (["", "secureaccess"].includes(pageid) || pageid.startsWith("_default/")) {
 	$("#dialog_edit_pageid").attr("disabled", "disabled");
 }
 $("#dialog_edit_pagetitle").val(pagetitle);
