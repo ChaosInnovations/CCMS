@@ -125,27 +125,16 @@ if (invalidPage($pageid)) {
 }
 $page = new Page($pageid);
 
-// Force HTTPS if this is a secure page or secureaccess, otherwise force HTTP:
-/*
-if ($page->secure || $pageid == "secureaccess") {
-	$httpsURL = 'https://'.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
-	if(!isset($_SERVER['HTTPS']) || $_SERVER['HTTPS']!=='on'){
-		if(count($_POST)>0) {
-			die('Page should be accessed with HTTPS, but a POST Submission has been sent here. Adjust the form to point to '.$httpsURL);
-		}
-		header("Status: 301 Moved Permanently");
-		header("Location: {$httpsURL}");
-		exit();
+// Force HTTPS
+$httpsURL = 'https://'.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
+if(!isset($_SERVER['HTTPS']) || $_SERVER['HTTPS']!=='on'){
+	if(count($_POST)>0) {
+		die('Page should be accessed with HTTPS, but a POST Submission has been sent here. Adjust the form to point to '.$httpsURL);
 	}
-} else {
-	$httpURL = 'http://'.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
-	if(isset($_SERVER['HTTPS']) && $_SERVER['HTTPS']==='on' ){
-		header("Status: 301 Moved Permanently");
-		header("Location: {$httpURL}");
-		exit();
-	}
+	header("Status: 301 Moved Permanently");
+	header("Location: {$httpsURL}");
+	exit();
 }
-*/
 
 if (($page->secure and !$authuser->permissions->page_viewsecure) or ($authuser->permissions->page_viewsecure and in_array($page->pageid, $authuser->permissions->page_viewblacklist))) {
 	header("Location: /secureaccess?n={$pageid}");
