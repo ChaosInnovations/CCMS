@@ -2,7 +2,8 @@
 
 namespace Lib\CCMS\Security;
 
-class UserPermissions {
+class UserPermissions
+{
 	public $owner = false;
 	public $admin_managepages = false;
 	public $admin_managesite = false;
