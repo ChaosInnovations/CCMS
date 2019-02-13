@@ -49,7 +49,7 @@ class Page
             return;
         }
 
-        $pdata = $pdatas[0];
+        $pdata = $pages[0];
         $this->rawtitle = $pdata["title"];
         $this->rawhead = $pdata["head"];
         $this->rawbody = $pdata["body"];
@@ -150,6 +150,7 @@ class Page
         $script .= "</script>";
 
         $header = $secure . $modals . $script . $top;
+        
         return $header;
     }
 
@@ -165,13 +166,14 @@ class Page
     public function resolvePlaceholders()
     {
         global $authuser, $availablemodules, $modules;
-
+        
         $this->body = $this->getTop() . $this->body . $this->getBottom();
 
         $placeholders = [];
         preg_match_all("/\{{2}[^\}]+\}{2}/", $this->body, $placeholders);
 
         foreach ($placeholders[0] as $pcode) {
+            
             if ($pcode == null || $pcode == "") {
                 continue;
             }
@@ -222,6 +224,7 @@ class Page
                     </script>
                 ";
             }
+            
             $this->body = str_replace($pcode, $content, $this->body);
         }
     }
