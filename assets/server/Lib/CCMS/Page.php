@@ -252,4 +252,20 @@ class Page
         $stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
         return count($stmt->fetchAll()) == 1;
     }
+    
+    public static function getTitleFromId(string $pid)
+    {
+        global $conn;
+        
+        $stmt = $conn->prepare("SELECT title FROM content_pages WHERE pageid=:pid;");
+        $stmt->bindParam(":pid", $pid);
+        $stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
+        $pages = $stmt->fetchAll();
+        
+        if (count($pages) != 1) {
+            return "Unknown";
+        }
+        
+        return urldecode($pages[0]["title"]);
+    }
 }
