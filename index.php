@@ -130,7 +130,7 @@ if (isset($_COOKIE["token"]) and validToken($_COOKIE["token"])) {
 	$authuser = new User(null);
 }
 
-if (invalidPage($pageid)) {
+if (!Page::pageExists($pageid)) {
 	$pageid = "_default/notfound";
 }
 $page = new Page($pageid);

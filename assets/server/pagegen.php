@@ -16,11 +16,11 @@ function ajax_newpage() {
 	$secure = isset($_POST["s"]) and $_POST["s"];
 	$npid = ($secure ? "secure/" : "") . "newpage";
 	$c = 0;
-	$ok = invalidPage($npid);
+	$ok = !Page::pageExists($npid);
 	while (!$ok) {
 		$c++;
 		$npid = ($secure ? "secure/" : "") . "newpage" . $c;
-		$ok = invalidPage($npid);
+		$ok = !Page::pageExists($npid);
 	}
 	$s = $secure ? "1" : "0";
 	$now = date("Y-m-d");
@@ -49,7 +49,7 @@ function ajax_removepage() {
 	if (!$sqlstat) {
 		return "FALSE";
 	}
-	if (!isset($_POST["pid"]) or invalidPage($_POST["pid"])) {
+	if (!isset($_POST["pid"]) or !Page::pageExists($_POST["pid"])) {
 		return "FALSE";
 	}
 	$pid = $_POST["pid"];
@@ -74,7 +74,7 @@ function ajax_securepage() {
 	if (!isset($_POST["state"])) {
 		return "FALSE";
 	}
-	if (!isset($_POST["pid"]) or invalidPage($_POST["pid"])) {
+	if (!isset($_POST["pid"]) or !Page::pageExists($_POST["pid"])) {
 		return "FALSE";
 	}
 	$pid = $_POST["pid"];
@@ -100,7 +100,7 @@ function ajax_checkpid() {
 		return "FALSE";
 	}
 	if ($_POST["check"] != $_POST["pageid"] &&
-	    !invalidPage($_POST["check"])) {
+	    Page::pageExists($_POST["check"])) {
 		return "FALSE";
 	}
 	if ($_POST["check"] != $_POST["pageid"] &&
@@ -126,7 +126,7 @@ function ajax_editpage() {
 		return "FALSE";
 	}
 	
-	if (invalidPage($_POST["pageid"])) {
+	if (!Page::pageExists($_POST["pageid"])) {
 		return "FALSE";
 	}
 	
@@ -145,7 +145,7 @@ function ajax_editpage() {
 		return "FALSE";
 	}
 	
-	if (!(invalidPage($newpageid) || $newpageid == $page->pageid) ||
+	if (!(!Page::pageExists($newpageid) || $newpageid == $page->pageid) ||
 	    in_array($newpageid, ["TRUE", "FALSE"])) {
 		return "FALSE";
 	}
@@ -184,30 +184,6 @@ function page_title($pid) {
 		return "Not Found";
 	}
 	return urldecode($pages[0]["title"]);
-}
-
-function invalidPage($pid=null) {
-	global $conn, $sqlstat, $sqlerr;
-	
-	if ($pid != null) {
-		$pageid = $pid;
-	} else {
-		global $pageid;
-	}
-	
-	$pages = [];
-	
-	if ($sqlstat) {
-		$stmt = $conn->prepare("SELECT pageid FROM content_pages;");
-		$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
-		$ps = $stmt->fetchAll();
-		foreach ($ps as $p) {
-			array_push($pages, $p["pageid"]);
-		}
-	} else {
-		$pages = ["", "secureaccess"];
-	}
-	return !(in_array($pageid, $pages) || substr($pageid, 0, 9) === "_default/");
 }
 
 ?>

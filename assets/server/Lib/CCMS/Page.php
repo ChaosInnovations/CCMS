@@ -235,6 +235,18 @@ class Page
         $sitetitle = getconfig("websitetitle");
         echo "{$pre}<title>{$this->title} | {$sitetitle}</title>{$this->head}";
     }
+    
+    public static function pageExists(string $pid)
     {
+        global $conn, $sqlstat, $sqlerr;
+        
+        if (!$sqlstat) {
+            return false;
+        }
+        
+        $stmt = $conn->prepare("SELECT pageid FROM content_pages WHERE pageid=:pid;");
+        $stmt->bindParam(":pid", $pid);
+        $stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
+        return count($stmt->fetchAll()) == 1;
     }
 }
