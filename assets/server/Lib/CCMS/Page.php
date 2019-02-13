@@ -19,13 +19,13 @@ class Page
     public $secure = false;
     public $revision = "";
 
-    public function __construct(string $pid=null)
+    public function __construct(string $pid)
     {
-        global $conn, $sqlstat, $sqlerr, $pageid;
+        global $conn, $sqlstat, $sqlerr;
 
-        $this->pageid = $pid == null ? $pageid : $pid;
+        $this->pageid = $pid;
 
-        $this->title = $pageid;
+        $this->title = $this->pageid;
         $this->body = "
             <div class='container-fluid'>
                 <div class='row'>
@@ -41,7 +41,7 @@ class Page
         }
 
         $stmt = $conn->prepare("SELECT * FROM content_pages WHERE pageid=:pid;");
-        $stmt->bindParam(":pid", $pageid);
+        $stmt->bindParam(":pid", $this->pageid);
         $stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
         $pages = $stmt->fetchAll();
 
