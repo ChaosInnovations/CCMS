@@ -23,7 +23,7 @@ class User
         $this->permissions = new UserPermissions();
         $this->uid = $uid;
 
-        if ($uid == null || !validUser($uid) || !sqlstat) {
+        if ($uid == null || !validUser($uid) || !$sqlstat) {
             return;
         }
 

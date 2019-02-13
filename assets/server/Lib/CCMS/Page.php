@@ -36,7 +36,7 @@ class Page
             </div>
         ";
 
-        if (!sqlstat) {
+        if (!$sqlstat) {
             return;
         }
 
