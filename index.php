@@ -214,7 +214,7 @@ echo "<script>var SERVER_NAME = \"{$_SERVER["SERVER_NAME"]}\", SERVER_HTTPS = \"
 	</head>
 	<body id="page">
 		<?php
-$page->InsertBody();
+echo $page->body;
 		?>
 		<script>
 			<?php

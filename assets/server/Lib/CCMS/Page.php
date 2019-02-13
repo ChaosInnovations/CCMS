@@ -235,9 +235,6 @@ class Page
         $sitetitle = getconfig("websitetitle");
         echo "{$pre}<title>{$this->title} | {$sitetitle}</title>{$this->head}";
     }
-
-    public function insertBody()
     {
-        echo $this->body;
     }
 }
