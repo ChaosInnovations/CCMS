@@ -8,6 +8,7 @@ use \PDO;
 use \Mailer;
 use \builtin_placeholders;
 use \Lib\CCMS\Security\User;
+use \Lib\CCMS\Security\AccountManager;
 
 include "secure.php";
 include "pagegen.php";
@@ -55,8 +56,8 @@ try {
 	$sqlstat = false;
 	$sqlerr = $e;
 }
-if (isset($_POST["token"]) and validToken($_POST["token"])) {
-	$authuser = new User(uidFromToken($_POST["token"]));
+if (isset($_POST["token"]) and AccountManager::validateToken($_POST["token"])) {
+	$authuser = User::userFromToken($_POST["token"]));
 } else {
 	setcookie("token", "0", 1);
 	$authuser = new User(null);
