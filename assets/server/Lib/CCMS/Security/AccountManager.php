@@ -43,7 +43,8 @@ class AccountManager
         return $token;
     }
     
-    public static function removeBadTokens() {
+    public static function removeBadTokens()
+    {
         global $conn, $sqlstat;
         
         if (!$sqlstat) {
