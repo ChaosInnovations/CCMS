@@ -285,17 +285,6 @@ function ajax_edituser() {
 	return "TRUE";
 }
 
-function nameOfUser($uid) {
-	global $conn, $sqlstat, $sqlerr;
-	
-	if ($sqlstat and validUser($uid)) {
-		$stmt = $conn->prepare("SELECT name FROM users WHERE uid=:uid;");
-		$stmt->bindParam(":uid", $uid);
-		$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
-		return $stmt->fetchAll()[0]["name"];
-	}
-}
-
 function validUser($uid) {
 	global $conn, $sqlstat, $sqlerr;
 	
