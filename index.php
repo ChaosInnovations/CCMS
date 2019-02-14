@@ -11,6 +11,14 @@ use \Lib\CCMS\Page;
 use \Lib\CCMS\Security\User;
 use \Lib\CCMS\Security\AccountManager;
 
+foreach ($argv as $arg) {
+    $e=explode("=",$arg);
+    if(count($e)==2)
+        $_GET[$e[0]]=$e[1];
+    else    
+        $_GET[$e[0]]=0;
+}
+
 // Delete setup script and STATE if it still exists (first time launch)
 if (file_exists("STATE") && file_get_contents("STATE") == "5:0" &&
     file_exists("provisioning.json") && file_exists("database.sql")) {
@@ -177,6 +185,36 @@ if(!isset($_SERVER['HTTPS']) || $_SERVER['HTTPS']!=='on'){
 	exit();
 }
 */
+
+if (isset($_GET["run_scheduled_tasks"])) {
+    $stmt = $conn->prepare("SELECT * FROM schedule WHERE after <= NOW();");
+    $stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
+    $jobs = $stmt->fetchAll();
+    foreach ($jobs as $job) {
+        $args = json_decode($job["args"], true);
+        if (in_array($job["function"], get_defined_functions()["user"])) {
+            $func = $job["function"];
+            $func($args);
+        } else {
+            $funcparts = explode("|", $job["function"], 2);
+            if (count($funcparts) == 2) {
+                $mod = $funcparts[0];
+                $func = $funcparts[1];
+            } else {
+                $mod = "builtin";
+                $func = $funcparts[0];
+            }
+            if (in_array($mod, $availablemodules)) {
+                if (method_exists($modules[$mod], $func)) {
+                    $modules[$mod]->$func($args);
+                }
+            }
+        }
+        $stmt = $conn->prepare("DELETE FROM schedule WHERE `index`=:idx;");
+        $stmt->bindParam(":idx", $job["index"]);
+        $stmt->execute();
+    }
+}
 
 if (substr($pageid, 0, 4) == "api/") {
     $old_func = substr($pageid, 4);
