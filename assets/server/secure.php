@@ -1,5 +1,6 @@
 <?php
 
+use \Lib\CCMS\Security\User;
 use \Lib\CCMS\Security\AccountManager;
 
 function ajax_newtoken() {
@@ -10,17 +11,11 @@ function ajax_newtoken() {
 	if (!isset($_POST["email"]) or !isset($_POST["password"])) {
 		return "FALSE";
 	}
-	$uid = md5(fix_email($_POST["email"]));
+	$uid = User::uidFromEmail($_POST["email"]);
 	if (!checkPassword($uid, $_POST["password"])) {
 		return "FALSE";
 	}
 	return AccountManager::registerNewToken($uid, $_SERVER["REMOTE_ADDR"]);
-}
-
-function fix_email($email) {
-	$email = strtolower($email);
-	$email = preg_replace('/\s+/', '', $email);
-	return $email;
 }
 
 function load_jsons() {
@@ -70,8 +65,8 @@ function ajax_newuser() {
 	if (!isset($_POST["email"]) or !isset($_POST["name"]) or !isset($_POST["permissions"])) {
 		return "FALSE";
 	}
-	$uid = md5(fix_email($_POST["email"]));
-	if (validUser($uid)) {
+	$uid = User::uidFromEmail($_POST["email"]);
+	if ((new User($uid))->isValidUser()) {
 		// User already exists.
 		return "FALSE";
 	}
@@ -79,17 +74,18 @@ function ajax_newuser() {
 		// Only owners can change users
 		return "FALSE";
 	}
+    
 	$body = $TEMPLATES["email-newuser"]($_POST["name"], $authuser->name, $baseUrl, getconfig("websitetitle"));
-	$mail = $notifMailer->compose([[fix_email($_POST["email"]), $_POST["name"]]], "Account Created", $body, "");
-	// comment below for testing
+	$mail = $notifMailer->compose([[User::normalizeEmail($_POST["email"]), $_POST["name"]]], "Account Created", $body, "");
 	
 	if (!$mail->send()) {
 		return "FALSE";
 	}
 	
-	$email = fix_email($_POST["email"]);
+	$email = User::normalizeEmail($_POST["email"]);
 	$now = date("Y-m-d");
 	$pwd = hash("sha512", "password");
+    
 	$stmt = $conn->prepare("INSERT INTO users VALUES (:uid, :email, :name, :now, :perms, '', '', 0, NULL, '', 1, 0);");
 	$stmt->bindParam(":uid", $uid);
 	$stmt->bindParam(":email", $email);
@@ -97,6 +93,7 @@ function ajax_newuser() {
 	$stmt->bindParam(":now", $now);
 	$stmt->bindParam(":perms", $_POST["permissions"]);
 	$stmt->execute();
+    
 	$stmt = $conn->prepare("INSERT INTO access VALUES (:uid, :pwd);");
 	$stmt->bindParam(":uid", $uid);
 	$stmt->bindParam(":pwd", $pwd);
@@ -110,25 +107,28 @@ function ajax_removeaccount() {
 	if (!$sqlstat) {
 		return "FALSE";
 	}
-	if (!isset($_POST["uid"]) or !validUser($_POST["uid"])) {
+	if (!isset($_POST["uid"]) or !(new User($_POST["uid"]))->isValidUser()) {
 		return "FALSE";
 	}
 	$uid = $_POST["uid"];
 	if (!$authuser->permissions->owner and $authuser->uid != $uid) {
 		return "FALSE";
 	}
-	if ($authuser->permissions->owner and $authuser->uid == $uid and count(usersWithPermissions("owner")) <= 1) {
+	if ($authuser->permissions->owner and $authuser->uid == $uid and User::numberOfOwners() <= 1) {
 		return "OWNER";
 	}
 	$stmt = $conn->prepare("DELETE FROM users WHERE uid=:uid;");
 	$stmt->bindParam(":uid", $uid);
 	$stmt->execute();
+    
 	$stmt = $conn->prepare("DELETE FROM access WHERE uid=:uid;");
 	$stmt->bindParam(":uid", $uid);
 	$stmt->execute();
+    
 	$stmt = $conn->prepare("DELETE FROM tokens WHERE uid=:uid;");
 	$stmt->bindParam(":uid", $uid);
 	$stmt->execute();
+    
 	return "TRUE";
 }
 
@@ -143,7 +143,7 @@ function ajax_checkpass() {
 	}
 	$uid = $authuser->uid;
 	if (isset($_POST["email"])) {
-		$uid = md5(fix_email($_POST["email"]));
+		$uid = User::uidFromEmail($_POST["email"]);
 	}
 	if ($uid == null) {
 		return "FALSE";
@@ -174,7 +174,7 @@ function ajax_checkuser() {
 	if (!$_POST["email"]) {
 		return "FALSE";
 	}
-	if (!validUser(md5(fix_email($_POST["email"])))) {
+	if (!User::userFromEmail($_POST["email"])->isValidUser()) {
 		return "FALSE";
 	}
 	return "TRUE";
@@ -186,7 +186,7 @@ function ajax_resetpwd() {
 	if (!$sqlstat) {
 		return "FALSE";
 	}
-	if (!isset($_POST["uid"]) or !validUser($_POST["uid"])) {
+	if (!isset($_POST["uid"]) or !(new User($_POST["uid"]))->isValidUser()) {
 		return "FALSE";
 	}
 	if (!$authuser->permissions->owner) {
@@ -209,7 +209,7 @@ function ajax_changepass() {
 	if (!isset($_POST["cpwd"]) or !isset($_POST["npwd"])) {
 		return "FALSE";
 	}
-	if ($authuser->uid == null) {
+	if (!$authuser->isValidUser()) {
 		return "FALSE";
 	}
 	if (!checkPassword($authuser->uid, $_POST["cpwd"])) {
@@ -248,7 +248,7 @@ function ajax_edituser() {
 		return "FALSE";
 	}
 	
-	if ($authuser->uid == null) {
+	if (!$authuser->isValidUser()) {
 		return "FALSE";
 	}
 	
@@ -283,24 +283,6 @@ function ajax_edituser() {
 		$stmt->execute();
 	}
 	return "TRUE";
-}
-
-function validUser($uid) {
-	global $conn, $sqlstat, $sqlerr;
-	
-	if ($sqlstat) {
-		$stmt = $conn->prepare("SELECT * FROM users WHERE uid=:uid;");
-		$stmt->bindParam(":uid", $uid);
-		$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
-		$users = $stmt->fetchAll();
-		if (count($users) == 1) {
-			return true;
-		} else {
-			return false;
-		}
-	} else {
-		return false;
-	}
 }
 
 ?>

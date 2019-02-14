@@ -13,26 +13,31 @@ class User
     public $registerdate = "";
     public $rawperms = "";
     public $permissions = null;
-    public $notify = true;
+    public $notify = false;
     public $online = false;
 
     public function __construct($uid)
     {
-        global $conn, $sqlstat, $sqlerr;
+        global $conn, $sqlstat;
 
-        $this->permissions = new UserPermissions();
         $this->uid = $uid;
+        $this->permissions = new UserPermissions();
 
-        if ($uid == null || !validUser($uid) || !$sqlstat) {
+        if (!$sqlstat) {
             return;
         }
 
         $stmt = $conn->prepare("SELECT * FROM users WHERE uid=:uid;");
-        $stmt->bindParam(":uid", $uid);
+        $stmt->bindParam(":uid", $this->uid);
         $stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
         $udata = $stmt->fetchAll();
+        
+        if (count($udata) != 1) {
+            $this->uid = null;
+            return;
+        }
 
-        $this->email = fix_email($udata[0]["email"]);
+        $this->email = User::normalizeEmail($udata[0]["email"]);
         $this->name = $udata[0]["name"];
 
         $this->notify = $udata[0]["notify"] && strtotime($udata[0]["last_notif"])<strtotime("now")-(30*60); // 30-minute cooldown
@@ -79,6 +84,10 @@ class User
         $this->permissions->page_editblacklist = preg_split('@;@', $udata[0]["permeditbl"], NULL, PREG_SPLIT_NO_EMPTY);
     }
     
+    public function isValidUser() {
+        return $this->uid !== null;
+    }
+    
     public static function userFromToken($token)
     {
         global $conn, $sqlstat;
@@ -92,5 +101,36 @@ class User
         $stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
 
         return new User($stmt->fetchAll()[0]["uid"]);
+    }
+    
+    public static function userFromEmail($email)
+    {
+        return new User(User::uidFromEmail($email));
+    }
+    
+    public static function uidFromEmail($email)
+    {
+        return md5(User::normalizeEmail($email));
+    }
+    
+    public static function normalizeEmail($email)
+    {
+        $email = strtolower($email);
+        $email = preg_replace('/\s+/', '', $email); // remove whitespace
+        return $email;
+    }
+    
+    public static function numberOfOwners()
+    {
+        global $conn, $sqlstat;
+        
+        if (!$sqlstat) {
+            return 0;
+        }
+        
+        $stmt = $conn->prepare("SELECT uid FROM users WHERE permissions LIKE '%owner%';");
+        $stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
+
+        return count($stmt->fetchAll());
     }
 }
