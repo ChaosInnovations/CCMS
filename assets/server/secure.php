@@ -1,43 +1,6 @@
 <?php
 
-function new_token($uid) {
-	global $conn;
-	// Kill other tokens from this uid
-	$stmt = $conn->prepare("UPDATE tokens SET forcekill=1 WHERE uid=:uid;");
-	$stmt->bindParam(":uid", $uid);
-	$stmt->execute();
-	
-	$now = date("Y-m-d", time());
-	$end = date("Y-m-d", time()+3600*24*30); // 30-day expiry
-	while (true) { // In case the token is already taken
-		$token = bin2hex(openssl_random_pseudo_bytes(16));
-		$stmt = $conn->prepare("SELECT * FROM tokens WHERE tid=:tid;");
-		$stmt->bindParam(":tid", $token);
-		$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
-		if (count($stmt->fetchAll()) == 0) {
-			break;
-		}
-	}
-	$stmt = $conn->prepare("INSERT INTO tokens VALUES (:uid, :tid, :ip, :start, :expire, 0);");
-	$stmt->bindParam(":uid", $uid);
-	$stmt->bindParam(":tid", $token);
-	$stmt->bindParam(":ip", $_SERVER['REMOTE_ADDR']);
-	$stmt->bindParam(":start", $now);
-	$stmt->bindParam(":expire", $end);
-	$stmt->execute();
-	return $token;
-}
-
-function removeBadTokens() {
-	global $conn, $sqlstat;
-	if (!$sqlstat) {
-		return;
-	}
-	$now = date("Y-m-d", time());
-	$stmt = $conn->prepare("DELETE FROM tokens WHERE expire<=:now OR forcekill=1;");
-	$stmt->bindParam(":now", $now);
-	$stmt->execute();
-}
+use \Lib\CCMS\Security\AccountManager;
 
 function ajax_newtoken() {
 	global $conn, $sqlstat, $sqlerr;
@@ -51,7 +14,7 @@ function ajax_newtoken() {
 	if (!checkPassword($uid, $_POST["password"])) {
 		return "FALSE";
 	}
-	return new_token($uid);
+	return AccountManager::registerNewToken($uid);
 }
 
 function fix_email($email) {
@@ -339,7 +302,7 @@ function uidFromToken($token) {
 function validToken($token) {
 	global $conn, $sqlstat, $sqlerr;
 	
-	removeBadTokens();
+	AccountManager::removeBadTokens();
 	
 	if ($sqlstat) {
 		$stmt = $conn->prepare("SELECT * FROM tokens WHERE tid=:tid AND source_ip=:ip AND start<=:now AND expire>:now AND forcekill=0;");
