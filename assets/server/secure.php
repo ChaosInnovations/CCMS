@@ -14,7 +14,7 @@ function ajax_newtoken() {
 	if (!checkPassword($uid, $_POST["password"])) {
 		return "FALSE";
 	}
-	return AccountManager::registerNewToken($uid);
+	return AccountManager::registerNewToken($uid, $_SERVER["REMOTE_ADDR"]);
 }
 
 function fix_email($email) {

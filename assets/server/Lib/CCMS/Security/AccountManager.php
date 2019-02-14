@@ -6,7 +6,7 @@ use \PDO;
 
 class AccountManager
 {
-    public static function registerNewToken($uid)
+    public static function registerNewToken($uid, $ip)
     {
         global $conn;
         
@@ -35,7 +35,7 @@ class AccountManager
         $stmt = $conn->prepare("INSERT INTO tokens VALUES (:uid, :tid, :ip, :start, :expire, 0);");
         $stmt->bindParam(":uid", $uid);
         $stmt->bindParam(":tid", $token);
-        $stmt->bindParam(":ip", $_SERVER['REMOTE_ADDR']);
+        $stmt->bindParam(":ip", $ip);
         $stmt->bindParam(":start", $now);
         $stmt->bindParam(":expire", $end);
         $stmt->execute();
