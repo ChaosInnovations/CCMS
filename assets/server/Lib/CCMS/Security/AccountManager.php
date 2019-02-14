@@ -67,8 +67,6 @@ class AccountManager
             return false;
         }
         
-        $now = date("Y-m-d");
-        
         $stmt = $conn->prepare("SELECT * FROM tokens WHERE tid=:tid AND source_ip=:ip;");
         $stmt->bindParam(":tid", $token);
         $stmt->bindParam(":ip", $ip);
