@@ -119,7 +119,7 @@ $notifMailer->password = getconfig("email_notifs_pass");
 $notifMailer->from = getconfig("email_notifs_from");
 
 if (isset($_COOKIE["token"]) and AccountManager::validateToken($_COOKIE["token"], $_SERVER["REMOTE_ADDR"])) {
-	$authuser = new User(uidFromToken($_COOKIE["token"]));
+	$authuser = User::userFromToken($_COOKIE["token"]);
     $stmt = $conn->prepare("UPDATE users SET collab_pageid=:pid WHERE uid=:uid;");
     $stmt->bindParam(":pid", $pageid);
     $stmt->bindParam(":uid", $authuser->uid);

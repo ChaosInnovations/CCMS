@@ -285,20 +285,6 @@ function ajax_edituser() {
 	return "TRUE";
 }
 
-function uidFromToken($token) {
-	global $conn, $sqlstat, $sqlerr;
-	
-	if ($sqlstat) {
-		$stmt = $conn->prepare("SELECT * FROM tokens WHERE tid=:tid;");
-		$stmt->bindParam(":tid", $token);
-		$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
-		$tokens = $stmt->fetchAll();
-		return $tokens[0]["uid"];
-	} else {
-		return null;
-	}
-}
-
 function nameOfUser($uid) {
 	global $conn, $sqlstat, $sqlerr;
 	

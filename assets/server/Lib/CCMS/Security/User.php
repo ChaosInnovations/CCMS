@@ -78,4 +78,19 @@ class User
         $this->permissions->page_viewblacklist = preg_split('@;@', $udata[0]["permviewbl"], NULL, PREG_SPLIT_NO_EMPTY);
         $this->permissions->page_editblacklist = preg_split('@;@', $udata[0]["permeditbl"], NULL, PREG_SPLIT_NO_EMPTY);
     }
+    
+    public static function userFromToken($token)
+    {
+        global $conn, $sqlstat;
+        
+        if (!$sqlstat) {
+            return new User(null);
+        }
+        
+        $stmt = $conn->prepare("SELECT * FROM tokens WHERE tid=:tid;");
+        $stmt->bindParam(":tid", $token);
+        $stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
+
+        return new User($stmt->fetchAll()[0]["uid"]);
+    }
 }

@@ -53,7 +53,7 @@ try {
 	$sqlerr = $e;
 }
 if (isset($_POST["token"]) and AccountManager::validateToken($_POST["token"], $_SERVER["REMOTE_ADDR"])) {
-	$authuser = new User(uidFromToken($_POST["token"]));
+	$authuser = User::userFromToken($_POST["token"]);
 } else {
 	setcookie("token", "0", 1);
 	$authuser = new User(null);
