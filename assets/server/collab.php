@@ -1,11 +1,13 @@
 <?php
 
+use \Lib\CCMS\Page;
+
 function notify($uid, $what) {
 	global $conn, $authuser, $notifMailer, $TEMPLATES; // authuser is sender
 	if ($authuser->uid == $uid) {
 		return;
 	}
-	$recvuser = new AuthUser($uid);
+	$recvuser = new User($uid);
 	$what .= ";";
 	$stmt = $conn->prepare("UPDATE users SET collab_notifs = CONCAT(`collab_notifs`,:what) WHERE uid=:uid;");
 	$stmt->bindParam(":what", $what);
@@ -233,7 +235,7 @@ function ajax_collab_update() {
 		if ($elapsed_weeks >= 100) {
 			$ls2 = "a long time ago";
 		}
-		$data = ["uid"=>$user["uid"],"online"=>strtotime($user["collab_lastseen"])>strtotime("now")-10,"lastseen"=>$user["collab_lastseen"],"lastseen_informal"=>$ls2,"page_id"=>$user["collab_pageid"],"page_title"=>page_title($user["collab_pageid"])];
+		$data = ["uid"=>$user["uid"],"online"=>strtotime($user["collab_lastseen"])>strtotime("now")-10,"lastseen"=>$user["collab_lastseen"],"lastseen_informal"=>$ls2,"page_id"=>$user["collab_pageid"],"page_title"=>Page::getTitleFromId($user["collab_pageid"])];
 		array_push($update["users"], $data);
 	}
 	
