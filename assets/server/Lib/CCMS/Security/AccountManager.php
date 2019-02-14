@@ -52,7 +52,7 @@ class AccountManager
         }
         
         $now = date("Y-m-d", time());
-        $stmt = $conn->prepare("DELETE FROM tokens WHERE expire<=:now OR forcekill=1;");
+        $stmt = $conn->prepare("DELETE FROM tokens WHERE expire<=:now OR forcekill!=0;");
         $stmt->bindParam(":now", $now);
         $stmt->execute();
     }
