@@ -314,20 +314,4 @@ function validUser($uid) {
 	}
 }
 
-function usersWithPermission($perm) {
-	global $conn, $sqlstat, $sqlerr;
-	$users = [];
-	if ($sqlstat) {
-		$stmt = $conn->prepare("SELECT uid, permissions FROM users;");
-		$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
-		$udata = $stmt->fetchAll();
-		foreach ($udata as $u) {		
-			if (!(strpos($u["permissions"], $perm) === false)) {
-				array_push($users, $u["uid"]);
-			}	
-		}
-	}
-	return $users;
-}
-
 ?>
