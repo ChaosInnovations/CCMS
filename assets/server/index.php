@@ -8,6 +8,7 @@ use \PDO;
 use \Mailer;
 use \builtin_placeholders;
 use \Lib\CCMS\Security\User;
+use \Lib\CCMS\Security\AccountManager;
 
 if (!isset($_GET["func"])) {
 	header("Location: /");
@@ -51,7 +52,7 @@ try {
 	$sqlstat = false;
 	$sqlerr = $e;
 }
-if (isset($_POST["token"]) and validToken($_POST["token"])) {
+if (isset($_POST["token"]) and AccountManager::validateToken($_POST["token"], $_SERVER["REMOTE_ADDR"])) {
 	$authuser = new User(uidFromToken($_POST["token"]));
 } else {
 	setcookie("token", "0", 1);

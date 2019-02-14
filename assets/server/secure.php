@@ -299,29 +299,6 @@ function uidFromToken($token) {
 	}
 }
 
-function validToken($token) {
-	global $conn, $sqlstat, $sqlerr;
-	
-	AccountManager::removeBadTokens();
-	
-	if ($sqlstat) {
-		$stmt = $conn->prepare("SELECT * FROM tokens WHERE tid=:tid AND source_ip=:ip AND start<=:now AND expire>:now AND forcekill=0;");
-		$now = date("Y-m-d");
-		$stmt->bindParam(":tid", $token);
-		$stmt->bindParam(":ip", $_SERVER['REMOTE_ADDR']);
-		$stmt->bindParam(":now", $now);
-		$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
-		$tokens = $stmt->fetchAll();
-		if (count($tokens) == 1) {
-			return true;
-		} else {
-			return false;
-		}
-	} else {
-		return false;
-	}
-}
-
 function nameOfUser($uid) {
 	global $conn, $sqlstat, $sqlerr;
 	

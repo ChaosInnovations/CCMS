@@ -9,6 +9,7 @@ use \Mailer;
 use \builtin_placeholders;
 use \Lib\CCMS\Page;
 use \Lib\CCMS\Security\User;
+use \Lib\CCMS\Security\AccountManager;
 
 // Delete setup script and STATE if it still exists (first time launch)
 if (file_exists("STATE") && file_get_contents("STATE") == "5:0" &&
@@ -117,7 +118,7 @@ $notifMailer->username = getconfig("email_notifs_user");
 $notifMailer->password = getconfig("email_notifs_pass");
 $notifMailer->from = getconfig("email_notifs_from");
 
-if (isset($_COOKIE["token"]) and validToken($_COOKIE["token"])) {
+if (isset($_COOKIE["token"]) and AccountManager::validateToken($_COOKIE["token"], $_SERVER["REMOTE_ADDR"])) {
 	$authuser = new User(uidFromToken($_COOKIE["token"]));
 	if ($pageid != "notfound") {
 		$stmt = $conn->prepare("UPDATE users SET collab_pageid=:pid WHERE uid=:uid;");
