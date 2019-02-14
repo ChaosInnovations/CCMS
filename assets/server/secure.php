@@ -11,11 +11,13 @@ function ajax_newtoken() {
 	if (!isset($_POST["email"]) or !isset($_POST["password"])) {
 		return "FALSE";
 	}
-	$uid = User::uidFromEmail($_POST["email"]);
-	if (!checkPassword($uid, $_POST["password"])) {
+	$user = User::userFromEmail($_POST["email"]);
+    
+	if (!$user->authenticate($_POST["password"])) {
 		return "FALSE";
 	}
-	return AccountManager::registerNewToken($uid, $_SERVER["REMOTE_ADDR"]);
+    
+	return AccountManager::registerNewToken($user->uid, $_SERVER["REMOTE_ADDR"]);
 }
 
 function load_jsons() {
@@ -84,20 +86,17 @@ function ajax_newuser() {
 	
 	$email = User::normalizeEmail($_POST["email"]);
 	$now = date("Y-m-d");
-	$pwd = hash("sha512", "password");
+	$pwd = password_hash("password", PASSWORD_DEFAULT);
     
-	$stmt = $conn->prepare("INSERT INTO users VALUES (:uid, :email, :name, :now, :perms, '', '', 0, NULL, '', 1, 0);");
+	$stmt = $conn->prepare("INSERT INTO users VALUES (:uid, :pwd, :email, :name, :now, :perms, '', '', 0, NULL, '', 1, 0);");
 	$stmt->bindParam(":uid", $uid);
+	$stmt->bindParam(":pwd", $pwd);
 	$stmt->bindParam(":email", $email);
 	$stmt->bindParam(":name", $_POST["name"]);
 	$stmt->bindParam(":now", $now);
 	$stmt->bindParam(":perms", $_POST["permissions"]);
 	$stmt->execute();
     
-	$stmt = $conn->prepare("INSERT INTO access VALUES (:uid, :pwd);");
-	$stmt->bindParam(":uid", $uid);
-	$stmt->bindParam(":pwd", $pwd);
-	$stmt->execute();
 	return "TRUE";
 }
 
@@ -145,29 +144,14 @@ function ajax_checkpass() {
 	if (isset($_POST["email"])) {
 		$uid = User::uidFromEmail($_POST["email"]);
 	}
-	if ($uid == null) {
+    $userToAuthenticate = new User($uid);
+	if (!$userToAuthenticate->isValidUser()) {
 		return "FALSE";
 	}
-	if (!checkPassword($uid, $_POST["password"])) {
+	if (!$userToAuthenticate->authenticate($_POST["password"])) {
 		return "FALSE";
 	}
 	return "TRUE";
-}
-
-function checkPassword($uid, $password) {
-	global $conn, $sqlstat, $sqlerr;
-	if (!$sqlstat) {
-		return false;
-	}
-	$pwd = hash("sha512", $password);
-	$stmt = $conn->prepare("SELECT pwd FROM access WHERE uid=:uid AND pwd=:pwd;");
-	$stmt->bindParam(":uid", $uid);
-	$stmt->bindParam(":pwd", $pwd);
-	$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
-	if (count($stmt->fetchAll()) != 1) {
-		return false;
-	}
-	return true;
 }
 
 function ajax_checkuser() {
@@ -192,8 +176,8 @@ function ajax_resetpwd() {
 	if (!$authuser->permissions->owner) {
 		return "FALSE";
 	}
-	$pwd = hash("sha512", "password");
-	$stmt = $conn->prepare("UPDATE access SET pwd=:pwd WHERE uid=:uid;");
+	$pwd = password_hash("password", PASSWORD_DEFAULT);
+	$stmt = $conn->prepare("UPDATE users SET pwd=:pwd WHERE uid=:uid;");
 	$stmt->bindParam(":pwd", $pwd);
 	$stmt->bindParam(":uid", $_POST["uid"]);
 	$stmt->execute();
@@ -212,11 +196,11 @@ function ajax_changepass() {
 	if (!$authuser->isValidUser()) {
 		return "FALSE";
 	}
-	if (!checkPassword($authuser->uid, $_POST["cpwd"])) {
+	if (!$authuser->authenticate($_POST["cpwd"])) {
 		return "FALSE";
 	}
-	$pwd = hash("sha512", $_POST["npwd"]);
-	$stmt = $conn->prepare("UPDATE access SET pwd=:pwd WHERE uid=:uid;");
+	$pwd = password_hash($_POST["npwd"], PASSWORD_DEFAULT);
+	$stmt = $conn->prepare("UPDATE users SET pwd=:pwd WHERE uid=:uid;");
 	$stmt->bindParam(":uid", $authuser->uid);
 	$stmt->bindParam(":pwd", $pwd);
 	$stmt->execute();

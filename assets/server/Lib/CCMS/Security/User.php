@@ -10,6 +10,7 @@ class User
     public $name = "User";
     public $email = "";
     public $uid = null;
+    public $pwdHash = "";
     public $registerdate = "";
     public $rawperms = "";
     public $permissions = null;
@@ -39,6 +40,7 @@ class User
 
         $this->email = User::normalizeEmail($udata[0]["email"]);
         $this->name = $udata[0]["name"];
+        $this->pwdHash = $udata[0]["pwd"];
 
         $this->notify = $udata[0]["notify"] && strtotime($udata[0]["last_notif"])<strtotime("now")-(30*60); // 30-minute cooldown
         $this->online = strtotime($udata[0]["collab_lastseen"])>strtotime("now")-10;
@@ -84,8 +86,14 @@ class User
         $this->permissions->page_editblacklist = preg_split('@;@', $udata[0]["permeditbl"], NULL, PREG_SPLIT_NO_EMPTY);
     }
     
-    public function isValidUser() {
+    public function isValidUser()
+    {
         return $this->uid !== null;
+    }
+    
+    public function authenticate($password)
+    {
+        return password_verify($password, $this->pwdHash);
     }
     
     public static function userFromToken($token)

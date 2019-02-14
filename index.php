@@ -43,16 +43,13 @@ if (file_exists("STATE") && file_get_contents("STATE") == "5:0" &&
 	}
 	
 	// Add Admin account
-	$uid = md5($provisionData->admin->email);
-	$pwdHash = hash("sha512", $provisionData->admin->pass);
-	$stmt = $conn->prepare("INSERT INTO `users` (uid, email, name, registered, permissions) VALUES (:uid, :email, :name, UTC_TIMESTAMP, 'owner;');");
-	$stmt->bindParam(":uid", $uid);
-	$stmt->bindParam(":email", $provisionData->admin->email);
-	$stmt->bindParam(":name", $provisionData->admin->name);
-	$stmt->execute();
-	$stmt = $conn->prepare("INSERT INTO `access` (uid, pwd) VALUES (:uid, :pwd);");
+	$uid = User::uidFromEmail($provisionData->admin->email);
+	$pwdHash = password_hash($provisionData->admin->pass, PASSWORD_DEFAULT);
+	$stmt = $conn->prepare("INSERT INTO `users` (uid, pwd, email, name, registered, permissions) VALUES (:uid, :pwd, :email, :name, UTC_TIMESTAMP, 'owner;');");
 	$stmt->bindParam(":uid", $uid);
 	$stmt->bindParam(":pwd", $pwdHash);
+	$stmt->bindParam(":email", $provisionData->admin->email);
+	$stmt->bindParam(":name", $provisionData->admin->name);
 	$stmt->execute();
 	
 	// Remove setup files
