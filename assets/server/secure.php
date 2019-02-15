@@ -1,43 +1,7 @@
 <?php
 
-function new_token($uid) {
-	global $conn;
-	// Kill other tokens from this uid
-	$stmt = $conn->prepare("UPDATE tokens SET forcekill=1 WHERE uid=:uid;");
-	$stmt->bindParam(":uid", $uid);
-	$stmt->execute();
-	
-	$now = date("Y-m-d", time());
-	$end = date("Y-m-d", time()+3600*24*30); // 30-day expiry
-	while (true) { // In case the token is already taken
-		$token = bin2hex(openssl_random_pseudo_bytes(16));
-		$stmt = $conn->prepare("SELECT * FROM tokens WHERE tid=:tid;");
-		$stmt->bindParam(":tid", $token);
-		$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
-		if (count($stmt->fetchAll()) == 0) {
-			break;
-		}
-	}
-	$stmt = $conn->prepare("INSERT INTO tokens VALUES (:uid, :tid, :ip, :start, :expire, 0);");
-	$stmt->bindParam(":uid", $uid);
-	$stmt->bindParam(":tid", $token);
-	$stmt->bindParam(":ip", $_SERVER['REMOTE_ADDR']);
-	$stmt->bindParam(":start", $now);
-	$stmt->bindParam(":expire", $end);
-	$stmt->execute();
-	return $token;
-}
-
-function removeBadTokens() {
-	global $conn, $sqlstat;
-	if (!$sqlstat) {
-		return;
-	}
-	$now = date("Y-m-d", time());
-	$stmt = $conn->prepare("DELETE FROM tokens WHERE expire<=:now OR forcekill=1;");
-	$stmt->bindParam(":now", $now);
-	$stmt->execute();
-}
+use \Lib\CCMS\Security\User;
+use \Lib\CCMS\Security\AccountManager;
 
 function ajax_newtoken() {
 	global $conn, $sqlstat, $sqlerr;
@@ -47,17 +11,13 @@ function ajax_newtoken() {
 	if (!isset($_POST["email"]) or !isset($_POST["password"])) {
 		return "FALSE";
 	}
-	$uid = md5(fix_email($_POST["email"]));
-	if (!checkPassword($uid, $_POST["password"])) {
+	$user = User::userFromEmail($_POST["email"]);
+    
+	if (!$user->authenticate($_POST["password"])) {
 		return "FALSE";
 	}
-	return new_token($uid);
-}
-
-function fix_email($email) {
-	$email = strtolower($email);
-	$email = preg_replace('/\s+/', '', $email);
-	return $email;
+    
+	return AccountManager::registerNewToken($user->uid, $_SERVER["REMOTE_ADDR"]);
 }
 
 function load_jsons() {
@@ -107,8 +67,8 @@ function ajax_newuser() {
 	if (!isset($_POST["email"]) or !isset($_POST["name"]) or !isset($_POST["permissions"])) {
 		return "FALSE";
 	}
-	$uid = md5(fix_email($_POST["email"]));
-	if (validUser($uid)) {
+	$uid = User::uidFromEmail($_POST["email"]);
+	if ((new User($uid))->isValidUser()) {
 		// User already exists.
 		return "FALSE";
 	}
@@ -116,28 +76,27 @@ function ajax_newuser() {
 		// Only owners can change users
 		return "FALSE";
 	}
+    
 	$body = $TEMPLATES["email-newuser"]($_POST["name"], $authuser->name, $baseUrl, getconfig("websitetitle"));
-	$mail = $notifMailer->compose([[fix_email($_POST["email"]), $_POST["name"]]], "Account Created", $body, "");
-	// comment below for testing
+	$mail = $notifMailer->compose([[User::normalizeEmail($_POST["email"]), $_POST["name"]]], "Account Created", $body, "");
 	
 	if (!$mail->send()) {
 		return "FALSE";
 	}
 	
-	$email = fix_email($_POST["email"]);
+	$email = User::normalizeEmail($_POST["email"]);
 	$now = date("Y-m-d");
-	$pwd = hash("sha512", "password");
-	$stmt = $conn->prepare("INSERT INTO users VALUES (:uid, :email, :name, :now, :perms, '', '', 0, NULL, '', 1, 0);");
+	$pwd = password_hash("password", PASSWORD_DEFAULT);
+    
+	$stmt = $conn->prepare("INSERT INTO users VALUES (:uid, :pwd, :email, :name, :now, :perms, '', '', 0, NULL, '', 1, 0);");
 	$stmt->bindParam(":uid", $uid);
+	$stmt->bindParam(":pwd", $pwd);
 	$stmt->bindParam(":email", $email);
 	$stmt->bindParam(":name", $_POST["name"]);
 	$stmt->bindParam(":now", $now);
 	$stmt->bindParam(":perms", $_POST["permissions"]);
 	$stmt->execute();
-	$stmt = $conn->prepare("INSERT INTO access VALUES (:uid, :pwd);");
-	$stmt->bindParam(":uid", $uid);
-	$stmt->bindParam(":pwd", $pwd);
-	$stmt->execute();
+    
 	return "TRUE";
 }
 
@@ -147,25 +106,28 @@ function ajax_removeaccount() {
 	if (!$sqlstat) {
 		return "FALSE";
 	}
-	if (!isset($_POST["uid"]) or !validUser($_POST["uid"])) {
+	if (!isset($_POST["uid"]) or !(new User($_POST["uid"]))->isValidUser()) {
 		return "FALSE";
 	}
 	$uid = $_POST["uid"];
 	if (!$authuser->permissions->owner and $authuser->uid != $uid) {
 		return "FALSE";
 	}
-	if ($authuser->permissions->owner and $authuser->uid == $uid and count(usersWithPermissions("owner")) <= 1) {
+	if ($authuser->permissions->owner and $authuser->uid == $uid and User::numberOfOwners() <= 1) {
 		return "OWNER";
 	}
 	$stmt = $conn->prepare("DELETE FROM users WHERE uid=:uid;");
 	$stmt->bindParam(":uid", $uid);
 	$stmt->execute();
+    
 	$stmt = $conn->prepare("DELETE FROM access WHERE uid=:uid;");
 	$stmt->bindParam(":uid", $uid);
 	$stmt->execute();
+    
 	$stmt = $conn->prepare("DELETE FROM tokens WHERE uid=:uid;");
 	$stmt->bindParam(":uid", $uid);
 	$stmt->execute();
+    
 	return "TRUE";
 }
 
@@ -180,38 +142,23 @@ function ajax_checkpass() {
 	}
 	$uid = $authuser->uid;
 	if (isset($_POST["email"])) {
-		$uid = md5(fix_email($_POST["email"]));
+		$uid = User::uidFromEmail($_POST["email"]);
 	}
-	if ($uid == null) {
+    $userToAuthenticate = new User($uid);
+	if (!$userToAuthenticate->isValidUser()) {
 		return "FALSE";
 	}
-	if (!checkPassword($uid, $_POST["password"])) {
+	if (!$userToAuthenticate->authenticate($_POST["password"])) {
 		return "FALSE";
 	}
 	return "TRUE";
-}
-
-function checkPassword($uid, $password) {
-	global $conn, $sqlstat, $sqlerr;
-	if (!$sqlstat) {
-		return false;
-	}
-	$pwd = hash("sha512", $password);
-	$stmt = $conn->prepare("SELECT pwd FROM access WHERE uid=:uid AND pwd=:pwd;");
-	$stmt->bindParam(":uid", $uid);
-	$stmt->bindParam(":pwd", $pwd);
-	$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
-	if (count($stmt->fetchAll()) != 1) {
-		return false;
-	}
-	return true;
 }
 
 function ajax_checkuser() {
 	if (!$_POST["email"]) {
 		return "FALSE";
 	}
-	if (!validUser(md5(fix_email($_POST["email"])))) {
+	if (!User::userFromEmail($_POST["email"])->isValidUser()) {
 		return "FALSE";
 	}
 	return "TRUE";
@@ -223,14 +170,14 @@ function ajax_resetpwd() {
 	if (!$sqlstat) {
 		return "FALSE";
 	}
-	if (!isset($_POST["uid"]) or !validUser($_POST["uid"])) {
+	if (!isset($_POST["uid"]) or !(new User($_POST["uid"]))->isValidUser()) {
 		return "FALSE";
 	}
 	if (!$authuser->permissions->owner) {
 		return "FALSE";
 	}
-	$pwd = hash("sha512", "password");
-	$stmt = $conn->prepare("UPDATE access SET pwd=:pwd WHERE uid=:uid;");
+	$pwd = password_hash("password", PASSWORD_DEFAULT);
+	$stmt = $conn->prepare("UPDATE users SET pwd=:pwd WHERE uid=:uid;");
 	$stmt->bindParam(":pwd", $pwd);
 	$stmt->bindParam(":uid", $_POST["uid"]);
 	$stmt->execute();
@@ -246,14 +193,14 @@ function ajax_changepass() {
 	if (!isset($_POST["cpwd"]) or !isset($_POST["npwd"])) {
 		return "FALSE";
 	}
-	if ($authuser->uid == null) {
+	if (!$authuser->isValidUser()) {
 		return "FALSE";
 	}
-	if (!checkPassword($authuser->uid, $_POST["cpwd"])) {
+	if (!$authuser->authenticate($_POST["cpwd"])) {
 		return "FALSE";
 	}
-	$pwd = hash("sha512", $_POST["npwd"]);
-	$stmt = $conn->prepare("UPDATE access SET pwd=:pwd WHERE uid=:uid;");
+	$pwd = password_hash($_POST["npwd"], PASSWORD_DEFAULT);
+	$stmt = $conn->prepare("UPDATE users SET pwd=:pwd WHERE uid=:uid;");
 	$stmt->bindParam(":uid", $authuser->uid);
 	$stmt->bindParam(":pwd", $pwd);
 	$stmt->execute();
@@ -285,7 +232,7 @@ function ajax_edituser() {
 		return "FALSE";
 	}
 	
-	if ($authuser->uid == null) {
+	if (!$authuser->isValidUser()) {
 		return "FALSE";
 	}
 	
@@ -320,163 +267,6 @@ function ajax_edituser() {
 		$stmt->execute();
 	}
 	return "TRUE";
-}
-
-class UserPermissions {
-	public $owner = false;
-	public $admin_managepages = false;
-	public $admin_managesite = false;
-	public $page_createsecure = false;
-	public $page_editsecure = false;
-	public $page_deletesecure = false;
-	public $page_viewsecure = false;
-	public $page_create = false;
-	public $page_edit = false;
-	public $page_delete = false;
-	public $toolbar = false;
-	public $page_viewblacklist = [];
-	public $page_editblacklist = [];
-}
-
-function uidFromToken($token) {
-	global $conn, $sqlstat, $sqlerr;
-	
-	if ($sqlstat) {
-		$stmt = $conn->prepare("SELECT * FROM tokens WHERE tid=:tid;");
-		$stmt->bindParam(":tid", $token);
-		$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
-		$tokens = $stmt->fetchAll();
-		return $tokens[0]["uid"];
-	} else {
-		return null;
-	}
-}
-
-class AuthUser {
-	
-	public $name = "User";
-	public $email = "";
-	public $uid = null;
-	public $registerdate = "";
-	public $rawperms = "";
-	public $permissions = null;
-	public $notify = true;
-	public $online = false;
-	
-	function __construct($uid) {
-		global $conn, $sqlstat, $sqlerr;
-		
-		$this->permissions = new UserPermissions();
-		$this->uid = $uid;
-		if ($uid != null and $sqlstat and validUser($uid)) {			
-			$stmt = $conn->prepare("SELECT * FROM users WHERE uid=:uid;");
-			$stmt->bindParam(":uid", $uid);
-			$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
-			$udata = $stmt->fetchAll();
-			
-			$this->uid = $uid;
-			$this->email = fix_email($udata[0]["email"]);
-			$this->name = $udata[0]["name"];
-			$this->notify = $udata[0]["notify"] && strtotime($udata[0]["last_notif"])<strtotime("now")-(30*60); // 30-minute cooldown
-			$this->online = strtotime($udata[0]["collab_lastseen"])>strtotime("now")-10;
-			$this->registerdate = date("l, F j, Y", strtotime($udata[0]["registered"]));
-			$rawperm = $udata[0]["permissions"];
-			$this->rawperms = $rawperm;
-			
-			$this->permissions->owner = !(strpos($rawperm, "owner;") === false);
-			$this->permissions->admin_managesite = (!(strpos($rawperm, "admin_managesite;") === false) or $this->permissions->owner);
-			$this->permissions->admin_managepages = (!(strpos($rawperm, "admin_managepages;") === false) or $this->permissions->admin_managesite);
-			$this->permissions->page_createsecure = (!(strpos($rawperm, "page_createsecure;") === false) or $this->permissions->admin_managepages);
-			$this->permissions->page_editsecure = (!(strpos($rawperm, "page_editsecure;") === false) or $this->permissions->page_createsecure);
-			$this->permissions->page_deletesecure = (!(strpos($rawperm, "page_deletesecure;") === false) or $this->permissions->admin_managepages);
-			$this->permissions->page_viewsecure = (!(strpos($rawperm, "page_viewsecure;") === false) or $this->permissions->page_editsecure);
-			$this->permissions->page_create = (!(strpos($rawperm, "page_create;") === false) or $this->permissions->page_createsecure);
-			$this->permissions->page_edit = (!(strpos($rawperm, "page_edit;") === false) or $this->permissions->page_editsecure);
-			$this->permissions->page_delete = (!(strpos($rawperm, "page_delete;") === false) or $this->permissions->page_deletesecure);
-			$this->permissions->toolbar = (!(strpos($rawperm, "toolbar;") === false) or 
-										   $this->permissions->owner or
-										   $this->permissions->admin_managesite or
-										   $this->permissions->admin_managepages or
-										   $this->permissions->page_createsecure or
-										   $this->permissions->page_editsecure or
-										   $this->permissions->page_deletesecure or
-										   $this->permissions->page_create or
-										   $this->permissions->page_edit or
-										   $this->permissions->page_delete);
-			//Also need to read blacklists
-			$this->permissions->page_viewblacklist = preg_split('@;@', $udata[0]["permviewbl"], NULL, PREG_SPLIT_NO_EMPTY);
-			$this->permissions->page_editblacklist = preg_split('@;@', $udata[0]["permeditbl"], NULL, PREG_SPLIT_NO_EMPTY);
-		}
-	}
-	
-}
-
-function validToken($token) {
-	global $conn, $sqlstat, $sqlerr;
-	
-	removeBadTokens();
-	
-	if ($sqlstat) {
-		$stmt = $conn->prepare("SELECT * FROM tokens WHERE tid=:tid AND source_ip=:ip AND start<=:now AND expire>:now AND forcekill=0;");
-		$now = date("Y-m-d");
-		$stmt->bindParam(":tid", $token);
-		$stmt->bindParam(":ip", $_SERVER['REMOTE_ADDR']);
-		$stmt->bindParam(":now", $now);
-		$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
-		$tokens = $stmt->fetchAll();
-		if (count($tokens) == 1) {
-			return true;
-		} else {
-			return false;
-		}
-	} else {
-		return false;
-	}
-}
-
-function nameOfUser($uid) {
-	global $conn, $sqlstat, $sqlerr;
-	
-	if ($sqlstat and validUser($uid)) {
-		$stmt = $conn->prepare("SELECT name FROM users WHERE uid=:uid;");
-		$stmt->bindParam(":uid", $uid);
-		$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
-		return $stmt->fetchAll()[0]["name"];
-	}
-}
-
-function validUser($uid) {
-	global $conn, $sqlstat, $sqlerr;
-	
-	if ($sqlstat) {
-		$stmt = $conn->prepare("SELECT * FROM users WHERE uid=:uid;");
-		$stmt->bindParam(":uid", $uid);
-		$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
-		$users = $stmt->fetchAll();
-		if (count($users) == 1) {
-			return true;
-		} else {
-			return false;
-		}
-	} else {
-		return false;
-	}
-}
-
-function usersWithPermission($perm) {
-	global $conn, $sqlstat, $sqlerr;
-	$users = [];
-	if ($sqlstat) {
-		$stmt = $conn->prepare("SELECT uid, permissions FROM users;");
-		$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
-		$udata = $stmt->fetchAll();
-		foreach ($udata as $u) {		
-			if (!(strpos($u["permissions"], $perm) === false)) {
-				array_push($users, $u["uid"]);
-			}	
-		}
-	}
-	return $users;
 }
 
 ?>

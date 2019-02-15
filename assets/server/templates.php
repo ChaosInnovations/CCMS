@@ -1,5 +1,8 @@
 <?php
 
+use \Lib\CCMS\Page;
+use \Lib\CCMS\Security\User;
+
 // TODO: groupings
 
 $TEMPLATES = [
@@ -153,7 +156,7 @@ $TEMPLATES = [
 	<div class="status '.(strtotime($user["collab_lastseen"])>strtotime("now")-10?'online':'offline'). '"></div>
 	<div class="info">
 		' . ($user["uid"]==$authuser->uid?'<b>':'') . $user["name"] . ($user["uid"]==$authuser->uid?'</b>':'') . '<br />
-		<small><i><span class="page"><a href="/' . $user["collab_pageid"] . '" title="' . page_title($user["collab_pageid"]) . '">' . page_title($user["collab_pageid"]) . '</a></span></i></small>
+		<small><i><span class="page"><a href="/' . $user["collab_pageid"] . '" title="' . Page::getTitleFromId($user["collab_pageid"]) . '">' . Page::getTitleFromId($user["collab_pageid"]) . '</a></span></i></small>
 	</div>
 	<button class="collab-chat" title="Open Chat" onclick="collab_showChat(\'U' . $user["uid"] . '\', \'' . $user["name"] . '\');">
 		<i class="fas fa-comment"></i>
@@ -822,7 +825,7 @@ $(document).keydown(function(event) {
 
 "secure-modal-admin-userrow" => function ($user, $uid) {
 	global $TEMPLATES;
-	$auser = new AuthUser($user["uid"]);
+	$auser = new User($user["uid"]);
 	$permissions = '
 <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#dialog_admin_users_' . $user["uid"] . '_perms" aria-expanded="false" aria-controls="dialog_admin_users_' . $user["uid"] . '_perms">Show/Hide</button>
 <div class="collapse" id="dialog_admin_users_' . $user["uid"] . '_perms">

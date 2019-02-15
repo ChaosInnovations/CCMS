@@ -27,6 +27,7 @@ DROP TABLE IF EXISTS `users`;
 /* -- stores user info */
 CREATE TABLE `users` (
   `uid` char(32) NOT NULL,UNIQUE KEY `uid` (`uid`),
+  `pwd` char(255) NOT NULL,
   `email` tinytext NOT NULL,
   `name` tinytext NOT NULL,
   `registered` date NOT NULL,
@@ -38,11 +39,6 @@ CREATE TABLE `users` (
   `collab_notifs` text NOT NULL,
   `notify` tinyint(1) NOT NULL DEFAULT '1',
   `last_notif` datetime NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-/* -- stores uid/pwdhash pairs */
-CREATE TABLE `access` (
-  `uid` char(32) NOT NULL,UNIQUE KEY `uid` (`uid`),
-  `pwd` char(128) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /* -- stores tokens` */
 CREATE TABLE `tokens` (

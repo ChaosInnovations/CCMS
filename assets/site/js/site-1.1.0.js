@@ -39,5 +39,5 @@ function module_ajax(func, args, call, fail) {
 		fail = function(){};
 	}
 	args.token = Token();
-	$.post(BASE_URL + "/assets/server/index.php?func="+func, args, call).fail(fail);
+	$.post(BASE_URL + "/api/"+func, args, call).fail(fail);
 }
