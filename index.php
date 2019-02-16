@@ -10,8 +10,6 @@ $response = $core->processRequest($request);
 $response->send();
 $core->dispose();
 
-use \PDO;
-use \builtin_placeholders;
 use \Lib\CCMS\Mailer;
 use \Lib\CCMS\Page;
 use \Lib\CCMS\Security\User;
