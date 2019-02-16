@@ -1,8 +1,14 @@
 <?php
 
+use \Lib\CCMS\CCMSCore;
 
 require_once "assets/server/autoload.php";
 
+$core = new CCMSCore();
+$request = $core->buildRequest();
+$response = $core->processRequest($request);
+$response->send();
+$core->dispose();
 
 use \PDO;
 use \builtin_placeholders;
