@@ -2,6 +2,7 @@
 
 use \Lib\CCMS\Page;
 use \Lib\CCMS\Security\User;
+use \Lib\CCMS\Utilities;
 
 // TODO: groupings
 
@@ -873,12 +874,12 @@ $(document).keydown(function(event) {
 		$userlist .= $TEMPLATES["secure-modal-admin-userrow"]($user, $authuser->uid);
 	}
 	
-	$websitetitle = getconfig("websitetitle");
-	$primaryemail = getconfig("primaryemail");
-	$secondaryemail = getconfig("secondaryemail");
+	$websitetitle = Utilities::getconfig("websitetitle");
+	$primaryemail = Utilities::getconfig("primaryemail");
+	$secondaryemail = Utilities::getconfig("secondaryemail");
 	
 	$releasedate = date("l, F j, Y", strtotime($ccms_info->release));
-	$creationdate = date("l, F j, Y", strtotime(getconfig("creationdate")));
+	$creationdate = date("l, F j, Y", strtotime(Utilities::getconfig("creationdate")));
 	
 	return '
 <div class="modal-body">

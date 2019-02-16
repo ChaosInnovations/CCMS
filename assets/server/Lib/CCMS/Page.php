@@ -235,7 +235,7 @@ class Page
         if ($this->usehead) {
             $pre = (new Page("_default/head"))->head;
         }
-        $sitetitle = getconfig("websitetitle");
+        $sitetitle = Utilities::getconfig("websitetitle");
         echo "{$pre}<title>{$this->title} | {$sitetitle}</title>{$this->head}";
     }
     

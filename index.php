@@ -2,6 +2,8 @@
 
 namespace CCMS;
 
+define(ROOT_PATH, dirname(__FILE__));
+
 require "assets/server/autoload.php";
 
 use \PDO;
@@ -10,6 +12,7 @@ use \Lib\CCMS\Mailer;
 use \Lib\CCMS\Page;
 use \Lib\CCMS\Security\User;
 use \Lib\CCMS\Security\AccountManager;
+use \Lib\CCMS\Utilities;
 
 foreach ($argv as $arg) {
     $e=explode("=",$arg);
@@ -102,7 +105,7 @@ include "assets/server/secure.php";
 include "assets/server/templates.php";
 include "assets/server/collab.php";
 
-load_jsons();
+Utilities::load_jsons();
 
 $conn = null;
 $sqlstat = true;
@@ -118,15 +121,16 @@ try {
 }
 
 $mailer = new Mailer();
-$mailer->host = getconfig("email_primary_host");
-$mailer->username = getconfig("email_primary_user");
-$mailer->password = getconfig("email_primary_pass");
-$mailer->from = getconfig("email_primary_from");
+$mailer->host     = Utilities::getconfig("email_primary_host");
+$mailer->username = Utilities::getconfig("email_primary_user");
+$mailer->password = Utilities::getconfig("email_primary_pass");
+$mailer->from     = Utilities::getconfig("email_primary_from");
+
 $notifMailer = new Mailer();
-$notifMailer->host = getconfig("email_notifs_host");
-$notifMailer->username = getconfig("email_notifs_user");
-$notifMailer->password = getconfig("email_notifs_pass");
-$notifMailer->from = getconfig("email_notifs_from");
+$notifMailer->host     = Utilities::getconfig("email_notifs_host");
+$notifMailer->username = Utilities::getconfig("email_notifs_user");
+$notifMailer->password = Utilities::getconfig("email_notifs_pass");
+$notifMailer->from     = Utilities::getconfig("email_notifs_from");
 
 // LOAD MODULES
 $modulepath = "assets/server_modules/";
