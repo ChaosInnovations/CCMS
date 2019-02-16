@@ -1,4 +1,7 @@
 <?php
+
+namespace Lib/PHPMailer;
+
 /**
  * PHPMailer POP-Before-SMTP Authentication Class.
  * PHP Version 5
@@ -27,6 +30,7 @@
  * @author Jim Jagielski (jimjag) <jimjag@gmail.com>
  * @author Andy Prevost (codeworxtech) <codeworxtech@users.sourceforge.net>
  */
+
 class POP3
 {
     /**

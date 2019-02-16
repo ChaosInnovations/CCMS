@@ -1,9 +1,8 @@
 <?php
-if (file_exists("PHPMailer/PHPMailerAutoload.php")) {
-	include "PHPMailer/PHPMailerAutoload.php";
-} else {
-	include "assets/server/PHPMailer/PHPMailerAutoload.php";
-}
+
+namespace Lib\CCMS;
+
+use \Lib\PHPMailer\PHPMailer;
 
 class Mailer {
 	
@@ -57,6 +56,3 @@ class Mailer {
 	}
 	
 }
-
-
-?>

@@ -1,4 +1,10 @@
 <?php
+
+namespace Lib\PHPMailer;
+
+use \Lib\PHPMailer\phpmailerException;
+use \Lib\PHPMailer\SMTP;
+
 /**
  * PHPMailer - PHP email creation and transport class.
  * PHP Version 5
@@ -3945,22 +3951,5 @@ class PHPMailer
             $params = array($isSent, $to, $cc, $bcc, $subject, $body, $from);
             call_user_func_array($this->action_function, $params);
         }
-    }
-}
-
-/**
- * PHPMailer exception handler
- * @package PHPMailer
- */
-class phpmailerException extends Exception
-{
-    /**
-     * Prettify error message output
-     * @return string
-     */
-    public function errorMessage()
-    {
-        $errorMsg = '<strong>' . $this->getMessage() . "</strong><br />\n";
-        return $errorMsg;
     }
 }

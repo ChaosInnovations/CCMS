@@ -5,8 +5,8 @@ namespace CCMS;
 require "assets/server/autoload.php";
 
 use \PDO;
-use \Mailer;
 use \builtin_placeholders;
+use \Lib\CCMS\Mailer;
 use \Lib\CCMS\Page;
 use \Lib\CCMS\Security\User;
 use \Lib\CCMS\Security\AccountManager;
@@ -99,7 +99,6 @@ header("Pragma: no-cache");
 
 include "assets/server/pagegen.php";
 include "assets/server/secure.php";
-include "assets/server/mail.php";
 include "assets/server/templates.php";
 include "assets/server/collab.php";
 

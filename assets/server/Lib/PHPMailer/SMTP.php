@@ -1,4 +1,7 @@
 <?php
+
+namespace Lib\PHPMailer;
+
 /**
  * PHPMailer RFC821 SMTP email transport class.
  * PHP Version 5
@@ -24,6 +27,7 @@
  * @author Chris Ryan
  * @author Marcus Bointon <phpmailer@synchromedia.co.uk>
  */
+ 
 class SMTP
 {
     /**
