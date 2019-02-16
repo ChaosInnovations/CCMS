@@ -2,6 +2,7 @@
 
 use \Lib\CCMS\Security\User;
 use \Lib\CCMS\Security\AccountManager;
+use \Lib\CCMS\Utilities;
 
 function ajax_newtoken() {
 	global $conn, $sqlstat, $sqlerr;
@@ -18,40 +19,6 @@ function ajax_newtoken() {
 	}
     
 	return AccountManager::registerNewToken($user->uid, $_SERVER["REMOTE_ADDR"]);
-}
-
-function load_jsons() {
-	global $db_config, $ccms_info;
-	$db_config = json_decode(file_get_contents("db-config.json", true));
-	$ccms_info = json_decode(file_get_contents("ccms-info.json", true));
-}
-
-function getconfig($property) {
-	global $conn, $sqlstat, $sqlerr;
-	if ($sqlstat) {
-		$stmt = $conn->prepare("SELECT * FROM config WHERE property=:property;");
-		$stmt->bindParam(":property", $property);
-		$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
-		$result = $stmt->fetchAll();
-		if (count($result) != 1) {
-			return "";
-		}
-		return $result[0]["value"];
-	} else {
-		return $sqlerr;
-	}
-}
-
-function setconfig($property, $value) {
-	global $conn, $sqlstat, $sqlerr;
-	if ($sqlstat) {
-		$stmt = $conn->prepare("UPDATE config SET {$property}=:val WHERE 1=1;");
-		$stmt->bindParam(":val", $value);
-		$stmt->execute();
-		return true;
-	} else {
-		return $sqlerr;
-	}
 }
 
 function ajax_newuser() {
@@ -77,7 +44,7 @@ function ajax_newuser() {
 		return "FALSE";
 	}
     
-	$body = $TEMPLATES["email-newuser"]($_POST["name"], $authuser->name, $baseUrl, getconfig("websitetitle"));
+	$body = $TEMPLATES["email-newuser"]($_POST["name"], $authuser->name, $baseUrl, Utilities::getconfig("websitetitle"));
 	$mail = $notifMailer->compose([[User::normalizeEmail($_POST["email"]), $_POST["name"]]], "Account Created", $body, "");
 	
 	if (!$mail->send()) {
@@ -213,10 +180,10 @@ function ajax_setconfig() {
 	
 	if ($sqlstat) {
 		if (isset($_POST["websitetitle"])) {
-			setconfig("websitetitle", $_POST["websitetitle"]);
+			Utilities::setconfig("websitetitle", $_POST["websitetitle"]);
 		}
 		if (isset($_POST["primaryemail"])) {
-			setconfig("primaryemail", $_POST["primaryemail"]);
+			Utilities::setconfig("primaryemail", $_POST["primaryemail"]);
 		}
 		return "TRUE";
 	} else {
