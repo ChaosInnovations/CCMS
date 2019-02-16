@@ -9,8 +9,8 @@ class Utilities
     function load_jsons()
     {
         global $db_config, $ccms_info;
-        $db_config = json_decode(file_get_contents(ROOT_PATH . "/assets/server/db-config.json", true));
-        $ccms_info = json_decode(file_get_contents(ROOT_PATH . "/assets/server/ccms-info.json", true));
+        $db_config = json_decode(file_get_contents($_SERVER["DOCUMENT_ROOT"] . "/assets/server/db-config.json", true));
+        $ccms_info = json_decode(file_get_contents($_SERVER["DOCUMENT_ROOT"] . "/assets/server/ccms-info.json", true));
     }
     
     function getconfig($property)

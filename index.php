@@ -1,10 +1,8 @@
 <?php
 
-namespace CCMS;
 
-define(ROOT_PATH, dirname(__FILE__));
+require_once "assets/server/autoload.php";
 
-require "assets/server/autoload.php";
 
 use \PDO;
 use \builtin_placeholders;
@@ -220,6 +218,15 @@ if (isset($_GET["run_scheduled_tasks"])) {
 }
 
 if (substr($pageid, 0, 4) == "api/") {
+    
+    // Should have modules register endpoints paired with functions.
+    // Functions should accept parameters (string $endpoint, array $args)
+    // > What about dynamic endpoints?
+    //   > endpoint registration could be regex to match
+    //   > all registrations matching regex should be called
+    // > How to adapt this to work with the scheduler?
+    // > How to make this work with page loads?
+    
     $old_func = substr($pageid, 4);
     if (in_array("ajax_" . $old_func, get_defined_functions()["user"])) {
         $func = "ajax_" . $old_func;
