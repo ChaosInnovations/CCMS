@@ -7,5 +7,6 @@
 
 $endpoints = [
     '/.*/i' => "\Lib\CCMS\Security\UserHook", // Sign in
+    '/^\/?api\/collab_update\/?$/i' => "\Lib\CCMS\CollabUpdateEndpoint",
     '/^(?!.*\.[a-z]*$).*$/i' => "\Lib\CCMS\PageEndpoint", // Capture all remaining endpoints that don't have an extension
 ];

@@ -206,49 +206,6 @@ if (isset($_GET["run_scheduled_tasks"])) {
     }
 }
 
-if (substr($pageid, 0, 4) == "api/") {
-    
-    // Should have modules register endpoints paired with functions.
-    // Functions should accept parameters (string $endpoint, array $args)
-    // > What about dynamic endpoints?
-    //   > endpoint registration could be regex to match
-    //   > all registrations matching regex should be called
-    // > How to adapt this to work with the scheduler?
-    // > How to make this work with page loads?
-    
-    $old_func = substr($pageid, 4);
-    if (in_array("ajax_" . $old_func, get_defined_functions()["user"])) {
-        $func = "ajax_" . $old_func;
-        echo $func();
-    } else {
-        $funcparts = explode("|", $old_func, 2);
-        if (count($funcparts) == 2) {
-            $mod = $funcparts[0];
-            $func = "ajax_" . $funcparts[1];
-        } else {
-            $mod = "builtin";
-            $func = "ajax_" . $funcparts[0];
-        }
-        if (in_array($mod, $availablemodules)) {
-            if (method_exists($modules[$mod], $func)) {
-                $result = $modules[$mod]->$func();
-            } else {
-                $result = "FALSE";
-            }
-        } else {
-            $result = "FALSE";
-        }
-        echo $result;
-    }
-
-    $size = ob_get_length();
-    header("Content-Length: {$size}");
-    ob_end_flush();
-    flush();
-    
-    exit();
-}
-
 $size = ob_get_length();
 header("Content-Length: {$size}");
 ob_end_flush();

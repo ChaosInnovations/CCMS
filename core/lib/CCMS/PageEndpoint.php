@@ -6,6 +6,7 @@ use \Lib\CCMS\IEndpoint;
 use \Lib\CCMS\Page;
 use \Lib\CCMS\Response;
 use \Lib\CCMS\Request;
+use \Lib\CCMS\Security\User;
 
 class PageEndpoint implements IEndpoint
 {
@@ -21,7 +22,7 @@ class PageEndpoint implements IEndpoint
         
         $stmt = $conn->prepare("UPDATE users SET collab_pageid=:pid WHERE uid=:uid;");
         $stmt->bindParam(":pid", $pageid);
-        $stmt->bindParam(":uid", $authuser->uid);
+        $stmt->bindParam(":uid", User::$currentUser->uid);
         $stmt->execute();
         
         $page = new Page($pageid);
