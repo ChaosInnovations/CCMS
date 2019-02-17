@@ -4,12 +4,14 @@ use \Lib\CCMS\CCMSCore;
 
 require_once "assets/server/autoload.php";
 
-foreach ($argv as $arg) {
-    $e=explode("=",$arg);
-    if(count($e)==2)
-        $_GET[$e[0]]=$e[1];
-    else    
-        $_GET[$e[0]]=0;
+if (isset($argv)) {
+    foreach ($argv as $arg) {
+        $e=explode("=",$arg);
+        if(count($e)==2)
+            $_GET[$e[0]]=$e[1];
+        else    
+            $_GET[$e[0]]=0;
+    }
 }
 
 use \Lib\CCMS\Mailer;
