@@ -24,15 +24,18 @@ class CCMSCore
         if ($request->isWeb()) {
             include_once $_SERVER["DOCUMENT_ROOT"]."/endpoints.php";
             // Enumerate endpoints 
-            foreach ($endpoints as $endpointRegex => $endpointClassName) {
+            foreach ($endpoints as $endpointRegex => $endpointFunctionName) {
                 if (!preg_match($endpointRegex, $request->getEndpoint())) {
                     continue;
                 }
-                $endpointClass = new $endpointClassName;
-                if (!$endpointClass instanceof IEndpoint) {
-                    continue;
+                
+                $result = null;
+                
+                try {
+                    $result = $endpointFunctionName($request);
+                } catch (\Exception $e) {
                 }
-                $result = $endpointClassName::endpointHook($request);
+                
                 if ($result instanceof Response) {
                     return $result;
                 }

@@ -3,6 +3,8 @@
 namespace Lib\CCMS;
 
 use \PDO;
+use \Lib\CCMS\Response;
+use \Lib\CCMS\Request;
 use \Lib\CCMS\Security\User;
 
 class Page
@@ -321,5 +323,29 @@ class Page
         }
         
         return urldecode($pages[0]["title"]);
+    }
+    
+    public static function hook(Request $request)
+    {
+        global $conn;
+        
+        $pageid = $request->getEndpoint();
+        
+        if (!Page::pageExists($pageid)) {
+            $pageid = "_default/notfound";
+        }
+        
+        $stmt = $conn->prepare("UPDATE users SET collab_pageid=:pid WHERE uid=:uid;");
+        $stmt->bindParam(":pid", $pageid);
+        $stmt->bindParam(":uid", User::$currentUser->uid);
+        $stmt->execute();
+        
+        $page = new Page($pageid);
+        
+        $response = new Response;
+        
+        $response->setContent($page->getContent());
+        
+        return $response;
     }
 }

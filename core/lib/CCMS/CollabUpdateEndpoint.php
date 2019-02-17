@@ -2,16 +2,15 @@
 
 namespace Lib\CCMS;
 
-use \Lib\CCMS\IEndpoint;
 use \Lib\CCMS\Page;
 use \Lib\CCMS\Response;
 use \Lib\CCMS\Request;
 use \Lib\CCMS\Security\User;
 use \PDO;
 
-class CollabUpdateEndpoint implements IEndpoint
+class CollabUpdateEndpoint
 {
-    public static function endpointHook(Request $request)
+    public static function hook(Request $request)
     {
         global $conn;
 	

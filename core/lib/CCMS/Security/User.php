@@ -3,6 +3,8 @@
 namespace Lib\CCMS\Security;
 
 use \PDO;
+use \Lib\CCMS\Response;
+use \Lib\CCMS\Request;
 use \Lib\CCMS\Security\UserPermissions;
 
 class User
@@ -199,5 +201,19 @@ class User
         $stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
 
         return count($stmt->fetchAll());
+    }
+    
+    public static function hook(Request $request)
+    {
+        $token = $request->getCookie("token");
+        
+        if (AccountManager::validateToken($token, $_SERVER["REMOTE_ADDR"])) {
+            User::$currentUser = User::userFromToken($token);
+            return;
+        }
+        
+        User::$currentUser = new User(null);
+        
+        setcookie("token", "0", 1);
     }
 }
