@@ -368,14 +368,6 @@ function ajax_collab_update() {
 		}
 		array_push($update["notifs"], $notif);
 	}
-	$defaultPasswordHash = hash("sha512", "password");
-	$stmt = $conn->prepare("SELECT uid FROM access WHERE uid=:uid AND pwd=:pwd;");
-	$stmt->bindParam(":uid", $authuser->uid);
-	$stmt->bindParam(":pwd", $defaultPasswordHash);
-	$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
-	if (count($stmt->fetchAll()) == 1) {
-		array_push($update["notifs"], "pwd");
-	}
 	
 	return json_encode($update);
 }
