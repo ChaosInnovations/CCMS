@@ -84,7 +84,7 @@ $notifMailer->from     = Utilities::getconfig("email_notifs_from");
 $core = new CCMSCore();
 $request = $core->buildRequest();
 $response = $core->processRequest($request);
-$response->send();
+$response->send(false);
 $core->dispose();
 
 // Delete setup script and STATE if it still exists (first time launch)

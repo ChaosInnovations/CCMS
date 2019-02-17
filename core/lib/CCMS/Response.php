@@ -12,8 +12,12 @@ class Response
         $this->content = $content;
     }
     
-    public function send()
+    public function send($buffer=true)
     {
+        if (!$buffer) {
+            echo $this->content;
+            return;
+        }
         
         ob_end_clean();
         ignore_user_abort(true);
