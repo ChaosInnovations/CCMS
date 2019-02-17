@@ -12,12 +12,7 @@ foreach ($argv as $arg) {
         $_GET[$e[0]]=0;
 }
 
-ob_end_clean();
-ignore_user_abort(true);
-ob_start();
-
-use \Lib\CCMS\Security\User;
-use \Lib\CCMS\Security\AccountManager;
+use \Lib\CCMS\Mailer;
 use \Lib\CCMS\Utilities;
 include "assets/server/pagegen.php";
 include "assets/server/secure.php";
@@ -72,14 +67,23 @@ try {
 	array_push($msgs, $e);
 }
 
+$mailer = new Mailer();
+$mailer->host     = Utilities::getconfig("email_primary_host");
+$mailer->username = Utilities::getconfig("email_primary_user");
+$mailer->password = Utilities::getconfig("email_primary_pass");
+$mailer->from     = Utilities::getconfig("email_primary_from");
+
+$notifMailer = new Mailer();
+$notifMailer->host     = Utilities::getconfig("email_notifs_host");
+$notifMailer->username = Utilities::getconfig("email_notifs_user");
+$notifMailer->password = Utilities::getconfig("email_notifs_pass");
+$notifMailer->from     = Utilities::getconfig("email_notifs_from");
+
 $core = new CCMSCore();
 $request = $core->buildRequest();
 $response = $core->processRequest($request);
 $response->send();
 $core->dispose();
-
-use \Lib\CCMS\Mailer;
-use \Lib\CCMS\Page;
 
 // Delete setup script and STATE if it still exists (first time launch)
 if (file_exists("STATE") && file_get_contents("STATE") == "5:0" &&
@@ -133,35 +137,6 @@ if (file_exists("STATE") && file_get_contents("STATE") == "5:0" &&
 	die();
 }
 
-$url = trim($_SERVER["REQUEST_URI"], "/");
-if (strstr($url, '?')) $url = substr($url, 0, strpos($url, '?'));
-
-$pageid = $url;
-if (isset($_GET["p"])) {
-	$pageid = $_GET["p"];
-	header("Location: /" . $pageid);
-    die();
-}
-
-// Prevent caching
-header("Expires: 0");
-header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT");
-header("Cache-Control: no-store, no-cache, must-revalidate");
-header("Cache-Control: post-check=0, pre-check=0", false);
-header("Pragma: no-cache");
-
-$mailer = new Mailer();
-$mailer->host     = Utilities::getconfig("email_primary_host");
-$mailer->username = Utilities::getconfig("email_primary_user");
-$mailer->password = Utilities::getconfig("email_primary_pass");
-$mailer->from     = Utilities::getconfig("email_primary_from");
-
-$notifMailer = new Mailer();
-$notifMailer->host     = Utilities::getconfig("email_notifs_host");
-$notifMailer->username = Utilities::getconfig("email_notifs_user");
-$notifMailer->password = Utilities::getconfig("email_notifs_pass");
-$notifMailer->from     = Utilities::getconfig("email_notifs_from");
-
 // Force HTTPS
 /*
 $httpsURL = 'https://'.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
@@ -204,8 +179,3 @@ if (isset($_GET["run_scheduled_tasks"])) {
         $stmt->execute();
     }
 }
-
-$size = ob_get_length();
-header("Content-Length: {$size}");
-ob_end_flush();
-flush();

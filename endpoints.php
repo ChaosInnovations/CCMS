@@ -6,7 +6,13 @@
 // If no endpoints are found, will respond with a 404
 
 $endpoints = [
-    '/.*/i' => "\Lib\CCMS\Security\User::hook", // Sign in
-    '/^\/?api\/collab_update\/?$/i' => "\Lib\CCMS\CollabUpdateEndpoint::hook",
+    '/.*/i' => "\Lib\CCMS\Security\User::hookAuthenticateFromRequest", // Sign in
+    
+    '/^\/?api\/checkuser\/?$/i' => "\Lib\CCMS\Security\User::hookCheckUser", // Check that the username is correct
+    '/^\/?api\/checkpass\/?$/i' => "\Lib\CCMS\Security\User::hookCheckPassword", // Check that the username is correct
+    '/^\/?api\/newtoken\/?$/i' => "\Lib\CCMS\Security\AccountManager::hookNewToken", // Check that the username is correct
+    
+    '/^\/?api\/collab_update\/?$/i' => "\Lib\CCMS\CollabUpdateEndpoint::hook", // Collaboration status update
+    
     '/^(?!.*\.[a-z]*$).*$/i' => "\Lib\CCMS\Page::hook", // Capture all remaining endpoints that don't have an extension
 ];

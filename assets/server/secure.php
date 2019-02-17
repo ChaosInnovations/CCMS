@@ -4,23 +4,6 @@ use \Lib\CCMS\Security\User;
 use \Lib\CCMS\Security\AccountManager;
 use \Lib\CCMS\Utilities;
 
-function ajax_newtoken() {
-	global $conn, $sqlstat, $sqlerr;
-	if (!$sqlstat) {
-		return "FALSE";
-	}
-	if (!isset($_POST["email"]) or !isset($_POST["password"])) {
-		return "FALSE";
-	}
-	$user = User::userFromEmail($_POST["email"]);
-    
-	if (!$user->authenticate($_POST["password"])) {
-		return "FALSE";
-	}
-    
-	return AccountManager::registerNewToken($user->uid, $_SERVER["REMOTE_ADDR"]);
-}
-
 function ajax_newuser() {
 	global $conn, $sqlstat, $sqlerr;
 	global $authuser;
@@ -95,39 +78,6 @@ function ajax_removeaccount() {
 	$stmt->bindParam(":uid", $uid);
 	$stmt->execute();
     
-	return "TRUE";
-}
-
-function ajax_checkpass() {
-	global $conn, $sqlstat, $sqlerr;
-	global $authuser;
-	if (!$sqlstat) {
-		return "FALSE";
-	}
-	if (!isset($_POST["password"])) {
-		return "FALSE";
-	}
-	$uid = $authuser->uid;
-	if (isset($_POST["email"])) {
-		$uid = User::uidFromEmail($_POST["email"]);
-	}
-    $userToAuthenticate = new User($uid);
-	if (!$userToAuthenticate->isValidUser()) {
-		return "FALSE";
-	}
-	if (!$userToAuthenticate->authenticate($_POST["password"])) {
-		return "FALSE";
-	}
-	return "TRUE";
-}
-
-function ajax_checkuser() {
-	if (!$_POST["email"]) {
-		return "FALSE";
-	}
-	if (!User::userFromEmail($_POST["email"])->isValidUser()) {
-		return "FALSE";
-	}
 	return "TRUE";
 }
 

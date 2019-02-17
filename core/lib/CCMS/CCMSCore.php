@@ -2,6 +2,7 @@
 
 namespace Lib\CCMS;
 
+use \Exception;
 use \Lib\CCMS\IEndpoint;
 use \Lib\CCMS\Request;
 use \Lib\CCMS\Response;
@@ -33,7 +34,7 @@ class CCMSCore
                 
                 try {
                     $result = $endpointFunctionName($request);
-                } catch (\Exception $e) {
+                } catch (Exception $e) {
                 }
                 
                 if ($result instanceof Response) {

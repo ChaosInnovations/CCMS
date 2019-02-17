@@ -2,10 +2,10 @@
 
 namespace Lib\CCMS\Security;
 
-use \PDO;
 use \Lib\CCMS\Response;
 use \Lib\CCMS\Request;
 use \Lib\CCMS\Security\UserPermissions;
+use \PDO;
 
 class User
 {
@@ -203,7 +203,7 @@ class User
         return count($stmt->fetchAll());
     }
     
-    public static function hook(Request $request)
+    public static function hookAuthenticateFromRequest(Request $request)
     {
         $token = $request->getCookie("token");
         
@@ -215,5 +215,40 @@ class User
         User::$currentUser = new User(null);
         
         setcookie("token", "0", 1);
+    }
+    
+    public static function hookCheckUser(Request $request)
+    {
+        if (!$_POST["email"]) {
+            return new Response("FALSE");
+        }
+        
+        if (!User::userFromEmail($_POST["email"])->isValidUser()) {
+            return new Response("FALSE");
+        }
+        
+        return new Response("TRUE");
+    }
+    
+    public static function hookCheckPassword(Request $request)
+    {
+        if (!isset($_POST["password"])) {
+            return "FALSE";
+        }
+        
+        $uid = User::$currentUser->uid;
+        if (isset($_POST["email"])) {
+            $uid = User::uidFromEmail($_POST["email"]);
+        }
+        
+        $userToAuthenticate = new User($uid);
+        if (!$userToAuthenticate->isValidUser()) {
+            return new Response("FALSE");
+        }
+        
+        if (!$userToAuthenticate->authenticate($_POST["password"])) {
+            return new Response("FALSE");
+        }
+        return new Response("TRUE");
     }
 }

@@ -2,6 +2,9 @@
 
 namespace Lib\CCMS\Security;
 
+use \Lib\CCMS\Security\User;
+use \Lib\CCMS\Response;
+use \Lib\CCMS\Request;
 use \PDO;
 
 class AccountManager
@@ -73,5 +76,19 @@ class AccountManager
         $stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
         
         return count($stmt->fetchAll()) == 1;
+    }
+    
+    public static function hookNewToken(Request $request)
+    {
+        if (!isset($_POST["email"]) or !isset($_POST["password"])) {
+            return new Response("FALSE");
+        }
+        $user = User::userFromEmail($_POST["email"]);
+        
+        if (!$user->authenticate($_POST["password"])) {
+            return new Response("FALSE");
+        }
+        
+        return new Response(AccountManager::registerNewToken($user->uid, $_SERVER["REMOTE_ADDR"]));
     }
 }
