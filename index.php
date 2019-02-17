@@ -27,7 +27,7 @@ $baseUrl = $https . "://" . $_SERVER["SERVER_NAME"];
 $modulepath = "assets/server_modules/";
 $availablemodules = ["builtin"];
 $modules = [];
-include ("assets/server/builtin_placeholders.php");
+include "assets/server/builtin_placeholders.php";
 $modules["builtin"] = new builtin_placeholders();
 foreach (scandir($modulepath) as $path) {
 	if ($path != "." and $path != "..") {
