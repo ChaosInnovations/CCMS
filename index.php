@@ -21,7 +21,6 @@ use \Lib\CCMS\Security\AccountManager;
 use \Lib\CCMS\Utilities;
 include "assets/server/pagegen.php";
 include "assets/server/secure.php";
-include "assets/server/collab.php";
 include "assets/server/templates.php";
 
 $https = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] != 'off') ? "https" : "http";

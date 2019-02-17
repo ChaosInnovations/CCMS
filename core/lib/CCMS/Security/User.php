@@ -98,6 +98,63 @@ class User
         return password_verify($password, $this->pwdHash);
     }
     
+    public function notify($what)
+    {
+        global $conn, $notifMailer, $TEMPLATES; // authuser is sender
+        if (User::$currentUser->uid == $uid) {
+            return;
+        }
+        $what .= ";";
+        $stmt = $conn->prepare("UPDATE users SET collab_notifs = CONCAT(`collab_notifs`,:what) WHERE uid=:uid;");
+        $stmt->bindParam(":what", $what);
+        $stmt->bindParam(":uid", $this->uid);
+        $stmt->execute();
+        
+        if ($this->online || !$this->notify) {
+            // Don't email if online already or has disabled email notifications/within notification cooldown.
+            return;
+        }
+        
+        // Reset recipient's notification cooldown
+        $stmt = $conn->prepare("UPDATE users SET last_notif=UTC_TIMESTAMP WHERE uid=:uid;");
+        $stmt->bindParam(":uid", $this->uid);
+        $stmt->execute();
+        
+        $nType = substr($what, 0, 1);
+        
+        if ($nType == "R" || $nType == "U") {
+            // Chat
+            $rn = "";
+            if ($nType == "U") {
+                $rn = "you";
+            }
+            else
+            {
+                $rid = substr($what, 1, strlen($what)-2);
+                $stmt = $conn->prepare("SELECT room_name FROM collab_rooms WHERE room_id=:rid;");
+                $stmt->bindParam(":rid", $rid);
+                $stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
+                $rn = $stmt->fetchAll()[0]["room_name"];
+            }
+            $body = $TEMPLATES["email-notif-chat"](User::$currentUser->name, $rn);
+            $oldFrom = $notifMailer->from;
+            $notifMailer->from = User::$currentUser->name;
+            $mail = $notifMailer->compose([[$this->email, $this->name]], User::$currentUser->name." sent a message", $body, "");
+            $mail->send();
+            $notifMailer->from = $oldFrom;
+        }
+    }
+
+    function unnotify($what)
+    {
+        global $conn;
+        $what .= ";";
+        $stmt = $conn->prepare("UPDATE users SET collab_notifs = REPLACE(`collab_notifs`,:what,'') WHERE uid=:uid;");
+        $stmt->bindParam(":what", $what);
+        $stmt->bindParam(":uid", $this->uid);
+        $stmt->execute();
+    }
+    
     public static function userFromToken($token)
     {
         global $conn, $sqlstat;
