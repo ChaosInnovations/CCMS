@@ -6,7 +6,8 @@
 // If no endpoints are found, will respond with a 404
 
 $endpoints = [
-    '/.*/i' => "\Lib\CCMS\Security\User::hookAuthenticateFromRequest", // Sign in
+    '/.*/i' => "\Lib\CCMS\Database::hookOpenConnection", // Connect to database
+    '/.*/' => "\Lib\CCMS\Security\User::hookAuthenticateFromRequest", // Sign in
     
     '/^\/?api\/checkuser\/?$/i' => "\Lib\CCMS\Security\User::hookCheckUser", // Check that the username is correct
     '/^\/?api\/checkpass\/?$/i' => "\Lib\CCMS\Security\User::hookCheckPassword", // Check that the username is correct
