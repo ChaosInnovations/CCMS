@@ -2,6 +2,7 @@
 
 namespace Lib\CCMS\Security;
 
+use \Lib\CCMS\Database;
 use \Lib\CCMS\Response;
 use \Lib\CCMS\Request;
 use \Lib\CCMS\Security\UserPermissions;
@@ -23,16 +24,10 @@ class User
 
     public function __construct($uid)
     {
-        global $conn, $sqlstat;
-
         $this->uid = $uid;
         $this->permissions = new UserPermissions();
 
-        if (!$sqlstat) {
-            return;
-        }
-
-        $stmt = $conn->prepare("SELECT * FROM users WHERE uid=:uid;");
+        $stmt = Database::Instance()->prepare("SELECT * FROM users WHERE uid=:uid;");
         $stmt->bindParam(":uid", $this->uid);
         $stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
         $udata = $stmt->fetchAll();
@@ -102,12 +97,12 @@ class User
     
     public function notify($what)
     {
-        global $conn, $notifMailer, $TEMPLATES; // authuser is sender
+        global $notifMailer, $TEMPLATES; // authuser is sender
         if (User::$currentUser->uid == $uid) {
             return;
         }
         $what .= ";";
-        $stmt = $conn->prepare("UPDATE users SET collab_notifs = CONCAT(`collab_notifs`,:what) WHERE uid=:uid;");
+        $stmt = Database::Instance()->prepare("UPDATE users SET collab_notifs = CONCAT(`collab_notifs`,:what) WHERE uid=:uid;");
         $stmt->bindParam(":what", $what);
         $stmt->bindParam(":uid", $this->uid);
         $stmt->execute();
@@ -118,7 +113,7 @@ class User
         }
         
         // Reset recipient's notification cooldown
-        $stmt = $conn->prepare("UPDATE users SET last_notif=UTC_TIMESTAMP WHERE uid=:uid;");
+        $stmt = Database::Instance()->prepare("UPDATE users SET last_notif=UTC_TIMESTAMP WHERE uid=:uid;");
         $stmt->bindParam(":uid", $this->uid);
         $stmt->execute();
         
@@ -133,7 +128,7 @@ class User
             else
             {
                 $rid = substr($what, 1, strlen($what)-2);
-                $stmt = $conn->prepare("SELECT room_name FROM collab_rooms WHERE room_id=:rid;");
+                $stmt = Database::Instance()->prepare("SELECT room_name FROM collab_rooms WHERE room_id=:rid;");
                 $stmt->bindParam(":rid", $rid);
                 $stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
                 $rn = $stmt->fetchAll()[0]["room_name"];
@@ -149,9 +144,8 @@ class User
 
     function unnotify($what)
     {
-        global $conn;
         $what .= ";";
-        $stmt = $conn->prepare("UPDATE users SET collab_notifs = REPLACE(`collab_notifs`,:what,'') WHERE uid=:uid;");
+        $stmt = Database::Instance()->prepare("UPDATE users SET collab_notifs = REPLACE(`collab_notifs`,:what,'') WHERE uid=:uid;");
         $stmt->bindParam(":what", $what);
         $stmt->bindParam(":uid", $this->uid);
         $stmt->execute();
@@ -159,13 +153,7 @@ class User
     
     public static function userFromToken($token)
     {
-        global $conn, $sqlstat;
-        
-        if (!$sqlstat) {
-            return new User(null);
-        }
-        
-        $stmt = $conn->prepare("SELECT * FROM tokens WHERE tid=:tid;");
+        $stmt = Database::Instance()->prepare("SELECT * FROM tokens WHERE tid=:tid;");
         $stmt->bindParam(":tid", $token);
         $stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
 
@@ -191,13 +179,7 @@ class User
     
     public static function numberOfOwners()
     {
-        global $conn, $sqlstat;
-        
-        if (!$sqlstat) {
-            return 0;
-        }
-        
-        $stmt = $conn->prepare("SELECT uid FROM users WHERE permissions LIKE '%owner%';");
+        $stmt = Database::Instance()->prepare("SELECT uid FROM users WHERE permissions LIKE '%owner%';");
         $stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
 
         return count($stmt->fetchAll());

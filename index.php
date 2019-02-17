@@ -54,20 +54,8 @@ foreach ($availablemodules as $m) {
 	}
 }
 
-Utilities::load_jsons();
-
-$conn = null;
-$sqlstat = true;
-$sqlerr = "";
-$msgs = [];
-try {
-	$conn = new PDO("mysql:host=" . $db_config->host . ";dbname=" . $db_config->database, $db_config->user, $db_config->pass);
-	$conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-} catch(PDOException $e) {
-	$sqlstat = false;
-	$sqlerr = $e;
-	array_push($msgs, $e);
-}
+Utilities::load_jsons(); // Still need this for now for configuration info.
+                         // Should move this stuff to .ini files with a new loader class
 
 $mailer = new Mailer();
 $mailer->host     = Utilities::getconfig("email_primary_host");

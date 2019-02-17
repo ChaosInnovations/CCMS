@@ -3,6 +3,7 @@
 namespace Lib\CCMS;
 
 use \PDO;
+use \Lib\CCMS\Database;
 use \Lib\CCMS\Response;
 use \Lib\CCMS\Request;
 use \Lib\CCMS\Security\User;
@@ -24,8 +25,6 @@ class Page
 
     public function __construct(string $pid)
     {
-        global $conn, $sqlstat, $sqlerr;
-
         $this->pageid = $pid;
 
         $this->title = $this->pageid;
@@ -39,11 +38,7 @@ class Page
             </div>
         ";
 
-        if (!$sqlstat) {
-            return;
-        }
-
-        $stmt = $conn->prepare("SELECT * FROM content_pages WHERE pageid=:pid;");
+        $stmt = Database::Instance()->prepare("SELECT * FROM content_pages WHERE pageid=:pid;");
         $stmt->bindParam(":pid", $this->pageid);
         $stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
         $pages = $stmt->fetchAll();
@@ -68,17 +63,15 @@ class Page
 
     public function getTop()
     {
-        global $conn, $sqlstat, $sqlerr, $TEMPLATES, $availablemodules, $modules;
+        global $TEMPLATES, $availablemodules, $modules;
 
         $securepages = [];
-        if ($sqlstat) {
-            $stmt = $conn->prepare("SELECT pageid FROM content_pages WHERE secure=1 AND pageid NOT LIKE '_default/%';");
-            $stmt->execute();
-            $stmt->setFetchMode(PDO::FETCH_ASSOC);
-            $ps = $stmt->fetchAll();
-            foreach ($ps as $p) {
-                array_push($securepages, $p["pageid"]);
-            }
+        $stmt = Database::Instance()->prepare("SELECT pageid FROM content_pages WHERE secure=1 AND pageid NOT LIKE '_default/%';");
+        $stmt->execute();
+        $stmt->setFetchMode(PDO::FETCH_ASSOC);
+        $ps = $stmt->fetchAll();
+        foreach ($ps as $p) {
+            array_push($securepages, $p["pageid"]);
         }
 
         $top = "";
@@ -114,11 +107,11 @@ class Page
 
         // Page manager menu
         if (User::$currentUser->permissions->admin_managepages) {
-            $stmt = $conn->prepare("SELECT pageid, title, secure, revision FROM content_pages ORDER BY pageid ASC;");
+            $stmt = Database::Instance()->prepare("SELECT pageid, title, secure, revision FROM content_pages ORDER BY pageid ASC;");
             $stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
             $pages = $stmt->fetchAll();
 
-            $stmt = $conn->prepare("SELECT * FROM users;");
+            $stmt = Database::Instance()->prepare("SELECT * FROM users;");
             $stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
             $users = $stmt->fetchAll();
 
@@ -297,13 +290,7 @@ class Page
     
     public static function pageExists(string $pid)
     {
-        global $conn, $sqlstat, $sqlerr;
-        
-        if (!$sqlstat) {
-            return false;
-        }
-        
-        $stmt = $conn->prepare("SELECT pageid FROM content_pages WHERE pageid=:pid;");
+        $stmt = Database::Instance()->prepare("SELECT pageid FROM content_pages WHERE pageid=:pid;");
         $stmt->bindParam(":pid", $pid);
         $stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
         return count($stmt->fetchAll()) == 1;
@@ -311,9 +298,7 @@ class Page
     
     public static function getTitleFromId(string $pid)
     {
-        global $conn;
-        
-        $stmt = $conn->prepare("SELECT title FROM content_pages WHERE pageid=:pid;");
+        $stmt = Database::Instance()->prepare("SELECT title FROM content_pages WHERE pageid=:pid;");
         $stmt->bindParam(":pid", $pid);
         $stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
         $pages = $stmt->fetchAll();
@@ -327,15 +312,13 @@ class Page
     
     public static function hook(Request $request)
     {
-        global $conn;
-        
         $pageid = $request->getEndpoint();
         
         if (!Page::pageExists($pageid)) {
             $pageid = "_default/notfound";
         }
         
-        $stmt = $conn->prepare("UPDATE users SET collab_pageid=:pid WHERE uid=:uid;");
+        $stmt = Database::Instance()->prepare("UPDATE users SET collab_pageid=:pid WHERE uid=:uid;");
         $stmt->bindParam(":pid", $pageid);
         $stmt->bindParam(":uid", User::$currentUser->uid);
         $stmt->execute();

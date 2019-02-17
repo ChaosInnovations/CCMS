@@ -12,17 +12,15 @@ class CollabUpdateEndpoint
 {
     public static function hook(Request $request)
     {
-        global $conn;
-	
         // Keepalive
-        $stmt = $conn->prepare("UPDATE users SET collab_lastseen=UTC_TIMESTAMP WHERE uid=:uid;");
+        $stmt = Database::Instance()->prepare("UPDATE users SET collab_lastseen=UTC_TIMESTAMP WHERE uid=:uid;");
         $stmt->bindParam(":uid", User::$currentUser->uid);
         $stmt->execute();
         
         // Send message
         if (isset($_POST["message"])) {
             $now = date("Y-m-d H:i:s", time() - 3600 * 9);
-            $stmt = $conn->prepare("INSERT INTO collab_chat (chat_from, chat_to, chat_body, chat_sent) VALUES (:uid, :to, :msg, :now);");
+            $stmt = Database::Instance()->prepare("INSERT INTO collab_chat (chat_from, chat_to, chat_body, chat_sent) VALUES (:uid, :to, :msg, :now);");
             $stmt->bindParam(":uid", User::$currentUser->uid);
             $stmt->bindParam(":to", $_POST["chat"]);
             $stmt->bindParam(":msg", $_POST["message"]);
@@ -32,12 +30,12 @@ class CollabUpdateEndpoint
             if (substr($_POST["chat"], 0, 1) == "R") {
                 // multiple members
                 $rid = substr($_POST["chat"], 1);
-                $stmt = $conn->prepare("SELECT room_members FROM collab_rooms WHERE room_id=:rid;");
+                $stmt = Database::Instance()->prepare("SELECT room_members FROM collab_rooms WHERE room_id=:rid;");
                 $stmt->bindParam(":rid", $rid);
                 $stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
                 $room = $stmt->fetchAll()[0];
                 if ($room["room_members"] == "*") {
-                    $stmt = $conn->prepare("SELECT uid FROM users;");
+                    $stmt = Database::Instance()->prepare("SELECT uid FROM users;");
                     $stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
                     foreach($stmt->fetchAll() as $u) {
                         notify($u["uid"], "R" . $rid);
@@ -56,17 +54,17 @@ class CollabUpdateEndpoint
         
         // Add entry
         if (isset($_POST["entry"])) {
-            $stmt = $conn->prepare("INSERT INTO collab_todo (list_id, todo_label, todo_done) VALUES (:lid, :label, 0);");
+            $stmt = Database::Instance()->prepare("INSERT INTO collab_todo (list_id, todo_label, todo_done) VALUES (:lid, :label, 0);");
             $stmt->bindParam(":lid", $_POST["list"]);
             $stmt->bindParam(":label", $_POST["entry"]);
             $stmt->execute();
             // Notify members
-            $stmt = $conn->prepare("SELECT list_participants FROM collab_lists WHERE list_id=:lid;");
+            $stmt = Database::Instance()->prepare("SELECT list_participants FROM collab_lists WHERE list_id=:lid;");
             $stmt->bindParam(":lid", $_POST["list"]);
             $stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
             $list = $stmt->fetchAll()[0];
             if ($list["list_participants"] == "*") {
-                $stmt = $conn->prepare("SELECT uid FROM users;");
+                $stmt = Database::Instance()->prepare("SELECT uid FROM users;");
                 $stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
                 foreach($stmt->fetchAll() as $u) {
                     notify($u["uid"], "L" . $_POST["list"]);
@@ -81,16 +79,16 @@ class CollabUpdateEndpoint
         
         // Check entry
         if (isset($_POST["check_entry"])) {
-            $stmt = $conn->prepare("UPDATE collab_todo SET todo_done=!todo_done WHERE todo_id=:tid;");
+            $stmt = Database::Instance()->prepare("UPDATE collab_todo SET todo_done=!todo_done WHERE todo_id=:tid;");
             $stmt->bindParam(":tid", $_POST["check_entry"]);
             $stmt->execute();
             // Notify members
-            $stmt = $conn->prepare("SELECT list_participants FROM collab_lists WHERE list_id=:lid;");
+            $stmt = Database::Instance()->prepare("SELECT list_participants FROM collab_lists WHERE list_id=:lid;");
             $stmt->bindParam(":lid", $_POST["list"]);
             $stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
             $list = $stmt->fetchAll()[0];
             if ($list["list_participants"] == "*") {
-                $stmt = $conn->prepare("SELECT uid FROM users;");
+                $stmt = Database::Instance()->prepare("SELECT uid FROM users;");
                 $stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
                 foreach($stmt->fetchAll() as $u) {
                     notify($u["uid"], "L" . $_POST["list"]);
@@ -105,16 +103,16 @@ class CollabUpdateEndpoint
         
         // Delete entry
         if (isset($_POST["delete_entry"])) {
-            $stmt = $conn->prepare("DELETE FROM collab_todo WHERE todo_id=:tid;");
+            $stmt = Database::Instance()->prepare("DELETE FROM collab_todo WHERE todo_id=:tid;");
             $stmt->bindParam(":tid", $_POST["delete_entry"]);
             $stmt->execute();
             // Notify members
-            $stmt = $conn->prepare("SELECT list_participants FROM collab_lists WHERE list_id=:lid;");
+            $stmt = Database::Instance()->prepare("SELECT list_participants FROM collab_lists WHERE list_id=:lid;");
             $stmt->bindParam(":lid", $_POST["list"]);
             $stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
             $list = $stmt->fetchAll()[0];
             if ($list["list_participants"] == "*") {
-                $stmt = $conn->prepare("SELECT uid FROM users;");
+                $stmt = Database::Instance()->prepare("SELECT uid FROM users;");
                 $stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
                 foreach($stmt->fetchAll() as $u) {
                     notify($u["uid"], "L" . $_POST["list"]);
@@ -130,9 +128,9 @@ class CollabUpdateEndpoint
         // Add room or list
         if (isset($_POST["new_type"]) && isset($_POST["new_id"]) && isset($_POST["new_members"]) && isset($_POST["new_name"])) {
             if ($_POST["new_type"] == "list") {
-                $stmt = $conn->prepare("INSERT INTO collab_lists (list_id, list_name, list_participants) VALUES (:id, :name, :members);");
+                $stmt = Database::Instance()->prepare("INSERT INTO collab_lists (list_id, list_name, list_participants) VALUES (:id, :name, :members);");
             } else {
-                $stmt = $conn->prepare("INSERT INTO collab_rooms (room_id, room_name, room_members) VALUES (:id, :name, :members);");
+                $stmt = Database::Instance()->prepare("INSERT INTO collab_rooms (room_id, room_name, room_members) VALUES (:id, :name, :members);");
             }
             $stmt->bindParam(":id", $_POST["new_id"]);
             $stmt->bindParam(":name", $_POST["new_name"]);
@@ -140,7 +138,7 @@ class CollabUpdateEndpoint
             $stmt->execute();
             // Notify members
             if ($_POST["new_members"] == "*") {
-                $stmt = $conn->prepare("SELECT uid FROM users;");
+                $stmt = Database::Instance()->prepare("SELECT uid FROM users;");
                 $stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
                 foreach($stmt->fetchAll() as $u) {
                     notify($u["uid"], ($_POST["new_type"] == "list"?"L":"R") . $_POST["new_id"]);
@@ -157,7 +155,7 @@ class CollabUpdateEndpoint
         $update = ["users"=>[],"rooms"=>[],"lists"=>[],"todo"=>[],"chat"=>[],"notifs"=>[]];
         
         // User statuses
-        $stmt = $conn->prepare("SELECT uid, collab_lastseen, collab_pageid FROM users;");
+        $stmt = Database::Instance()->prepare("SELECT uid, collab_lastseen, collab_pageid FROM users;");
         $stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
         $users = $stmt->fetchAll();
         foreach($users as $user) {
@@ -187,7 +185,7 @@ class CollabUpdateEndpoint
         }
         
         // Room statuses
-        $stmt = $conn->prepare("SELECT room_id, room_name, room_members FROM collab_rooms;");
+        $stmt = Database::Instance()->prepare("SELECT room_id, room_name, room_members FROM collab_rooms;");
         $stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
         $rooms = $stmt->fetchAll();
         foreach($rooms as $room) {
@@ -195,10 +193,10 @@ class CollabUpdateEndpoint
             $numMembers = count(explode(";", $room["room_members"]));
             $numOnline = 0;
             if ($room["room_members"] == "*") {
-                $stmt = $conn->prepare("SELECT uid FROM users;");
+                $stmt = Database::Instance()->prepare("SELECT uid FROM users;");
                 $stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
                 $numMembers = count($stmt->fetchAll());
-                $stmt = $conn->prepare("SELECT uid FROM users WHERE collab_lastseen>SUBTIME(UTC_TIMESTAMP, '0:0:10');");
+                $stmt = Database::Instance()->prepare("SELECT uid FROM users WHERE collab_lastseen>SUBTIME(UTC_TIMESTAMP, '0:0:10');");
                 $stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
                 $numOnline = count($stmt->fetchAll());
             } else {
@@ -206,7 +204,7 @@ class CollabUpdateEndpoint
                 if (!in_array(User::$currentUser->uid, $members)) {
                     continue;
                 }
-                $stmt = $conn->prepare("SELECT uid FROM users WHERE collab_lastseen>SUBTIME(UTC_TIMESTAMP, '0:0:10');");
+                $stmt = Database::Instance()->prepare("SELECT uid FROM users WHERE collab_lastseen>SUBTIME(UTC_TIMESTAMP, '0:0:10');");
                 $stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
                 $users = $stmt->fetchAll();
                 foreach ($users as $user) {
@@ -221,7 +219,7 @@ class CollabUpdateEndpoint
         }
         
         // List statuses
-        $stmt = $conn->prepare("SELECT list_id, list_name, list_participants FROM collab_lists;");
+        $stmt = Database::Instance()->prepare("SELECT list_id, list_name, list_participants FROM collab_lists;");
         $stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
         $lists = $stmt->fetchAll();
         foreach($lists as $list) {
@@ -229,11 +227,11 @@ class CollabUpdateEndpoint
                 continue;
             }
             
-            $stmt = $conn->prepare("SELECT todo_id FROM collab_todo WHERE list_id=:lid;");
+            $stmt = Database::Instance()->prepare("SELECT todo_id FROM collab_todo WHERE list_id=:lid;");
             $stmt->bindParam(":lid", $list["list_id"]);
             $stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
             $numTasks = count($stmt->fetchAll());
-            $stmt = $conn->prepare("SELECT todo_id FROM collab_todo WHERE list_id=:lid AND todo_done=1;");
+            $stmt = Database::Instance()->prepare("SELECT todo_id FROM collab_todo WHERE list_id=:lid AND todo_done=1;");
             $stmt->bindParam(":lid", $list["list_id"]);
             $stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
             $numComplete = count($stmt->fetchAll());
@@ -245,11 +243,11 @@ class CollabUpdateEndpoint
         // Chat
         if (strlen($_POST["chat"]) == 33) {
             if (substr($_POST["chat"], 0, 1) == "R") {
-                $stmt = $conn->prepare("SELECT chat_id, chat_from, chat_body, chat_sent FROM collab_chat WHERE chat_to=:cid ORDER BY chat_sent DESC LIMIT 60;");
+                $stmt = Database::Instance()->prepare("SELECT chat_id, chat_from, chat_body, chat_sent FROM collab_chat WHERE chat_to=:cid ORDER BY chat_sent DESC LIMIT 60;");
             } else {
                 $otherUid = substr($_POST["chat"], 1);
                 $ucid = "U" . User::$currentUser->uid;
-                $stmt = $conn->prepare("SELECT chat_id, chat_from, chat_body, chat_sent FROM collab_chat WHERE (chat_to=:cid AND chat_from=:uid) OR (chat_to=:ucid AND chat_from=:ouid) ORDER BY chat_sent DESC LIMIT 60;");
+                $stmt = Database::Instance()->prepare("SELECT chat_id, chat_from, chat_body, chat_sent FROM collab_chat WHERE (chat_to=:cid AND chat_from=:uid) OR (chat_to=:ucid AND chat_from=:ouid) ORDER BY chat_sent DESC LIMIT 60;");
                 $stmt->bindParam(":ucid", $ucid);
                 $stmt->bindParam(":ouid", $otherUid);
                 $stmt->bindParam(":uid", User::$currentUser->uid);
@@ -260,7 +258,7 @@ class CollabUpdateEndpoint
             unnotify(User::$currentUser->uid, $_POST["chat"]);
             
             foreach ($messages as $message) {
-                $stmt = $conn->prepare("SELECT name FROM users WHERE uid=:uid;");
+                $stmt = Database::Instance()->prepare("SELECT name FROM users WHERE uid=:uid;");
                 $stmt->bindParam(":uid", $message["chat_from"]);
                 $stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
                 $names = $stmt->fetchAll();
@@ -292,7 +290,7 @@ class CollabUpdateEndpoint
         
         // Todo list
         if (strlen($_POST["list"]) == 32) {
-            $stmt = $conn->prepare("SELECT todo_id, todo_label, todo_done FROM collab_todo WHERE list_id=:lid ORDER BY todo_id ASC;");
+            $stmt = Database::Instance()->prepare("SELECT todo_id, todo_label, todo_done FROM collab_todo WHERE list_id=:lid ORDER BY todo_id ASC;");
             $stmt->bindParam(":lid", $_POST["list"]);
             $stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
             $entries= $stmt->fetchAll();
@@ -306,7 +304,7 @@ class CollabUpdateEndpoint
         }
         
         // Get notifications
-        $stmt = $conn->prepare("SELECT collab_notifs FROM users WHERE uid=:uid;");
+        $stmt = Database::Instance()->prepare("SELECT collab_notifs FROM users WHERE uid=:uid;");
         $stmt->bindParam(":uid", User::$currentUser->uid);
         $stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
         foreach (explode(";", $stmt->fetchAll()[0]["collab_notifs"]) as $notif) {

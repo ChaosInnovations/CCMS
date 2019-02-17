@@ -2,6 +2,7 @@
 
 namespace Lib\CCMS;
 
+use \Lib\CCMS\Database;
 use \PDO;
 
 class Utilities
@@ -17,7 +18,7 @@ class Utilities
     {
         global $conn, $sqlstat, $sqlerr;
         if ($sqlstat) {
-            $stmt = $conn->prepare("SELECT * FROM config WHERE property=:property;");
+            $stmt = Database::Instance()->prepare("SELECT * FROM config WHERE property=:property;");
             $stmt->bindParam(":property", $property);
             $stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
             $result = $stmt->fetchAll();

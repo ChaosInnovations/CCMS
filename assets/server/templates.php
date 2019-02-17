@@ -1,5 +1,6 @@
 <?php
 
+use \Lib\CCMS\Database;
 use \Lib\CCMS\Page;
 use \Lib\CCMS\Security\User;
 use \Lib\CCMS\Utilities;
@@ -142,12 +143,10 @@ $TEMPLATES = [
 // \_____________/
 
 "secure-collab-pane-userlist" => function() {
-	global $conn;
-	
 	$list = '';
 	
 	// User statuses
-	$stmt = $conn->prepare("SELECT uid, name, collab_lastseen, collab_pageid FROM users ORDER BY name ASC;");
+	$stmt = Database::Instance()->prepare("SELECT uid, name, collab_lastseen, collab_pageid FROM users ORDER BY name ASC;");
 	$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
 	$users = $stmt->fetchAll();
 	
@@ -170,12 +169,10 @@ $TEMPLATES = [
 },
 
 "secure-collab-pane-roomlist" => function() {
-	global $conn;
-	
 	$list = '';
 	
 	// Room statuses
-	$stmt = $conn->prepare("SELECT room_id, room_name, room_members FROM collab_rooms ORDER BY room_name ASC;");
+	$stmt = Database::Instance()->prepare("SELECT room_id, room_name, room_members FROM collab_rooms ORDER BY room_name ASC;");
 	$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
 	$rooms = $stmt->fetchAll();
 	
@@ -184,10 +181,10 @@ $TEMPLATES = [
 		$numMembers = count(explode(";", $room["room_members"]));
 		$numOnline = 0;
 		if ($room["room_members"] == "*") {
-			$stmt = $conn->prepare("SELECT uid FROM users;");
+			$stmt = Database::Instance()->prepare("SELECT uid FROM users;");
 			$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
 			$numMembers = count($stmt->fetchAll());
-			$stmt = $conn->prepare("SELECT uid FROM users WHERE collab_lastseen>SUBTIME(UTC_TIMESTAMP, '0:0:10');");
+			$stmt = Database::Instance()->prepare("SELECT uid FROM users WHERE collab_lastseen>SUBTIME(UTC_TIMESTAMP, '0:0:10');");
 			$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
 			$numOnline = count($stmt->fetchAll());
 		} else {
@@ -195,7 +192,7 @@ $TEMPLATES = [
 			if (!in_array(User::$currentUser->uid, $members)) {
 				continue;
 			}
-			$stmt = $conn->prepare("SELECT uid FROM users WHERE collab_lastseen>SUBTIME(UTC_TIMESTAMP, '0:0:10');");
+			$stmt = Database::Instance()->prepare("SELECT uid FROM users WHERE collab_lastseen>SUBTIME(UTC_TIMESTAMP, '0:0:10');");
 			$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
 			$users = $stmt->fetchAll();
 			foreach ($users as $user) {
@@ -224,12 +221,10 @@ $TEMPLATES = [
 },
 
 "secure-collab-pane-todolist" => function() {
-	global $conn;
-	
 	$todolist = '';
 	
 	// Todo statuses
-	$stmt = $conn->prepare("SELECT list_id, list_name, list_participants FROM collab_lists;");
+	$stmt = Database::Instance()->prepare("SELECT list_id, list_name, list_participants FROM collab_lists;");
 	$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
 	$lists = $stmt->fetchAll();
 	foreach($lists as $list) {
@@ -237,11 +232,11 @@ $TEMPLATES = [
 			continue;
 		}
 		
-		$stmt = $conn->prepare("SELECT todo_id FROM collab_todo WHERE list_id=:lid;");
+		$stmt = Database::Instance()->prepare("SELECT todo_id FROM collab_todo WHERE list_id=:lid;");
 		$stmt->bindParam(":lid", $list["list_id"]);
 		$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
 		$numTasks = count($stmt->fetchAll());
-		$stmt = $conn->prepare("SELECT todo_id FROM collab_todo WHERE list_id=:lid AND todo_done=1;");
+		$stmt = Database::Instance()->prepare("SELECT todo_id FROM collab_todo WHERE list_id=:lid AND todo_done=1;");
 		$stmt->bindParam(":lid", $list["list_id"]);
 		$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
 		$numComplete = count($stmt->fetchAll());
@@ -264,11 +259,9 @@ $TEMPLATES = [
 },
 
 "secure-collab-pane-createMemberList" => function() {
-	global $conn;
-	
 	$list = '';
 	
-	$stmt = $conn->prepare("SELECT uid, name FROM users ORDER BY name ASC;");
+	$stmt = Database::Instance()->prepare("SELECT uid, name FROM users ORDER BY name ASC;");
 	$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
 	$users = $stmt->fetchAll();
 	foreach($users as $user) {

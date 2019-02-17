@@ -24,7 +24,7 @@ class CCMSCore
     {
         if ($request->isWeb()) {
             include_once $_SERVER["DOCUMENT_ROOT"]."/endpoints.php";
-            // Enumerate endpoints 
+            // Enumerate endpoints
             foreach ($endpoints as $endpointRegex => $endpointFunctionName) {
                 if (!preg_match($endpointRegex, $request->getEndpoint())) {
                     continue;
@@ -35,6 +35,7 @@ class CCMSCore
                 try {
                     $result = $endpointFunctionName($request);
                 } catch (Exception $e) {
+                    echo $e;
                 }
                 
                 if ($result instanceof Response) {
@@ -43,7 +44,7 @@ class CCMSCore
             }
         }
         // Returns Response
-        return new Response;
+        return new Response();
     }
     
     public function dispose()

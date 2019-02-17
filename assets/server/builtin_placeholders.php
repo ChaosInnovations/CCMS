@@ -1,17 +1,12 @@
 <?php
 
+use \Lib\CCMS\Database;
 use \Lib\CCMS\Security\User;
 
 class builtin_placeholders {
 	public $dependencies = [];
 	
-	function __construct() {
-		global $conn, $sqlstat, $sqlerr;
-		global $page;
-	}
-	
 	function place_loginform() {
-		global $conn, $sqlstat, $sqlerr;
 		if (User::$currentUser->uid == null) {
 			$html = '
 <form id="loginform" class="form" onsubmit="return loginSubmission();">
@@ -108,19 +103,17 @@ function loginSubmission() {
 		} else {
 			$html = "<h5 class=\"card-title\">You're logged in.</h5>";
 			$html .= "<h6 class=\"card-subtitle mb-2 text-muted\">You now have access to these pages:</h6>";
-			if ($sqlstat) {
-				$html .= "<div class=\"list-group\">";
-				$stmt = $conn->prepare("SELECT pageid, title FROM content_pages WHERE secure=1 AND pageid NOT LIKE '_default/%' ORDER BY pageid ASC;");
-				$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
-				$pdatas = $stmt->fetchAll();
-				foreach ($pdatas as $pd) {
-					if (User::$currentUser->permissions->page_viewsecure and !in_array($pd["pageid"], User::$currentUser->permissions->page_viewblacklist)) {
-						$title = urldecode($pd["title"]);
-						$html .= "<a class=\"list-group-item list-group-item-action\" href=\"/{$pd["pageid"]}\" title=\"{$title}\">{$title}</a>";
-					}
-				}
-				$html .= "</div>";
-			}
+            $html .= "<div class=\"list-group\">";
+            $stmt = Database::Instance()->prepare("SELECT pageid, title FROM content_pages WHERE secure=1 AND pageid NOT LIKE '_default/%' ORDER BY pageid ASC;");
+            $stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
+            $pdatas = $stmt->fetchAll();
+            foreach ($pdatas as $pd) {
+                if (User::$currentUser->permissions->page_viewsecure and !in_array($pd["pageid"], User::$currentUser->permissions->page_viewblacklist)) {
+                    $title = urldecode($pd["title"]);
+                    $html .= "<a class=\"list-group-item list-group-item-action\" href=\"/{$pd["pageid"]}\" title=\"{$title}\">{$title}</a>";
+                }
+            }
+            $html .= "</div>";
 			return $html;
 		}
 	}
@@ -176,24 +169,20 @@ function module_builtin_contactus_submit() {
 	}
 	
 	function place_sitemap() {
-		global $conn, $sqlstat, $sqlerr;
-		if ($sqlstat) {
-			$content = "<ul>";
-			$stmt = $conn->prepare("SELECT pageid, title, secure FROM content_pages WHERE pageid NOT LIKE '_default/%' ORDER BY pageid ASC;");
-			$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
-			$pdatas = $stmt->fetchAll();
-			foreach ($pdatas as $pd) {
-				if ($pd["secure"] == "1" and !User::$currentUser->permissions->page_viewsecure or in_array($pd["pageid"], User::$currentUser->permissions->page_viewblacklist)) {
-					continue;
-				} else {
-					$title = urldecode($pd["title"]);
-					$content  .= "<li><a href=\"/{$pd["pageid"]}\" title=\"{$title}\">{$title}</a></li>";
-				}
-			}
-			$content .= "</ul>";
-		} else {
-			$content = "";
-		}
+        $content = "<ul>";
+        $stmt = Database::Instance()->prepare("SELECT pageid, title, secure FROM content_pages WHERE pageid NOT LIKE '_default/%' ORDER BY pageid ASC;");
+        $stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
+        $pdatas = $stmt->fetchAll();
+        foreach ($pdatas as $pd) {
+            if ($pd["secure"] == "1" and !User::$currentUser->permissions->page_viewsecure or in_array($pd["pageid"], User::$currentUser->permissions->page_viewblacklist)) {
+                continue;
+            } else {
+                $title = urldecode($pd["title"]);
+                $content  .= "<li><a href=\"/{$pd["pageid"]}\" title=\"{$title}\">{$title}</a></li>";
+            }
+        }
+        $content .= "</ul>";
+        
 		return $content;
 	}
 	
