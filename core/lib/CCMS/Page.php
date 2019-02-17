@@ -3,6 +3,7 @@
 namespace Lib\CCMS;
 
 use \PDO;
+use \Lib\CCMS\Security\User;
 
 class Page
 {
@@ -65,7 +66,7 @@ class Page
 
     public function getTop()
     {
-        global $authuser, $conn, $sqlstat, $sqlerr, $TEMPLATES, $availablemodules, $modules;
+        global $conn, $sqlstat, $sqlerr, $TEMPLATES, $availablemodules, $modules;
 
         $securepages = [];
         if ($sqlstat) {
@@ -83,7 +84,7 @@ class Page
             $top = (new Page("_default/top"))->body;
         }
 
-        if (!$authuser->permissions->toolbar) {
+        if (!User::$currentUser->permissions->toolbar) {
             return $top;
         }
 
@@ -91,12 +92,12 @@ class Page
         $script = "<script>";
         $secure = "";
 
-        $secure .= $TEMPLATES["secure-menu"]($authuser, $securepages, $availablemodules, $modules);
+        $secure .= $TEMPLATES["secure-menu"]($securepages, $availablemodules, $modules);
 
         // Edit menu
         if (
-            ($this->secure ? $authuser->permissions->page_editsecure : $authuser->permissions->page_edit) &&
-            (!in_array($this->pageid, $authuser->permissions->page_editblacklist))
+            ($this->secure ? User::$currentUser->permissions->page_editsecure : User::$currentUser->permissions->page_edit) &&
+            (!in_array($this->pageid, User::$currentUser->permissions->page_editblacklist))
         ) {
             $modals .= $TEMPLATES["secure-modal-start"]("dialog_edit", "Edit Page", "lg");
             $modals .= $TEMPLATES["secure-modal-edit-bodyfoot"]($this);
@@ -110,7 +111,7 @@ class Page
         }
 
         // Page manager menu
-        if ($authuser->permissions->admin_managepages) {
+        if (User::$currentUser->permissions->admin_managepages) {
             $stmt = $conn->prepare("SELECT pageid, title, secure, revision FROM content_pages ORDER BY pageid ASC;");
             $stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
             $pages = $stmt->fetchAll();
@@ -120,19 +121,19 @@ class Page
             $users = $stmt->fetchAll();
 
             $modals .= $TEMPLATES["secure-modal-start"]("dialog_admin", "Administration", "lg");
-            $modals .= $TEMPLATES["secure-modal-admin-bodyfoot"]($authuser, $pages, $users);
+            $modals .= $TEMPLATES["secure-modal-admin-bodyfoot"]($pages, $users);
             $script .= $TEMPLATES["secure-modal-admin-script"]();
             $modals .= $TEMPLATES["secure-modal-end"];
         }
 
         // Account menu
         $modals .= $TEMPLATES["secure-modal-start"]("dialog_account", "Account Details", "lg");
-        $modals .= $TEMPLATES["secure-modal-account-bodyfoot"]($authuser);
+        $modals .= $TEMPLATES["secure-modal-account-bodyfoot"]();
         $modals .= $TEMPLATES["secure-modal-end"];
         $script .= $TEMPLATES["secure-modal-account-script"];
 
         // Module menus
-        if ($authuser->permissions->admin_managesite) {
+        if (User::$currentUser->permissions->admin_managesite) {
             foreach ($availablemodules as $m) {
                 $mc = $modules[$m];
                 if (method_exists($mc, "getModal")) {
@@ -165,7 +166,7 @@ class Page
 
     public function resolvePlaceholders()
     {
-        global $authuser, $availablemodules, $modules;
+        global $availablemodules, $modules;
         
         $this->body = $this->getTop() . $this->body . $this->getBottom();
 

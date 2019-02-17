@@ -13,14 +13,14 @@ $TEMPLATES = [
 //(  Admin Menu  )
 // \____________/
 
-"secure-menu" => function ($authuser, $securepages, $availablemodules, $modules) {
+"secure-menu" => function($securepages, $availablemodules, $modules) {
 	global $TEMPLATES;
 	
 	$canChat = true; // temporary chat permission
 	
 	$securePageListing = '';
 	foreach ($securepages as $sp) {
-		if (!in_array($sp, $authuser->permissions->page_viewblacklist)) {
+		if (!in_array($sp, User::$currentUser->permissions->page_viewblacklist)) {
 			$spd = new Page($sp);
 			$securePageListing .= '<a href="/'.$sp.'">'.$spd->title.'</a><br />
 			';
@@ -58,36 +58,36 @@ $TEMPLATES = [
       <span><i class="fas fa-home"></i></span>
     </div>
   </div>
-  <div id="secureMenu_vertical" class="secureMenu-iconGroup vertical" style="z-index:9;">' . ($authuser->permissions->admin_managepages ? '
+  <div id="secureMenu_vertical" class="secureMenu-iconGroup vertical" style="z-index:9;">' . (User::$currentUser->permissions->admin_managepages ? '
     <div id="secureMenu_option-admin" title="Administration" onclick="showDialog(\'admin\');" class="secureMenu-icon">
       <span><i class="fas fa-cogs"></i></span>
-    </div>' : '') . ($authuser->permissions->admin_managesite ? '
+    </div>' : '') . (User::$currentUser->permissions->admin_managesite ? '
     <div id="secureMenu_option-moduleTrigger" title="Modules" onclick="triggerPane(\'module\');" class="secureMenu-icon">
       <span><i class="fas fa-puzzle-piece"></i></span>
-    </div>' : '') . ($authuser->permissions->page_viewsecure ? '
+    </div>' : '') . (User::$currentUser->permissions->page_viewsecure ? '
     <div id="secureMenu_option-securepageTrigger" title="Secure Pages" onclick="triggerPane(\'securepage\');" class="secureMenu-icon">
       <span><i class="fas fa-lock"></i></span>
-    </div>' : '') . ($authuser->permissions->page_create ? '
+    </div>' : '') . (User::$currentUser->permissions->page_create ? '
     <div id="secureMenu_option-newpage" title="New Page" onclick="createPage();" class="secureMenu-icon">
       <span><i class="fas fa-plus"></i></span>
-    </div>' : '') . ($authuser->permissions->page_edit ? '
+    </div>' : '') . (User::$currentUser->permissions->page_edit ? '
     <div id="secureMenu_option-edit" title="Edit Page" onclick="showDialog(\'edit\');" class="secureMenu-icon">
       <span><i class="fas fa-edit"></i></span>
     </div>' : '') . '
   </div>' . ($canChat ? '
   <div id="secureMenu_pane-collab" class="secureMenu-pane collapsed vertical" style="display:none;">
     ' . $TEMPLATES["secure-collab-pane"]() . '
-  </div>' : '') . ($authuser->permissions->admin_managesite ? '
+  </div>' : '') . (User::$currentUser->permissions->admin_managesite ? '
   <div id="secureMenu_pane-module" class="secureMenu-pane collapsed horizontal" style="display:none;">
     <b>Modules</b>
     <hr />
     <div>
 		' . $moduleListing . '
     </div>
-  </div>' : '') . ($authuser->permissions->page_viewsecure ? '
+  </div>' : '') . (User::$currentUser->permissions->page_viewsecure ? '
   <div id="secureMenu_pane-securepage" class="secureMenu-pane collapsed horizontal" style="display:none;">
     <b>Secure Pages</b>
-    <hr />' . ($authuser->permissions->page_createsecure ? '
+    <hr />' . (User::$currentUser->permissions->page_createsecure ? '
     <span onclick="createSecurePage();"><i class="fas fa-plus"></i></span>
     <hr />' : '') . '
     <div>
@@ -142,7 +142,7 @@ $TEMPLATES = [
 // \_____________/
 
 "secure-collab-pane-userlist" => function() {
-	global $conn, $authuser;
+	global $conn;
 	
 	$list = '';
 	
@@ -156,7 +156,7 @@ $TEMPLATES = [
 <div id="secureMenu_collab-person-' . $user["uid"] . '" class="collab-person">
 	<div class="status '.(strtotime($user["collab_lastseen"])>strtotime("now")-10?'online':'offline'). '"></div>
 	<div class="info">
-		' . ($user["uid"]==$authuser->uid?'<b>':'') . $user["name"] . ($user["uid"]==$authuser->uid?'</b>':'') . '<br />
+		' . ($user["uid"]==User::$currentUser->uid?'<b>':'') . $user["name"] . ($user["uid"]==User::$currentUser->uid?'</b>':'') . '<br />
 		<small><i><span class="page"><a href="/' . $user["collab_pageid"] . '" title="' . Page::getTitleFromId($user["collab_pageid"]) . '">' . Page::getTitleFromId($user["collab_pageid"]) . '</a></span></i></small>
 	</div>
 	<button class="collab-chat" title="Open Chat" onclick="collab_showChat(\'U' . $user["uid"] . '\', \'' . $user["name"] . '\');">
@@ -170,7 +170,7 @@ $TEMPLATES = [
 },
 
 "secure-collab-pane-roomlist" => function() {
-	global $conn, $authuser;
+	global $conn;
 	
 	$list = '';
 	
@@ -192,7 +192,7 @@ $TEMPLATES = [
 			$numOnline = count($stmt->fetchAll());
 		} else {
 			$members = explode(";", $room["room_members"]);
-			if (!in_array($authuser->uid, $members)) {
+			if (!in_array(User::$currentUser->uid, $members)) {
 				continue;
 			}
 			$stmt = $conn->prepare("SELECT uid FROM users WHERE collab_lastseen>SUBTIME(UTC_TIMESTAMP, '0:0:10');");
@@ -224,7 +224,7 @@ $TEMPLATES = [
 },
 
 "secure-collab-pane-todolist" => function() {
-	global $conn, $authuser;
+	global $conn;
 	
 	$todolist = '';
 	
@@ -233,7 +233,7 @@ $TEMPLATES = [
 	$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
 	$lists = $stmt->fetchAll();
 	foreach($lists as $list) {
-		if ($list["list_participants"] != "*" && !in_array($authuser->uid, explode(";", $list["list_participants"]))) {
+		if ($list["list_participants"] != "*" && !in_array(User::$currentUser->uid, explode(";", $list["list_participants"]))) {
 			continue;
 		}
 		
@@ -264,7 +264,7 @@ $TEMPLATES = [
 },
 
 "secure-collab-pane-createMemberList" => function() {
-	global $conn, $authuser;
+	global $conn;
 	
 	$list = '';
 	
@@ -860,7 +860,7 @@ $(document).keydown(function(event) {
 },
 
 // Body
-"secure-modal-admin-bodyfoot" => function($authuser, $pages, $users) {
+"secure-modal-admin-bodyfoot" => function($pages, $users) {
 	global $TEMPLATES;
 	global $ccms_info;
 	
@@ -871,7 +871,7 @@ $(document).keydown(function(event) {
 	
 	$userlist = "";
 	foreach ($users as $user) {
-		$userlist .= $TEMPLATES["secure-modal-admin-userrow"]($user, $authuser->uid);
+		$userlist .= $TEMPLATES["secure-modal-admin-userrow"]($user, User::$currentUser->uid);
 	}
 	
 	$websitetitle = Utilities::getconfig("websitetitle");
@@ -887,8 +887,8 @@ $(document).keydown(function(event) {
 	    <div class="col-12 col-md-3 mb-3">
 		    <div class="nav flex-md-column flex-row nav-pills" id="dialog_admin_tabs" role="tablist" aria-orientation="vertical">
 		        <a class="nav-link flex-sm-fill text-center text-md-left active" id="dialog_admin_tab_pages" data-toggle="pill" href="#dialog_admin_panel_pages" role="tab" aria-controls="dialog_admin_panel_pages" aria-selected="true">Pages</a>
-		        ' . ($authuser->permissions->owner ? '<a class="nav-link flex-sm-fill text-center text-md-left" id="dialog_admin_tab_users" data-toggle="pill" href="#dialog_admin_panel_users" role="tab" aria-controls="dialog_admin_panel_users" aria-selected="false">Users</a>':'').'
-		        ' . ($authuser->permissions->admin_managesite ? '<a class="nav-link flex-sm-fill text-center text-md-left" id="dialog_admin_tab_site" data-toggle="pill" href="#dialog_admin_panel_site" role="tab" aria-controls="dialog_admin_panel_site" aria-selected="false">Site</a>':'').'
+		        ' . (User::$currentUser->permissions->owner ? '<a class="nav-link flex-sm-fill text-center text-md-left" id="dialog_admin_tab_users" data-toggle="pill" href="#dialog_admin_panel_users" role="tab" aria-controls="dialog_admin_panel_users" aria-selected="false">Users</a>':'').'
+		        ' . (User::$currentUser->permissions->admin_managesite ? '<a class="nav-link flex-sm-fill text-center text-md-left" id="dialog_admin_tab_site" data-toggle="pill" href="#dialog_admin_panel_site" role="tab" aria-controls="dialog_admin_panel_site" aria-selected="false">Site</a>':'').'
 		        <a class="nav-link flex-sm-fill text-center text-md-left" id="dialog_admin_tab_ccms" data-toggle="pill" href="#dialog_admin_panel_ccms" role="tab" aria-controls="dialog_admin_panel_ccms" aria-selected="false">Chaos CMS</a>
 		    </div>
 	    </div>
@@ -901,7 +901,7 @@ $(document).keydown(function(event) {
 						</thead>
 						<tbody>' . $pagelist . '</tbody>
 					</table>
-				</div>' . ($authuser->permissions->owner ? '
+				</div>' . (User::$currentUser->permissions->owner ? '
 		        <div class="tab-pane fade" id="dialog_admin_panel_users" role="tabpanel" aria-labelledby="dialog_admin_tab_users">
 					<form role="edit" onsubmit="dialog_admin_users_new();return false;">
 						<div class="form-group row">
@@ -997,7 +997,7 @@ $(document).keydown(function(event) {
 						</thead>
 						<tbody>' . $userlist . '</tbody>
 					</table>
-				</div>':'') . ($authuser->permissions->admin_managesite ? '
+				</div>':'') . (User::$currentUser->permissions->admin_managesite ? '
 		        <div class="tab-pane fade" id="dialog_admin_panel_site" role="tabpanel" aria-labelledby="dialog_admin_tab_site">
 					<form onsubmit="dialog_admin_site_save();return false;">
 						<div class="form-group row">
@@ -1169,7 +1169,7 @@ function dialog_admin_site_save() {
 
 // Account Modal
 //===============
-"secure-modal-account-bodyfoot" => function($authuser) {
+"secure-modal-account-bodyfoot" => function() {
 // Body
 	return '
 <div class="modal-body">
@@ -1178,13 +1178,13 @@ function dialog_admin_site_save() {
 		<div class="form-group row">
 			<label class="col-form-label col-sm-3 col-md-2" for="dialog_account_name">Name</label>
 			<div class="col-sm-9 col-md-10">
-				<input name="name" title="Name" class="form-control" id="dialog_account_name" type="text" placeholder="Name" value="' . $authuser->name . '" />
+				<input name="name" title="Name" class="form-control" id="dialog_account_name" type="text" placeholder="Name" value="' . User::$currentUser->name . '" />
 			</div>
 		</div>
 		<div class="form-group row">
 			<div class="offset-sm-3 offset-md-2 col-sm-9 col-md-10">
 				<div class="form-check form-check-inline mb-2 mt-2">
-					<input class="form-check-input" type="checkbox" id="dialog_account_notify" value=""' . ($authuser->notify ? ' checked' : '') . '>
+					<input class="form-check-input" type="checkbox" id="dialog_account_notify" value=""' . (User::$currentUser->notify ? ' checked' : '') . '>
 					<label class="form-check-label" for="dialog_account_notify">I want to receive notifications via email</label>
 				</div>
 			</div>
@@ -1199,25 +1199,25 @@ function dialog_admin_site_save() {
 		<div class="form-group row">
 			<label class="col-form-label col-sm-3 col-md-2" for="dialog_account_email">Email</label>
 			<div class="col-sm-9 col-md-10">
-				<p class="form-control-plaintext" id="dialog_account_email">' . $authuser->email . '</p>
+				<p class="form-control-plaintext" id="dialog_account_email">' . User::$currentUser->email . '</p>
 			</div>
 		</div>
 		<div class="form-group row">
 			<label class="col-form-label col-sm-3 col-md-2" for="dialog_account_regdate">Registered on</label>
 			<div class="col-sm-9 col-md-10">
-				<p class="form-control-plaintext" id="dialog_account_regdate">' . $authuser->registerdate . '</p>
+				<p class="form-control-plaintext" id="dialog_account_regdate">' . User::$currentUser->registerdate . '</p>
 			</div>
 		</div>
 		<div class="form-group row">
 			<label class="col-form-label col-sm-3 col-md-2" for="dialog_account_perms">Permissions</label>
 			<div class="col-sm-9 col-md-10">
-				<p class="form-control-plaintext" id="dialog_account_perms">' . $authuser->rawperms . '</p>
+				<p class="form-control-plaintext" id="dialog_account_perms">' . User::$currentUser->rawperms . '</p>
 			</div>
 		</div>
 	</form>
 	<h4>Change your Password</h4>
 	<form role="edit" onsubmit="dialog_account_changepass();return false;">
-		<input autocomplete="username" style="display:none;" id="dialog_account_user" type="text" value="'. $authuser->email .'" />
+		<input autocomplete="username" style="display:none;" id="dialog_account_user" type="text" value="'. User::$currentUser->email .'" />
 		<div class="form-group row">
 			<label class="col-form-label col-sm-3 col-md-2" for="dialog_account_cpwd">Current Password</label>
 			<div class="input-group col-sm-9 col-md-10">
@@ -1251,7 +1251,7 @@ function dialog_admin_site_save() {
 	<h4>Delete your Account</h4>
 	<div class="row">
 		<div class="offset-sm-3 offset-md-2 col-sm-9 col-md-10">
-			<button class="btn btn-danger" onclick="dialog_account_delete(\'' . $authuser->uid . '\');">Delete Account</button>
+			<button class="btn btn-danger" onclick="dialog_account_delete(\'' . User::$currentUser->uid . '\');">Delete Account</button>
 		</div>
 	</div>
 </div>' .

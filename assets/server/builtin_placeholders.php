@@ -1,5 +1,7 @@
 <?php
 
+use \Lib\CCMS\Security\User;
+
 class builtin_placeholders {
 	public $dependencies = [];
 	
@@ -10,8 +12,7 @@ class builtin_placeholders {
 	
 	function place_loginform() {
 		global $conn, $sqlstat, $sqlerr;
-		global $authuser;
-		if ($authuser->uid == null) {
+		if (User::$currentUser->uid == null) {
 			$html = '
 <form id="loginform" class="form" onsubmit="return loginSubmission();">
 	<div class="form-group">
@@ -113,7 +114,7 @@ function loginSubmission() {
 				$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
 				$pdatas = $stmt->fetchAll();
 				foreach ($pdatas as $pd) {
-					if ($authuser->permissions->page_viewsecure and !in_array($pd["pageid"], $authuser->permissions->page_viewblacklist)) {
+					if (User::$currentUser->permissions->page_viewsecure and !in_array($pd["pageid"], User::$currentUser->permissions->page_viewblacklist)) {
 						$title = urldecode($pd["title"]);
 						$html .= "<a class=\"list-group-item list-group-item-action\" href=\"/{$pd["pageid"]}\" title=\"{$title}\">{$title}</a>";
 					}
@@ -176,14 +177,13 @@ function module_builtin_contactus_submit() {
 	
 	function place_sitemap() {
 		global $conn, $sqlstat, $sqlerr;
-		global $authuser;
 		if ($sqlstat) {
 			$content = "<ul>";
 			$stmt = $conn->prepare("SELECT pageid, title, secure FROM content_pages WHERE pageid NOT LIKE '_default/%' ORDER BY pageid ASC;");
 			$stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
 			$pdatas = $stmt->fetchAll();
 			foreach ($pdatas as $pd) {
-				if ($pd["secure"] == "1" and !$authuser->permissions->page_viewsecure or in_array($pd["pageid"], $authuser->permissions->page_viewblacklist)) {
+				if ($pd["secure"] == "1" and !User::$currentUser->permissions->page_viewsecure or in_array($pd["pageid"], User::$currentUser->permissions->page_viewblacklist)) {
 					continue;
 				} else {
 					$title = urldecode($pd["title"]);
@@ -203,7 +203,7 @@ function module_builtin_contactus_submit() {
 	}
 	
 	function ajax_contactform() {
-		global $authuser, $mailer;
+		global $mailer;
 		if (!isset($_POST["name"]) ||
 		    !isset($_POST["reply"]) ||
 			!isset($_POST["message"])) {

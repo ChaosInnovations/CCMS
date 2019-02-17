@@ -73,20 +73,6 @@ try {
 	array_push($msgs, $e);
 }
 
-if (isset($_COOKIE["token"]) and AccountManager::validateToken($_COOKIE["token"], $_SERVER["REMOTE_ADDR"])) {
-	$authuser = User::userFromToken($_COOKIE["token"]);
-    /*
-    if (Page::pageExists($pageid)) {
-        $stmt = $conn->prepare("UPDATE users SET collab_pageid=:pid WHERE uid=:uid;");
-        $stmt->bindParam(":pid", $pageid);
-        $stmt->bindParam(":uid", $authuser->uid);
-        $stmt->execute();
-    }*/
-} else {
-	setcookie("token", "0", 1);
-	$authuser = new User(null);
-}
-
 $core = new CCMSCore();
 $request = $core->buildRequest();
 $response = $core->processRequest($request);
