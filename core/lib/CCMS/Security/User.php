@@ -16,6 +16,8 @@ class User
     public $permissions = null;
     public $notify = false;
     public $online = false;
+    
+    public static $currentUser = null;
 
     public function __construct($uid)
     {
