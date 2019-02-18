@@ -12,8 +12,8 @@ $endpoints = [
     '/^web:.*/' => "\Lib\CCMS\Security\User::hookAuthenticateFromRequest", // Sign in
     
     '/^web:\/?api\/checkuser\/?$/i' => "\Lib\CCMS\Security\User::hookCheckUser", // Check that the username is correct
-    '/^web:\/?api\/checkpass\/?$/i' => "\Lib\CCMS\Security\User::hookCheckPassword", // Check that the username is correct
-    '/^web:\/?api\/newtoken\/?$/i' => "\Lib\CCMS\Security\AccountManager::hookNewToken", // Check that the username is correct
+    '/^web:\/?api\/checkpass\/?$/i' => "\Lib\CCMS\Security\User::hookCheckPassword", // Check that the password is correct
+    '/^web:\/?api\/newtoken\/?$/i' => "\Lib\CCMS\Security\AccountManager::hookNewToken", // Create a new token if authenticated
     
     '/^web:\/?api\/collab_update\/?$/i' => "\Lib\CCMS\CollabUpdateEndpoint::hook", // Collaboration status update
     
