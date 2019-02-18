@@ -8,7 +8,7 @@
 // run by a web server or by command line interface (i.e. by cron)
 
 $endpoints = [
-    '/.*/' => "\Lib\CCMS\Database::hookOpenConnection", // Connect to database
+    '/.*/' => "\Mod\Database::hookOpenConnection", // Connect to database
     '/^web:.*/' => "\Lib\CCMS\Security\User::hookAuthenticateFromRequest", // Sign in
     
     '/^web:\/?api\/checkuser\/?$/i' => "\Lib\CCMS\Security\User::hookCheckUser", // Check that the username is correct

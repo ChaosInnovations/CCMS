@@ -2,7 +2,7 @@
 
 namespace Lib\CCMS;
 
-use \Lib\CCMS\Database;
+use \Mod\Database;
 use \PDO;
 
 class Utilities

@@ -1,7 +1,7 @@
 <?php
 
-use \Lib\CCMS\Database;
 use \Lib\CCMS\Security\User;
+use \Mod\Database;
 
 class builtin_placeholders {
 	public $dependencies = [];

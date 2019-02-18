@@ -2,10 +2,10 @@
 
 namespace Lib\CCMS\Security;
 
-use \Lib\CCMS\Database;
 use \Lib\CCMS\Security\User;
 use \Lib\CCMS\Response;
 use \Lib\CCMS\Request;
+use \Mod\Database;
 use \PDO;
 
 class AccountManager

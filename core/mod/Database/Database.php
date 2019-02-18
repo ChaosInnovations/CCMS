@@ -1,6 +1,6 @@
 <?php
 
-namespace Lib\CCMS;
+namespace Mod;
 
 use \Lib\CCMS\Response;
 use \Lib\CCMS\Request;
