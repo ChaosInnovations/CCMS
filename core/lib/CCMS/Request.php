@@ -9,8 +9,23 @@ class Request
     protected $isWeb = true;
     protected $cookies = [];
     
-    public function __construct(array $server, array $cookies)
+    public function __construct(array $server, array $cookies=[], $sapi_name="apache2handler")
     {
+        if (substr($sapi_type, 0, 3) == 'cli' || empty($_SERVER['REMOTE_ADDR'])) {
+            $this->isWeb = false;
+            
+            global $argv;
+            if (isset($argv)) {
+                foreach ($argv as $arg) {
+                    $e=explode("=",$arg);
+                    if(count($e)==2)
+                        $_GET[$e[0]]=$e[1];
+                    else    
+                        $_GET[$e[0]]=0;
+                }
+            }
+        }
+        
         $url = trim($server["REQUEST_URI"], "/");
         if (strstr($url, '?')) {
             $url = substr($url, 0, strpos($url, '?'));
@@ -23,6 +38,11 @@ class Request
     public function getEndpoint()
     {
         return $this->endpoint;
+    }
+    
+    public function getTypedEndpoint()
+    {
+        return ($this->isWeb ? "web:" : "cli:") . $this->endpoint;
     }
     
     public function isWeb()

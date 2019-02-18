@@ -16,31 +16,31 @@ class CCMSCore
     
     public function buildRequest()
     {
+        $sapi_name = php_sapi_name();
+        
         // Returns Request
-        return new Request($_SERVER, $_COOKIE);
+        return new Request($_SERVER, $_COOKIE, $sapi_name);
     }
     
     public function processRequest(Request $request)
     {
-        if ($request->isWeb()) {
-            include_once $_SERVER["DOCUMENT_ROOT"]."/endpoints.php";
-            // Enumerate endpoints
-            foreach ($endpoints as $endpointRegex => $endpointFunctionName) {
-                if (!preg_match($endpointRegex, $request->getEndpoint())) {
-                    continue;
-                }
-                
-                $result = null;
-                
-                try {
-                    $result = $endpointFunctionName($request);
-                } catch (Exception $e) {
-                    echo $e;
-                }
-                
-                if ($result instanceof Response) {
-                    return $result;
-                }
+        include_once $_SERVER["DOCUMENT_ROOT"]."/endpoints.php";
+        // Enumerate endpoints
+        foreach ($endpoints as $endpointRegex => $endpointFunctionName) {
+            if (!preg_match($endpointRegex, $request->getTypedEndpoint())) {
+                continue;
+            }
+            
+            $result = null;
+            
+            try {
+                $result = $endpointFunctionName($request);
+            } catch (Exception $e) {
+                echo $e;
+            }
+            
+            if ($result instanceof Response) {
+                return $result;
             }
         }
         // Returns Response
