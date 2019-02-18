@@ -3,6 +3,7 @@
 use \Lib\CCMS\Security\User;
 use \Lib\CCMS\Security\AccountManager;
 use \Lib\CCMS\Utilities;
+use \Mod\Mailer;
 
 function ajax_newuser() {
 	global $conn, $sqlstat, $sqlerr;
@@ -28,7 +29,7 @@ function ajax_newuser() {
 	}
     
 	$body = $TEMPLATES["email-newuser"]($_POST["name"], $authuser->name, $baseUrl, Utilities::getconfig("websitetitle"));
-	$mail = $notifMailer->compose([[User::normalizeEmail($_POST["email"]), $_POST["name"]]], "Account Created", $body, "");
+	$mail = Mailer::NotifInstance()->compose([[User::normalizeEmail($_POST["email"]), $_POST["name"]]], "Account Created", $body, "");
 	
 	if (!$mail->send()) {
 		return "FALSE";

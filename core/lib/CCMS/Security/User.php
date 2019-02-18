@@ -6,6 +6,7 @@ use \Lib\CCMS\Response;
 use \Lib\CCMS\Request;
 use \Lib\CCMS\Security\UserPermissions;
 use \Mod\Database;
+use \Mod\Mailer;
 use \PDO;
 
 class User
@@ -97,7 +98,7 @@ class User
     
     public function notify($what)
     {
-        global $notifMailer, $TEMPLATES; // authuser is sender
+        global $TEMPLATES;
         if (User::$currentUser->uid == $uid) {
             return;
         }
@@ -134,11 +135,11 @@ class User
                 $rn = $stmt->fetchAll()[0]["room_name"];
             }
             $body = $TEMPLATES["email-notif-chat"](User::$currentUser->name, $rn);
-            $oldFrom = $notifMailer->from;
-            $notifMailer->from = User::$currentUser->name;
-            $mail = $notifMailer->compose([[$this->email, $this->name]], User::$currentUser->name." sent a message", $body, "");
+            $oldFrom = Mailer::NotifInstance()->from;
+            Mailer::NotifInstance()->from = User::$currentUser->name;
+            $mail = Mailer::NotifInstance()->compose([[$this->email, $this->name]], User::$currentUser->name." sent a message", $body, "");
             $mail->send();
-            $notifMailer->from = $oldFrom;
+            Mailer::NotifInstance()->from = $oldFrom;
         }
     }
 

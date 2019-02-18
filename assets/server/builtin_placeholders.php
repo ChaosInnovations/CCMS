@@ -2,6 +2,7 @@
 
 use \Lib\CCMS\Security\User;
 use \Mod\Database;
+use \Mod\Mailer;
 
 class builtin_placeholders {
 	public $dependencies = [];
@@ -192,7 +193,6 @@ function module_builtin_contactus_submit() {
 	}
 	
 	function ajax_contactform() {
-		global $mailer;
 		if (!isset($_POST["name"]) ||
 		    !isset($_POST["reply"]) ||
 			!isset($_POST["message"])) {
@@ -212,7 +212,7 @@ function module_builtin_contactus_submit() {
 		$body .= "{$_POST["message"]}\n\n";
 		$body .= "This message was send using the online Contact form.";
 		
-		$mail = $mailer->compose([[$mailer->user]], "Message from {$_POST["name"]}", $htmlbody, $body);
+		$mail = Mailer::Instance()->compose([[$mailer->user]], "Message from {$_POST["name"]}", $htmlbody, $body);
 		if (!$mail->send()) {
 			return "FALSE";
 		}

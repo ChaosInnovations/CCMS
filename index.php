@@ -4,7 +4,6 @@ use \Lib\CCMS\CCMSCore;
 
 require_once "assets/server/autoload.php";
 
-use \Lib\CCMS\Mailer;
 use \Lib\CCMS\Utilities;
 include "assets/server/pagegen.php";
 include "assets/server/secure.php";
@@ -15,18 +14,6 @@ $baseUrl = $https . "://" . $_SERVER["SERVER_NAME"];
 
 Utilities::load_jsons(); // Still need this for now for configuration info.
                          // Should move this stuff to .ini files with a new loader class
-
-$mailer = new Mailer();
-$mailer->host     = Utilities::getconfig("email_primary_host");
-$mailer->username = Utilities::getconfig("email_primary_user");
-$mailer->password = Utilities::getconfig("email_primary_pass");
-$mailer->from     = Utilities::getconfig("email_primary_from");
-
-$notifMailer = new Mailer();
-$notifMailer->host     = Utilities::getconfig("email_notifs_host");
-$notifMailer->username = Utilities::getconfig("email_notifs_user");
-$notifMailer->password = Utilities::getconfig("email_notifs_pass");
-$notifMailer->from     = Utilities::getconfig("email_notifs_from");
 
 // LOAD MODULES
 $modulepath = "assets/server_modules/";
