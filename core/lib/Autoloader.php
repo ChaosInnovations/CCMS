@@ -86,6 +86,21 @@ class Autoloader
                 // yes, we're done
                 return $file;
             }
+            
+            // Also check for a class in a directory with the same name
+            $matches = [];
+            if (preg_match('/[^\\\\]*$/', $relative_class, $matches))
+            {
+                $file = $base_dir
+                  . str_replace('\\', '/', $relative_class)
+                  . '/'
+                  . $matches[0]
+                  . '.php';
+                
+                if ($this->requireFile($file)) {
+                    return $file;
+                }
+            }
         }
 
         // never found it
