@@ -723,7 +723,7 @@ $("#dialog_edit").on("shown.bs.modal", function() {
 });
 
 function dialog_edit_check_pageid() {
-	module_ajax("checkpid", {pageid: pageid,
+	module_ajax("page/checkid", {pageid: pageid,
 								  check: $("#dialog_edit_pageid").val(),
 								  token: Cookies.get("token")}, function(data){
 		var fieldparent = $("#dialog_edit_pageid").parent();
@@ -749,7 +749,7 @@ function dialog_edit_reset() {
 }
 
 function dialog_edit_save() {
-	module_ajax("editpage", {pageid: pageid,
+	module_ajax("page/edit", {pageid: pageid,
 								  newpageid: $("#dialog_edit_pageid").val(),
 	                              title: encodeURIComponent($("#dialog_edit_pagetitle").val()),
 								  usehead: $("#dialog_edit_usehead")[0].checked ? 1 : 0,
@@ -1036,7 +1036,7 @@ $(document).keydown(function(event) {
 	return '
 function dialog_admin_pages_togglesecure(pid) {
 	state = $("#dialog_admin_pages_secure_" + pid).prop("checked");
-	module_ajax("securepage", {pid: pid, state: state}, function(data) {
+	module_ajax("page/secure", {pid: pid, state: state}, function(data) {
 		if (data == "FALSE") {
 			$("#dialog_admin-pages_secure_" + pid).prop("checked", !state);
 			window.alert("Couldn\'t change secure state.");
@@ -1053,7 +1053,7 @@ function dialog_admin_pages_delete(pid) {
 	if (!window.confirm("Are you sure you want to permanently delete this page?", "Yes", "No")) {
 		return;
 	}
-	module_ajax("removepage", {pid: pid}, function (data) {
+	module_ajax("page/remove", {pid: pid}, function (data) {
 		if (data == "FALSE") {
 			window.alert("Couldn\'t delete page.");
 		} else if (data == "SPECIAL") {

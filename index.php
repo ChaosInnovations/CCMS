@@ -5,7 +5,6 @@ use \Lib\CCMS\CCMSCore;
 require_once "assets/server/autoload.php";
 
 use \Lib\CCMS\Utilities;
-include "assets/server/pagegen.php";
 include "assets/server/secure.php";
 include "assets/server/templates.php";
 

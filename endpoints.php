@@ -17,5 +17,11 @@ $endpoints = [
     
     '/^web:\/?api\/collab_update\/?$/i' => "\Lib\CCMS\CollabUpdateEndpoint::hook", // Collaboration status update
     
-    '/^web:(?!.*\.[a-z]*$).*$/i' => "\Mod\Page::hook", // Capture all remaining endpoints that don't have an extension
+    '/^web:\/?api\/page\/new\/?$/i' => "\Mod\Page::hookNewPage",
+    '/^web:\/?api\/page\/remove\/?$/i' => "\Mod\Page::hookRemovePage",
+    '/^web:\/?api\/page\/edit\/?$/i' => "\Mod\Page::hookEditPage",
+    '/^web:\/?api\/page\/secure\/?$/i' => "\Mod\Page::hookSecurePage",
+    '/^web:\/?api\/page\/checkpid\/?$/i' => "\Mod\Page::hookCheckPid",
+    
+    '/(?!.*\.[a-z]*$)^web:.*$/i' => "\Mod\Page::hook", // Capture all remaining endpoints that don't have an extension
 ];

@@ -332,4 +332,171 @@ class Page
         
         return $response;
     }
+    
+    public static function hookNewPage(Request $request)
+    {
+        if (isset($_POST["s"]) and $_POST["s"] and !User::$currentUser->permissions->page_createsecure) {
+            return new Response("FALSE");
+        }
+        
+        if ((!isset($_POST["s"]) or !$_POST["s"]) and !User::$currentUser->permissions->page_create) {
+            return new Response("FALSE");
+        }
+        
+        $secure = isset($_POST["s"]) and $_POST["s"];
+        $npid = ($secure ? "secure/" : "") . "newpage";
+        
+        $c = 0;
+        $ok = !Page::pageExists($npid);
+        while (!$ok) {
+            $c++;
+            $npid = ($secure ? "secure/" : "") . "newpage" . $c;
+            $ok = !Page::pageExists($npid);
+        }
+        
+        $s = $secure ? "1" : "0";
+        $now = date("Y-m-d");
+        
+        $stmt = Database::Instance()->prepare("SELECT * FROM content_pages WHERE pageid='_default/page';");
+        $stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
+        $template = $stmt->fetchAll()[0];
+        
+        $stmt = Database::Instance()->prepare("INSERT INTO content_pages VALUES (:pageid, :title, :head, :body, :usehead, :usetop, :usebottom, :secure, :now);");
+        $stmt->bindParam(":pageid", $npid);
+        $stmt->bindParam(":title", $template["title"]);
+        $stmt->bindParam(":head", $template["head"]);
+        $stmt->bindParam(":body", $template["body"]);
+        $stmt->bindParam(":usehead", $template["usehead"]);
+        $stmt->bindParam(":usetop", $template["usetop"]);
+        $stmt->bindParam(":usebottom", $template["usebottom"]);
+        $stmt->bindParam(":now", $now);
+        $stmt->bindParam(":secure", $s);
+        $stmt->execute();
+        return new Response($npid);
+    }
+    
+    public static function hookRemovePage(Request $request)
+    {
+        if (!isset($_POST["pid"]) or !Page::pageExists($_POST["pid"])) {
+            return new Response("FALSE");
+        }
+        
+        $pid = $_POST["pid"];
+        if (in_array($pid, ["", "secureaccess"]) || substr($pid, 0, 9) === "_default/") {
+            return new Response("SPECIAL");
+        }
+        
+        if (!User::$currentUser->permissions->admin_managepages) {
+            return new Response("FALSE");
+        }
+        
+        $stmt = Database::Instance()->prepare("DELETE FROM content_pages WHERE pageid=:pid;");
+        $stmt->bindParam(":pid", $pid);
+        $stmt->execute();
+        return new Response("TRUE");
+    }
+    
+    public static function hookSecurePage(Request $request)
+    {
+        if (!isset($_POST["state"])) {
+            return new Response("FALSE");
+        }
+        
+        if (!isset($_POST["pid"]) or !Page::pageExists($_POST["pid"])) {
+            return new Response("FALSE");
+        }
+        
+        $pid = $_POST["pid"];
+        if (in_array($pid, ["", "secureaccess"]) || substr($pid, 0, 9) === "_default/") {
+            return new Response("SPECIAL");
+        }
+        
+        if (!User::$currentUser->permissions->admin_managepages) {
+            return new Response("FALSE");
+        }
+        
+        $s = $_POST["state"] == "true" ? "1" : "0";
+        $now = date("Y-m-d");
+        $stmt = Database::Instance()->prepare("UPDATE content_pages SET secure=:secure, revision=:now WHERE pageid=:pid;");
+        $stmt->bindParam(":secure", $s);
+        $stmt->bindParam(":now", $now);
+        $stmt->bindParam(":pid", $pid);
+        $stmt->execute();
+        return new Response("TRUE");
+    }
+    
+    public static function hookCheckPid(Request $request)
+    {
+        if (!isset($_POST["pageid"]) ||
+            !isset($_POST["check"])) {
+            return new Response("FALSE");
+        }
+        if ($_POST["check"] != $_POST["pageid"] &&
+            Page::pageExists($_POST["check"])) {
+            return new Response("FALSE");
+        }
+        if ($_POST["check"] != $_POST["pageid"] &&
+            in_array($_POST["pageid"], ["", "secureaccess"]) || substr($_POST["pageid"], 0, 9) === "_default/") {
+            return new Response("FALSE");
+        }
+        
+        return new Response("TRUE");
+    }
+    
+    public static function hookEditPage(Request $request)
+    {
+        if (!isset($_POST["pageid"]) ||
+            !isset($_POST["newpageid"]) ||
+            !isset($_POST["title"]) ||
+            !isset($_POST["usehead"]) ||
+            !isset($_POST["head"]) ||
+            !isset($_POST["usetop"]) ||
+            !isset($_POST["body"]) ||
+            !isset($_POST["usebottom"])) {
+            return new Response("FALSE");
+        }
+        
+        if (!Page::pageExists($_POST["pageid"])) {
+            return new Response("FALSE");
+        }
+        
+        $page = new Page($_POST["pageid"]);
+        
+        if (!$authuser->permissions->page_edit ||
+            ($page->secure && !User::$currentUser->permissions->page_editsecure) ||
+            in_array($page->pageid, User::$currentUser->permissions->page_viewblacklist) ||
+            in_array($page->pageid, User::$currentUser->permissions->page_editblacklist)) {
+            return new Response("FALSE");
+        }
+        
+        $newpageid = $_POST["newpageid"];
+        
+        if (!($newpageid == $page->pageid || !(in_array($page->pageid, ["", "secureaccess"]) || substr($page->pageid, 0, 9) === "_default/"))) {
+            return new Response("FALSE");
+        }
+        
+        if (!(!Page::pageExists($newpageid) || $newpageid == $page->pageid) ||
+            in_array($newpageid, ["TRUE", "FALSE"])) {
+            return new Response("FALSE");
+        }
+        
+        $now = date("Y-m-d");
+        $stmt = Connection::Instance()->prepare("UPDATE content_pages SET pageid=:pageid, title=:title, head=:head, body=:body, usehead=:usehead, usetop=:usetop, usebottom=:usebottom, revision=:now WHERE pageid=:oldpid;");
+        $stmt->bindParam(":pageid", $newpageid);
+        $stmt->bindParam(":oldpid", $page->pageid);
+        $stmt->bindParam(":title", $_POST["title"]);
+        $stmt->bindParam(":usehead", $_POST["usehead"]);
+        $stmt->bindParam(":head", $_POST["head"]);
+        $stmt->bindParam(":usetop", $_POST["usetop"]);
+        $stmt->bindParam(":body", $_POST["body"]);
+        $stmt->bindParam(":usebottom", $_POST["usebottom"]);
+        $stmt->bindParam(":now", $now);
+        $stmt->execute();
+        
+        if ($newpageid == $page->pageid) {
+            return new Response("TRUE");
+        }
+        
+        return new Response($newpageid);
+    }
 }
