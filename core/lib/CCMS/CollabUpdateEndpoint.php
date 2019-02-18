@@ -2,10 +2,10 @@
 
 namespace Lib\CCMS;
 
-use \Lib\CCMS\Page;
 use \Lib\CCMS\Response;
 use \Lib\CCMS\Request;
 use \Lib\CCMS\Security\User;
+use \Mod\Page;
 use \PDO;
 
 class CollabUpdateEndpoint

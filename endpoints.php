@@ -17,5 +17,5 @@ $endpoints = [
     
     '/^web:\/?api\/collab_update\/?$/i' => "\Lib\CCMS\CollabUpdateEndpoint::hook", // Collaboration status update
     
-    '/^web:(?!.*\.[a-z]*$).*$/i' => "\Lib\CCMS\Page::hook", // Capture all remaining endpoints that don't have an extension
+    '/^web:(?!.*\.[a-z]*$).*$/i' => "\Mod\Page::hook", // Capture all remaining endpoints that don't have an extension
 ];

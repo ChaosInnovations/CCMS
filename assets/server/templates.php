@@ -1,9 +1,9 @@
 <?php
 
 use \Lib\CCMS\Database;
-use \Lib\CCMS\Page;
 use \Lib\CCMS\Security\User;
 use \Lib\CCMS\Utilities;
+use \Mod\Page;
 
 // TODO: groupings
 

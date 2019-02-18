@@ -1,12 +1,13 @@
 <?php
 
-namespace Lib\CCMS;
+namespace Mod;
 
-use \PDO;
-use \Lib\CCMS\Database;
 use \Lib\CCMS\Response;
 use \Lib\CCMS\Request;
 use \Lib\CCMS\Security\User;
+use \Lib\CCMS\Utilities;
+use \Mod\Database;
+use \PDO;
 
 class Page
 {

@@ -1,6 +1,6 @@
 <?php
 
-use \Lib\CCMS\Page;
+use \Mod\Page;
 
 function ajax_newpage() {
 	global $conn, $sqlstat, $authuser;
