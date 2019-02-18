@@ -11,7 +11,7 @@ class Request
     
     public function __construct(array $server, array $cookies=[], $sapi_name="apache2handler")
     {
-        if (substr($sapi_type, 0, 3) == 'cli' || empty($_SERVER['REMOTE_ADDR'])) {
+        if (substr($sapi_name, 0, 3) == 'cli' || empty($server['REMOTE_ADDR'])) {
             $this->isWeb = false;
             
             global $argv;
