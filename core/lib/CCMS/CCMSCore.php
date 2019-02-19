@@ -23,17 +23,19 @@ class CCMSCore
     
     public function processRequest(Request $request)
     {
-        include_once $_SERVER["DOCUMENT_ROOT"]."/endpoints.php";
-        // Enumerate endpoints
-        foreach ($endpoints as $endpointRegex => $endpointFunctionName) {
-            if (!preg_match($endpointRegex, $request->getTypedEndpoint())) {
+        include_once $_SERVER["DOCUMENT_ROOT"]."/hooks.php";
+        // Enumerate hooks
+        foreach ($hooks as $hook) {
+            $hookRegex = $hook[0];
+            $hookFunctionName = $hook[1];
+            if (!preg_match($hookRegex, $request->getTypedEndpoint())) {
                 continue;
             }
             
             $result = null;
             
             try {
-                $result = $endpointFunctionName($request);
+                $result = $hookFunctionName($request);
             } catch (Exception $e) {
                 echo $e;
             }

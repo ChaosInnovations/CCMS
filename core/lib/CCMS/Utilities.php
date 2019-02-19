@@ -26,6 +26,7 @@ class Utilities
             return "";
         }
         return $result[0]["value"];
+    }
 
     function setconfig($property, $value)
     {

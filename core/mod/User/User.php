@@ -6,6 +6,7 @@ use \Lib\CCMS\Response;
 use \Lib\CCMS\Request;
 use \Mod\Database;
 use \Mod\Mailer;
+use \Mod\User\AccountManager;
 use \Mod\User\UserPermissions;
 use \PDO;
 
