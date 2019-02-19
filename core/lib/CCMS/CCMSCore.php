@@ -23,6 +23,9 @@ class CCMSCore
     
     public function processRequest(Request $request)
     {
+        $response = new Response();
+        $response->setFinal(false);
+        
         include_once $_SERVER["DOCUMENT_ROOT"]."/hooks.php";
         // Enumerate hooks
         foreach ($hooks as $hook) {
@@ -41,11 +44,15 @@ class CCMSCore
             }
             
             if ($result instanceof Response) {
-                return $result;
+                $response->append($result);
+            }
+            
+            if ($response->isFinal()) {
+                break;
             }
         }
         // Returns Response
-        return new Response();
+        return $response;
     }
     
     public function dispose()

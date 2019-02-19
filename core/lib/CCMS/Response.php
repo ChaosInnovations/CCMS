@@ -5,11 +5,13 @@ namespace Lib\CCMS;
 class Response
 {
     
-    protected $content;
+    protected $content = "";
+    protected $final = true;
     
-    public function __construct($content='')
+    public function __construct($content='', $final=true)
     {
         $this->content = $content;
+        $this->final = $final;
     }
     
     public function send($buffer=true)
@@ -34,5 +36,29 @@ class Response
     public function setContent(string $content)
     {
         $this->content = $content;
+    }
+    
+    public function getContent()
+    {
+        return $this->content;
+    }
+    
+    public function setFinal(bool $isFinal)
+    {
+        $this->final = $isFinal;
+    }
+    
+    public function isFinal()
+    {
+        return $this->final;
+    }
+    
+    public function append(Response $otherResponse)
+    {
+        if ($this->final) {
+            return;
+        }
+        $this->content .= $otherResponse->getContent();
+        $this->final = $otherResponse->isFinal();
     }
 }

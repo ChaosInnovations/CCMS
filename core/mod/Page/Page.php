@@ -326,11 +326,7 @@ class Page
         
         $page = new Page($pageid);
         
-        $response = new Response;
-        
-        $response->setContent($page->getContent());
-        
-        return $response;
+        return new Response($page->getContent(), false);
     }
     
     public static function hookNewPage(Request $request)
