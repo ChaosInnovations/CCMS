@@ -2,10 +2,9 @@
 
 use \Lib\CCMS\CCMSCore;
 
-require_once "assets/server/autoload.php";
+require_once "core/autoload.php";
 
 use \Lib\CCMS\Utilities;
-include "assets/server/secure.php";
 include "assets/server/templates.php";
 
 $https = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] != 'off') ? "https" : "http";
