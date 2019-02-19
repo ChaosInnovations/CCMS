@@ -1,9 +1,9 @@
 <?php
 
-use \Lib\CCMS\Security\User;
 use \Lib\CCMS\Utilities;
 use \Mod\Database;
 use \Mod\Page;
+use \Mod\User;
 
 // TODO: groupings
 
@@ -1093,7 +1093,7 @@ function dialog_admin_users_new() {
 	permissions += $("#dialog_admin_users_permission_page_create").prop("checked") ? "page_create;" : "";
 	permissions += $("#dialog_admin_users_permission_page_delete").prop("checked") ? "page_delete;" : "";
 	permissions += $("#dialog_admin_users_permission_toolbar").prop("checked") ? "toolbar;" : "";
-	module_ajax("newuser", {email: $("#dialog_admin_users_newemail").val(),
+	module_ajax("user/new", {email: $("#dialog_admin_users_newemail").val(),
 	                        name: $("#dialog_admin_users_newname").val(),
 							permissions: permissions}, function (data) {
 		if (data != "TRUE") {
@@ -1106,7 +1106,7 @@ function dialog_admin_users_new() {
 }
 
 function dialog_admin_users_update(uid) {
-	module_ajax("edituser", {permissions: $("#dialog_admin_users_"+uid+"_perms_p").val(),
+	module_ajax("user/edit", {permissions: $("#dialog_admin_users_"+uid+"_perms_p").val(),
 	                         permviewbl: $("#dialog_admin_users_"+uid+"_perms_v").val(),
 							 permeditbl: $("#dialog_admin_users_"+uid+"_perms_e").val(),
 							 uid: uid,
@@ -1122,7 +1122,7 @@ function dialog_admin_users_update(uid) {
 
 function dialog_admin_users_delete(uid) {
 	if (window.confirm("Are you sure you want to remove this account?", "Yes", "No")) {
-		module_ajax("removeaccount", {uid: uid}, function (data) {
+		module_ajax("user/remove", {uid: uid}, function (data) {
 			if (data == "TRUE") {
 				window.alert("Account removed.");
 				window.location.reload(true);
@@ -1137,7 +1137,7 @@ function dialog_admin_users_delete(uid) {
 }
 
 function dialog_admin_users_reset(uid) {
-	module_ajax("resetpwd", {uid: uid}, function (data) {
+	module_ajax("user/password/reset", {uid: uid}, function (data) {
 		if (data == "TRUE") {
 			window.alert("Password reset to \\"password\\".");
 		} else {
@@ -1147,7 +1147,7 @@ function dialog_admin_users_reset(uid) {
 }
 
 function dialog_admin_site_save() {
-	module_ajax("setconfig", {websitetitle: $("#dialog_admin_site_websitetitle").val(),
+	module_ajax("api/config/set", {websitetitle: $("#dialog_admin_site_websitetitle").val(),
 	                               primaryemail: $("#dialog_admin_site_primaryemail").val(),
 	                               token: Cookies.get("token")}, function(data){
 		if (data == "TRUE") {
@@ -1258,7 +1258,7 @@ function dialog_admin_site_save() {
 "secure-modal-account-script" =>
 '
 function dialog_account_save() {
-	module_ajax("edituser", {name: $("#dialog_account_name").val(), notify: $("#dialog_account_notify")[0].checked ? 1 : 0}, function (data) {
+	module_ajax("user/edit", {name: $("#dialog_account_name").val(), notify: $("#dialog_account_notify")[0].checked ? 1 : 0}, function (data) {
 		if (data == "TRUE") {
 			$(".dialog_account_formfeedback_saved").removeClass("hidden");
 			setTimeout(function(){$(".dialog_account_formfeedback_saved").addClass("hidden");window.location.reload(true);}, 800);
@@ -1315,7 +1315,7 @@ function dialog_account_changepass() {
 	var npwd = $("#dialog_account_npwd").val();
 	var conditions = npwd.length >= 8;
 	if (conditions) {
-		module_ajax("changepass", {cpwd: $("#dialog_account_cpwd").val(), npwd: $("#dialog_account_npwd").val()}, function (data) {
+		module_ajax("user/password/edit", {cpwd: $("#dialog_account_cpwd").val(), npwd: $("#dialog_account_npwd").val()}, function (data) {
 			if (data == "TRUE") {
 				$("#dialog_account_cpwd").val("");
 				$("#dialog_account_npwd").val("");
@@ -1335,7 +1335,7 @@ function dialog_account_changepass() {
 
 function dialog_account_delete(uid) {
 	if (window.confirm("Are you sure you want to remove your account?", "Yes", "No")) {
-		module_ajax("removeaccount", {uid: uid}, function (data) {
+		module_ajax("user/remove", {uid: uid}, function (data) {
 			if (data == "TRUE") {
 				window.alert("Account removed.");
 				logout();

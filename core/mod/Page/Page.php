@@ -4,9 +4,9 @@ namespace Mod;
 
 use \Lib\CCMS\Response;
 use \Lib\CCMS\Request;
-use \Lib\CCMS\Security\User;
 use \Lib\CCMS\Utilities;
 use \Mod\Database;
+use \Mod\User;
 use \PDO;
 
 class Page

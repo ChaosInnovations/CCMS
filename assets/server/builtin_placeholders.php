@@ -1,8 +1,8 @@
 <?php
 
-use \Lib\CCMS\Security\User;
 use \Mod\Database;
 use \Mod\Mailer;
+use \Mod\User;
 
 class builtin_placeholders {
 	public $dependencies = [];

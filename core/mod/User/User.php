@@ -1,12 +1,12 @@
 <?php
 
-namespace Lib\CCMS\Security;
+namespace Mod;
 
 use \Lib\CCMS\Response;
 use \Lib\CCMS\Request;
-use \Lib\CCMS\Security\UserPermissions;
 use \Mod\Database;
 use \Mod\Mailer;
+use \Mod\User\UserPermissions;
 use \PDO;
 
 class User
@@ -231,6 +231,150 @@ class User
         
         if (!$userToAuthenticate->authenticate($_POST["password"])) {
             return new Response("FALSE");
+        }
+        return new Response("TRUE");
+    }
+    
+    public static function hookNewUser(Request $request)
+    {
+        // api/user/new
+        global $TEMPLATES;
+        global $baseUrl;
+        
+        if (!isset($_POST["email"]) or !isset($_POST["name"]) or !isset($_POST["permissions"])) {
+            return new Response("FALSE");
+        }
+        
+        $uid = User::uidFromEmail($_POST["email"]);
+        if ((new User($uid))->isValidUser()) {
+            // User already exists.
+            return new Response("FALSE");
+        }
+        if (!User::$currentUser->permissions->owner) {
+            // Only owners can change users
+            return new Response("FALSE");
+        }
+        
+        $body = $TEMPLATES["email-newuser"]($_POST["name"], User::$currentUser->name, $baseUrl, Utilities::getconfig("websitetitle"));
+        $mail = Mailer::NotifInstance()->compose([[User::normalizeEmail($_POST["email"]), $_POST["name"]]], "Account Created", $body, "");
+        
+        if (!$mail->send()) {
+            return new Response("FALSE");
+        }
+        
+        $email = User::normalizeEmail($_POST["email"]);
+        $now = date("Y-m-d");
+        $pwd = password_hash("password", PASSWORD_DEFAULT);
+        
+        $stmt = $Database::Instance()->prepare("INSERT INTO users VALUES (:uid, :pwd, :email, :name, :now, :perms, '', '', 0, NULL, '', 1, 0);");
+        $stmt->bindParam(":uid", $uid);
+        $stmt->bindParam(":pwd", $pwd);
+        $stmt->bindParam(":email", $email);
+        $stmt->bindParam(":name", $_POST["name"]);
+        $stmt->bindParam(":now", $now);
+        $stmt->bindParam(":perms", $_POST["permissions"]);
+        $stmt->execute();
+        
+        return new Response("TRUE");
+    }
+    
+    public static function hookRemoveUser(Request $request)
+    {
+        // api/user/remove
+        if (!isset($_POST["uid"]) or !(new User($_POST["uid"]))->isValidUser()) {
+            return new Response("FALSE");
+        }
+        $uid = $_POST["uid"];
+        if (!User::$currentUser->permissions->owner and User::$currentUser->uid != $uid) {
+            return new Response("FALSE");
+        }
+        if (User::$currentUser->permissions->owner and User::$currentUser->uid == $uid and User::numberOfOwners() <= 1) {
+            return new Response("OWNER");
+        }
+        $stmt = Database::Instance()->prepare("DELETE FROM users WHERE uid=:uid;");
+        $stmt->bindParam(":uid", $uid);
+        $stmt->execute();
+
+        $stmt = Database::Instance()->prepare("DELETE FROM tokens WHERE uid=:uid;");
+        $stmt->bindParam(":uid", $uid);
+        $stmt->execute();
+
+        return new Response("TRUE");
+    }
+    
+    public static function hookPasswordReset(Request $request)
+    {
+        // api/user/password/reset
+        if (!isset($_POST["uid"]) or !(new User($_POST["uid"]))->isValidUser()) {
+            return new Response("FALSE");
+        }
+        if (!User::$currentUser->permissions->owner) {
+            return new Response("FALSE");
+        }
+        $pwd = password_hash("password", PASSWORD_DEFAULT);
+        $stmt = Database::Instance()->prepare("UPDATE users SET pwd=:pwd WHERE uid=:uid;");
+        $stmt->bindParam(":pwd", $pwd);
+        $stmt->bindParam(":uid", $_POST["uid"]);
+        $stmt->execute();
+        return new Response("TRUE");
+    }
+    
+    public static function hookPasswordChange(Request $request)
+    {
+        // api/user/password/edit
+        if (!isset($_POST["cpwd"]) or !isset($_POST["npwd"])) {
+            return new Response("FALSE");
+        }
+        if (!User::$currentUser->isValidUser()) {
+            return new Response("FALSE");
+        }
+        if (!User::$currentUser->authenticate($_POST["cpwd"])) {
+            return new Response("FALSE");
+        }
+        $pwd = password_hash($_POST["npwd"], PASSWORD_DEFAULT);
+        $stmt = Database::Instance()->prepare("UPDATE users SET pwd=:pwd WHERE uid=:uid;");
+        $stmt->bindParam(":uid", User::$currentUser->uid);
+        $stmt->bindParam(":pwd", $pwd);
+        $stmt->execute();
+        echo new Response("TRUE");
+    }
+    
+    public static function hookEditUser(Request $request)
+    {
+        // api/user/edit
+        if (!User::$currentUser->isValidUser()) {
+            return new Response("FALSE");
+        }
+        
+        if (isset($_POST["name"])) {
+            $stmt = Database::Instance()->prepare("UPDATE users SET name=:name WHERE uid=:uid;");
+            $stmt->bindParam(":name", $_POST["name"]);
+            $stmt->bindParam(":uid", User::$currentUser->uid);
+            $stmt->execute();
+        }
+        if (isset($_POST["notify"])) {
+            $stmt = Database::Instance()->prepare("UPDATE users SET notify=:notify WHERE uid=:uid;");
+            $stmt->bindParam(":notify", $_POST["notify"]);
+            $stmt->bindParam(":uid", User::$currentUser->uid);
+            $stmt->execute();
+        }
+        if (isset($_POST["permissions"]) and User::$currentUser->permissions->owner) {
+            $stmt = Database::Instance()->prepare("UPDATE users SET permissions=:new WHERE uid=:uid;");
+            $stmt->bindParam(":new", $_POST["permissions"]);
+            $stmt->bindParam(":uid", $_POST["uid"]);
+            $stmt->execute();
+        }
+        if (isset($_POST["permviewbl"]) and User::$currentUser->permissions->owner) {
+            $stmt = Database::Instance()->prepare("UPDATE users SET permviewbl=:new WHERE uid=:uid;");
+            $stmt->bindParam(":new", $_POST["permviewbl"]);
+            $stmt->bindParam(":uid", $_POST["uid"]);
+            $stmt->execute();
+        }
+        if (isset($_POST["permeditbl"]) and User::$currentUser->permissions->owner) {
+            $stmt = Database::Instance()->prepare("UPDATE users SET permeditbl=:new WHERE uid=:uid;");
+            $stmt->bindParam(":new", $_POST["permeditbl"]);
+            $stmt->bindParam(":uid", $_POST["uid"]);
+            $stmt->execute();
         }
         return new Response("TRUE");
     }

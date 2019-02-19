@@ -14,6 +14,13 @@ $endpoints = [
     '/^web:\/?api\/checkuser\/?$/i' => "\Lib\CCMS\Security\User::hookCheckUser", // Check that the username is correct
     '/^web:\/?api\/checkpass\/?$/i' => "\Lib\CCMS\Security\User::hookCheckPassword", // Check that the password is correct
     '/^web:\/?api\/newtoken\/?$/i' => "\Lib\CCMS\Security\AccountManager::hookNewToken", // Create a new token if authenticated
+    '/^web:\/?api\/user\/new\/?$/i' => "\Lib\CCMS\Security\User::hookNewUser", // Create a new user
+    '/^web:\/?api\/user\/edit\/?$/i' => "\Lib\CCMS\Security\User::hookEditUser", // Edit a user
+    '/^web:\/?api\/user\/remove\/?$/i' => "\Lib\CCMS\Security\User::hookRemoveUser", // Remove a user
+    '/^web:\/?api\/user\/password\/reset\/?$/i' => "\Lib\CCMS\Security\User::hookPasswordReset", // Reset password to default
+    '/^web:\/?api\/user\/password\/edit\/?$/i' => "\Lib\CCMS\Security\User::hookPasswordChange", // Change password
+    
+    '/^web:\/?api\/config\/set\/?$/i' => "\Lib\CCMS\Utilities::hookSetConfig", // Set configuration
     
     '/^web:\/?api\/collab_update\/?$/i' => "\Lib\CCMS\CollabUpdateEndpoint::hook", // Collaboration status update
     

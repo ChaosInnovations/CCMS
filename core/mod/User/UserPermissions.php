@@ -1,6 +1,6 @@
 <?php
 
-namespace Lib\CCMS\Security;
+namespace Mod\User;
 
 class UserPermissions
 {
