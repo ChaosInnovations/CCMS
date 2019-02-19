@@ -38,7 +38,7 @@ class CCMSCore
             $result = null;
             
             try {
-                $result = $hookFunctionName($request);
+                $result = $hookFunctionName($request, $response);
             } catch (Exception $e) {
                 echo $e;
             }
