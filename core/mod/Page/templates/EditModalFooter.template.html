@@ -1,0 +1,35 @@
+<span class="dialog_edit_formfeedback_saved" style="display:none;">Saved!</span>
+<span class="dialog_edit_formfeedback_notsaved" style="display:none;">There was an error saving. Check your connection.</span>
+<button type="button" class="btn btn-primary" onclick="dialog_edit_save();">Save changes</button>
+<button type="button" class="btn btn-danger" onclick="dialog_edit_reset();">Reset Changes</button>
+<script>
+function dialog_edit_save() {
+    module_ajax("page/edit", {pageid: pageid,
+                                  newpageid: $("#dialog_edit_pageid").val(),
+                                  title: encodeURIComponent($("#dialog_edit_pagetitle").val()),
+                                  usehead: $("#dialog_edit_usehead")[0].checked ? 1 : 0,
+                                  head: encodeURIComponent(cm_edit_head.getValue()),
+                                  usetop: $("#dialog_edit_usetop")[0].checked ? 1 : 0,
+                                  body: encodeURIComponent(cm_edit_body.getValue()),
+                                  usebottom: $("#dialog_edit_usebottom")[0].checked ? 1 : 0,
+                                  token: Cookies.get("token")}, function(data){
+        if (data == "FALSE") {
+            $(".dialog_edit_formfeedback_notsaved").show();
+            setTimeout(function(){$(".dialog_edit_formfeedback_notsaved").hide();}, 1500);
+        } else if (data == "TRUE") {
+            $(".dialog_edit_formfeedback_saved").show();
+            setTimeout(function(){window.location.reload();}, 800);
+        } else {
+            window.location = "/"+data;
+        }
+    });
+}
+
+
+function dialog_edit_reset() {
+    $("#dialog_edit_pageid").val(pageid);
+    $("#dialog_edit_pagetitle").val(pagetitle);
+    $("#dialog_edit_head").val(head);
+    cm_edit_body.setValue(body);
+}
+</script>

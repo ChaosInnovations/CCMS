@@ -1,0 +1,128 @@
+<form class="form" role="edit" onsubmit="dialog_edit_save();return false;">
+    <div class="form-group row">
+        <div class="offset-md-2 offset-sm-3 col-md-10 col-sm-9">
+            <input type="submit" class="btn btn-primary" title="Save" value="Save" />
+            <span class="dialog_edit_formfeedback_saved" style="display:none;">Saved!</span>
+            <span class="dialog_edit_formfeedback_notsaved" style="display:none;">There was an error saving. Check your connection.</span>
+        </div>
+    </div>
+    <div class="form-group row">
+        <label class="col-form-label col-sm-3 col-md-2" for="dialog_edit_pageid">Page URL:</label>
+        <div class="input-group col-sm-9 col-md-10">
+            <div class="input-group-prepend">
+                <span class="input-group-text">{baseUrl}/</span>
+            </div>
+            <input type="text" id="dialog_edit_pageid" name="pageid" class="form-control border-right-0" title="Page ID" placeholder="Page ID" oninput="dialog_edit_check_pageid();" />
+            <div class="input-group-append">
+                <div class="input-group-text bg-transparent border-left-0">
+                    <i class="fas fa-times" style="display:none;"></i>
+                    <i class="fas fa-check" style="display:none;"></i>
+                </div>
+            </div>
+            <script>
+var pageid = "{pageid}";
+$("#dialog_edit_pageid").val(pageid);
+if (["", "secureaccess"].includes(pageid) || pageid.startsWith("_default/")) {
+    $("#dialog_edit_pageid").attr("disabled", "disabled");
+}
+
+function dialog_edit_check_pageid() {
+    module_ajax("page/checkid", {pageid: pageid,
+                                  check: $("#dialog_edit_pageid").val(),
+                                  token: Cookies.get("token")}, function(data){
+        var fieldparent = $("#dialog_edit_pageid").parent();
+        if (data == "TRUE") {
+            fieldparent.removeClass("has-error");
+            fieldparent.addClass("has-success");
+            fieldparent.find(".fa-times").hide();
+            fieldparent.find(".fa-check").show();
+        } else {
+            fieldparent.removeClass("has-success");
+            fieldparent.addClass("has-error");
+            fieldparent.find(".fa-check").hide();
+            fieldparent.find(".fa-times").show();
+        }
+    });
+}
+            </script>
+        </div>
+    </div>
+    <div class="form-group row">
+        <label class="col-form-label col-sm-3 col-md-2" for="dialog_edit_pagetitle">Page Title:</label>
+        <div class="col-sm-9 col-md-10">
+            <input type="text" id="dialog_edit_pagetitle" name="pagetitle" class="form-control" title="Page Title" placeholder="Page Title" />
+            <script>
+var pagetitle = decodeURIComponent("{rawtitle}");
+$("#dialog_edit_pagetitle").val(pagetitle);
+            </script>
+        </div>
+    </div>
+    <div class="form-group row">
+        <label class="col-form-label col-sm-3 col-md-2" for="dialog_edit_head"><code>&lt;head&gt;</code>:</label>
+        <div class="col-sm-9 col-md-10">
+            <div class="form-check form-check-inline mb-2 mt-2">
+                <input class="form-check-input" type="checkbox" id="dialog_edit_usehead" value=""{useheadChecked}>
+                <label class="form-check-label" for="dialog_edit_usehead">Also prepend default <code>&lt;head&gt;</code></label>
+            </div>
+            <textarea id="dialog_edit_head" name="head" class="form-control" title="Page Head" placeholder="Page Head" rows="8"></textarea>
+            <script>
+var head = decodeURIComponent("{rawhead}");
+$("#dialog_edit_head").val(head);
+            </script>
+        </div>
+    </div>
+    <div class="form-group row">
+        <label class="col-form-label col-sm-3 col-md-2" for="dialog_edit_body"><code>&lt;body&gt;</code>:</label>
+        <div class="col-sm-9 col-md-10">
+            <div class="form-check form-check-inline mb-2 mt-2">
+                <input class="form-check-input" type="checkbox" id="dialog_edit_usetop" value=""{usetopChecked}>
+                <label class="form-check-label" for="dialog_edit_usetop">Also prepend default top</label>
+            </div>
+            <textarea id="dialog_edit_body" name="body" class="form-control" title="Page Body" placeholder="Page Body" rows="32"></textarea>
+            <div class="form-check form-check-inline mt-2">
+                <input class="form-check-input" type="checkbox" id="dialog_edit_usebottom" value=""{usebottomChecked}>
+                <label class="form-check-label" for="dialog_edit_usebottom">Also append default bottom</label>
+            </div>
+            <script>
+var body = decodeURIComponent("{rawbody}");
+$("#dialog_edit_body").val(body);
+            </script>
+        </div>
+    </div>
+</form>
+<script>
+var cm_edit_head = null;
+var cm_edit_body = null;
+
+$("#dialog_edit").on("shown.bs.modal", function() {
+    if (cm_edit_head == null) {
+        cm_edit_head = CodeMirror.fromTextArea(document.getElementById("dialog_edit_head"), {
+            lineNumbers: true,
+            mode:  "htmlmixed"
+        });
+        cm_edit_body = CodeMirror.fromTextArea(document.getElementById("dialog_edit_body"), {
+            lineNumbers: true,
+            mode:  "htmlmixed"
+        });
+    }
+});
+
+$(document).keydown(function(event) {
+    if (event.ctrlKey || event.metaKey) {
+        switch (String.fromCharCode(event.which).toLowerCase()) {
+        case "s":
+            if ($("#dialog_edit").is(":visible")) {
+                event.preventDefault();
+                dialog_edit_save();
+                break;
+            }
+        case "e":
+            if (!$("#dialog_edit").is(":visible")) {
+                event.preventDefault();
+                showDialog("edit");
+                break;
+            }
+        }
+    }
+});
+</script>

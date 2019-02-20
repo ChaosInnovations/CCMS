@@ -6,6 +6,7 @@ use \Lib\CCMS\Response;
 use \Lib\CCMS\Request;
 use \Lib\CCMS\Utilities;
 use \Mod\Database;
+use \Mod\SecureMenu;
 use \Mod\User;
 use \PDO;
 
@@ -168,6 +169,8 @@ class Page
 
     public static function hook(Request $request)
     {
+        global $baseUrl;
+        
         $pageid = $request->getEndpoint();
 
         if (!Page::pageExists($pageid)) {
@@ -180,6 +183,31 @@ class Page
         $stmt->execute();
 
         $page = new Page($pageid);
+        
+        if (User::$currentUser->permissions->page_edit) {
+            SecureMenu::Instance()->addEntry("edit", "Edit Page", "showDialog('edit');", '<i class="fas fa-edit"></i>', SecureMenu::VERTICAL);
+            $template_vars = [
+                'baseUrl' => $baseUrl,
+                'useheadChecked' => ($page->usehead ? ' checked' : ''),
+                'usetopChecked' => ($page->usetop ? ' checked' : ''),
+                'usebottomChecked' => ($page->usebottom ? ' checked' : ''),
+                'pageid' => $pageid,
+                'rawtitle' => $page->rawtitle,
+                'rawhead' => $page->rawhead,
+                'rawbody' => $page->rawbody,
+            ];
+            $editModalBody = Utilities::fillTemplate(file_get_contents(dirname(__FILE__) . "/templates/EditModalBody.template.html"), $template_vars);
+            $editModalFooter = file_get_contents(dirname(__FILE__) . "/templates/EditModalFooter.template.html");
+            SecureMenu::Instance()->addModal("dialog_edit", "Edit Page", $editModalBody, $editModalFooter);
+        }
+        if (User::$currentUser->permissions->page_create) {
+            SecureMenu::Instance()->addEntry("newpage", "New Page", "createPage();", '<i class="fas fa-plus"></i>', SecureMenu::VERTICAL);
+        }
+        if (User::$currentUser->permissions->page_viewsecure) {
+            SecureMenu::Instance()->addEntry("securepageTrigger", "Secure Pages", "triggerPane('securepage');", '<i class="fas fa-lock"></i>', SecureMenu::VERTICAL);
+        }
+        
+        SecureMenu::Instance()->addEntry("home", "Home", "location.assign('/');", '<i class="fas fa-home"></i>', SecureMenu::HORIZONTAL);
 
         return new Response($page->getContent(), false);
     }
