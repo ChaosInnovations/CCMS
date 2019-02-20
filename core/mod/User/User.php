@@ -136,10 +136,17 @@ class User
                 $stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
                 $rn = $stmt->fetchAll()[0]["room_name"];
             }
-            $body = $TEMPLATES["email-notif-chat"](User::$currentUser->name, $rn);
+            
+            $template_vars = [
+                "senderName" => User::$currentUser->name,
+                "recipientName" => $rn,
+            ];
+            $htmlBody = Utilities::fillTemplate(file_get_contents(dirname(__FILE__) . "/templates/ChatNotificationEmail.template.html"), $template_vars);
+            $altBody = Utilities::fillTemplate(file_get_contents(dirname(__FILE__) . "/templates/ChatNotificationEmail.template.txt"), $template_vars);
+            
             $oldFrom = Mailer::NotifInstance()->from;
             Mailer::NotifInstance()->from = User::$currentUser->name;
-            $mail = Mailer::NotifInstance()->compose([[$this->email, $this->name]], User::$currentUser->name." sent a message", $body, "");
+            $mail = Mailer::NotifInstance()->compose([[$this->email, $this->name]], User::$currentUser->name." sent a message", $htmlBody, $altBody);
             $mail->send();
             Mailer::NotifInstance()->from = $oldFrom;
         }
@@ -257,8 +264,20 @@ class User
             return new Response("FALSE");
         }
         
-        $body = $TEMPLATES["email-newuser"]($_POST["name"], User::$currentUser->name, $baseUrl, Utilities::getconfig("websitetitle"));
-        $mail = Mailer::NotifInstance()->compose([[User::normalizeEmail($_POST["email"]), $_POST["name"]]], "Account Created", $body, "");
+        $defaultPassword = "password";
+        
+        $template_vars = [
+            "name" => $_POST["name"],
+            "adminName" => User::$currentUser->name,
+            "url" => Utilities::getconfig("websitetitle"),
+            "organization" => $pagelist,
+            "password" => $defaultPassword,
+            "signinUrl" => $baseUrl . "/secureaccess",
+        ];
+        $htmlBody = Utilities::fillTemplate(file_get_contents(dirname(__FILE__) . "/templates/NewUserEmail.template.html"), $template_vars);
+        $altBody = Utilities::fillTemplate(file_get_contents(dirname(__FILE__) . "/templates/NewUserEmail.template.txt"), $template_vars);
+        
+        $mail = Mailer::NotifInstance()->compose([[User::normalizeEmail($_POST["email"]), $_POST["name"]]], "Account Created", $htmlBody, $altBody);
         
         if (!$mail->send()) {
             return new Response("FALSE");
@@ -266,7 +285,7 @@ class User
         
         $email = User::normalizeEmail($_POST["email"]);
         $now = date("Y-m-d");
-        $pwd = password_hash("password", PASSWORD_DEFAULT);
+        $pwd = password_hash($defaultPassword, PASSWORD_DEFAULT);
         
         $stmt = $Database::Instance()->prepare("INSERT INTO users VALUES (:uid, :pwd, :email, :name, :now, :perms, '', '', 0, NULL, '', 1, 0);");
         $stmt->bindParam(":uid", $uid);
@@ -384,10 +403,10 @@ class User
     public static function placeholderLoginForm($args)
     {
         if (User::$currentUser->uid == null) {
-            $html = file_get_contents(dirname(__FILE__) . "/LoginForm.template.html");
+            $html = file_get_contents(dirname(__FILE__) . "/templates/LoginForm.template.html");
             return $html;
         } else {
-            $pagelistTemplate = file_get_contents(dirname(__FILE__) . "/LoggedInListItem.template.html");
+            $pagelistTemplate = file_get_contents(dirname(__FILE__) . "/templates/LoggedInListItem.template.html");
             $pagelist = "";
             
             $stmt = Database::Instance()->prepare("SELECT pageid, title FROM content_pages WHERE secure=1 AND pageid NOT LIKE '_default/%' ORDER BY pageid ASC;");
@@ -407,7 +426,7 @@ class User
             $template_vars = [
                 "pagelist" => $pagelist,
             ];
-            $html = Utilities::fillTemplate(file_get_contents(dirname(__FILE__) . "/LoggedIn.template.html"), $template_vars);
+            $html = Utilities::fillTemplate(file_get_contents(dirname(__FILE__) . "/templates/LoggedIn.template.html"), $template_vars);
             return $html;
         }
     }

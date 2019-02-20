@@ -1364,32 +1364,4 @@ $(document).keydown(function(event) {
     }
 });',
 
-//   ________
-//  /        \
-// (  Emails  )
-//  \________/
-
-"email-newuser" => function($name, $adminName, $url, $organization) {
-    return '
-<div>
-    <h1>Hi ' . $name . '!</h1>
-    <p>' . $adminName . ' created an account for you on the
-    <a href="' . $url . '" title="' . $organization . '">' . $organization . ' website.</a>
-    Your current password is <b>password</b> so please change it when you log in for the first time.</p>
-    <a href="' . $url . '/secureaccess">Sign In</a>
-</div>
-<p>' . $organization . '</p>';
-},
-
-"email-notif-chat" => function($senderName, $recipientName) {
-    return '
-<div>
-    <h2>' . $senderName . ' sent a message to ' . $recipientName . '.</h2>
-    <h4>Please log in to see and reply to ' . $senderName . '\'s message.</h4>
-</div>
-<p>This mailbox is not monitored; please don\'t reply to this email.</p>
-<small>To stop receiving these emails, change your account\'s notification settings.</small>';
-}
-
-
 ];

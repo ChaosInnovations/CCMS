@@ -88,7 +88,7 @@ if (isset($_GET["run_scheduled_tasks"])) {
         $args = json_decode($job["args"], true);
         if (in_array($job["function"], get_defined_functions()["user"])) {
             $func = $job["function"];
-            $func($args);
+            //$func($args);
         } else {
             $funcparts = explode("|", $job["function"], 2);
             if (count($funcparts) == 2) {
