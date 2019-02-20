@@ -106,7 +106,7 @@ class SecureMenu
         ];
         $menu = Utilities::fillTemplate($secureMenuTemplate, $template_vars);
         
-        return new Response($menu, false);
+        //return new Response($menu, false);
 
         $securepages = [];
         $stmt = Database::Instance()->prepare("SELECT pageid FROM content_pages WHERE secure=1 AND pageid NOT LIKE '_default/%';");
@@ -159,7 +159,7 @@ class SecureMenu
         $modals .= "</div>";
         $script .= "</script>";
 
-        $menu = $secure . $modals . $script;
+        $menu = $menu . $modals . $script;
 
         return new Response($menu, false);
     }
