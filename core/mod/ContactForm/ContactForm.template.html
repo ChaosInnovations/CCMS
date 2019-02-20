@@ -1,0 +1,40 @@
+<form onsubmit="module_contactform_submit();return false;">
+    <div class="row">
+    <div class="form-group col-10 offset-1">
+        <label class="control-label" for="module_contactform_name">Name:</label>
+        <input type="text" id="module_contactform_name" name="name" class="form-control" title="Name" placeholder="Name">
+    </div>
+    <div class="form-group col-10 offset-1">
+        <label class="control-label" for="module_contactform_reply">Email or Phone Number:</label>
+        <input type="text" id="module_contactform_reply" name="reply" class="form-control" title="Email or Phone Number" placeholder="Email or Phone Number">
+    </div>
+    <div class="form-group col-10 offset-1">
+        <label class="control-label" for="module_contactform_message">Message:</label>
+        <textarea class="form-control" name="message" id="module_contactform_message" title="Message" placeholder="Message" rows="4"></textarea>
+    </div>
+        <div class="form-group col-10 offset-1">
+        <input type="submit" class="btn btn-info" title="Send Message" value="Send Message">
+        <p class="form-text" id="module_contactform_feedback"></p>
+    </div>
+    </div>
+</form>
+<script>
+function module_contactform_submit() {
+    $("#module_contactform_feedback").html("Sending...");
+    if ($("#module_contactform_name").val() != "" && $("#module_contactform_reply").val() != "" && $("#module_contactform_message").val() != "") {
+        module_ajax("contactform/response", {name: $("#module_contactform_name").val(),
+                                    reply: $("#module_contactform_reply").val(),
+                                    message: $("#module_contactform_message").val()}, function(data) {
+            if (data == "TRUE") {
+                $("#module_contactform_feedback").html("Your message was sent.");
+            } else {
+                $("#module_contactform_feedback").html("Your message couldn\'t be sent.");
+            }
+            setTimeout(function(){$("#module_contactform_feedback").html("")}, 10000);
+        });
+    } else {
+        $("#module_contactform_feedback").html("Your message couldn\'t be sent. Make sure you have completed the form.");
+        setTimeout(function(){$("#module_contactform_feedback").html("")}, 10000);
+    }
+}
+</script>

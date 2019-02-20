@@ -15,7 +15,7 @@ function showDialog(dialog) {
 }
 
 function createPage() {
-	module_ajax("newpage", {}, function (data){
+	module_ajax("page/new", {}, function (data){
 		if (data == "FALSE") {
 			window.alert("Couldn't create page.");
 		} else {
@@ -25,7 +25,7 @@ function createPage() {
 }
 
 function createSecurePage() {
-	module_ajax("newpage", {s: true}, function (data){
+	module_ajax("page/new", {s: true}, function (data){
 		if (data == "FALSE") {
 			window.alert("Couldn't create page.");
 		} else {
