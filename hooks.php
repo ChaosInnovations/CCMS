@@ -37,6 +37,8 @@ $hooks = [
     ['/(?!.*\.[a-z]*$)^web:.*$/i',                "\Mod\Page::hook"],                             // Capture all remaining hooks that don't have an extension
     
     ['/(?!.*\.[a-z]*$)^web:.*$/i',                "\Mod\User::hookMenu"],
+
+    ['/(?!.*\.[a-z]*$)^web:.*$/i',                "\Mod\ModuleMenu::hookAddToSecureMenu"],
     
     ['/(?!.*\.[a-z]*$)^web:.*$/i',                "\Mod\SecureMenu::hook"],
 

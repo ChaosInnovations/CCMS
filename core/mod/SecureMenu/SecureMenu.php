@@ -131,7 +131,7 @@ class SecureMenu
         $script = "<script>";
         $secure = "";
 
-        $secure .= $TEMPLATES["secure-menu"]($availablemodules, $modules);
+        $secure .= $TEMPLATES["secure-menu"]();
 
         // Page manager menu
         if (User::$currentUser->permissions->admin_managepages) {

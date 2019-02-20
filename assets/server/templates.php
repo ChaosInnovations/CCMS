@@ -14,21 +14,10 @@ $TEMPLATES = [
 //(  Admin Menu  )
 // \____________/
 
-"secure-menu" => function($securepages, $availablemodules, $modules) {
+"secure-menu" => function() {
     global $TEMPLATES;
 
     $canChat = true; // temporary chat permission
-
-    $moduleListing = '';
-    /*
-    foreach($availablemodules as $m) {
-        $mc = $modules[$m];
-        if (isset($mc->name) && method_exists($mc, "getModal")) {
-            $moduleListing .= '<span onclick="showDialog(\'module_'.$m.'\');">'.$mc->name.'</span><br />
-            ';
-        }
-    }
-    */
 
     return '
 <div id="secureMenu" class="secureMenu">
@@ -71,13 +60,6 @@ $TEMPLATES = [
   </div>' . ($canChat ? '
   <div id="secureMenu_pane-collab" class="secureMenu-pane collapsed vertical" style="display:none;">
     ' . $TEMPLATES["secure-collab-pane"]() . '
-  </div>' : '') . (User::$currentUser->permissions->admin_managesite ? '
-  <div id="secureMenu_pane-module" class="secureMenu-pane collapsed horizontal" style="display:none;">
-    <b>Modules</b>
-    <hr />
-    <div>
-        ' . $moduleListing . '
-    </div>
   </div>' : '') . '
   <script>
     var secureMenuVisible = false;
