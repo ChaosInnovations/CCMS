@@ -1,161 +1,164 @@
 <div id="secureMenu" class="secureMenu">
-  <div id="secureMenu_trigger" class="secureMenu-icon" title="Secure Menu" onclick="toggleSecureMenu();" style="z-index:10;">
-    <span class="notif-badge" style="display: none;">0</span>
-    <span><i class="fas fa-ellipsis-v"></i></span>
-  </div>
-  <div id="secureMenu_horizontal" class="secureMenu-iconGroup horizontal" style="z-index:9;">
-  {horizontalEntries}
-    <div id="secureMenu_option-collabTrigger" title="Collaborate" onclick="triggerPane('collab');" class="secureMenu-icon">
-      <span class="notif-badge" style="display: none;">0</span>
-      <span><i class="fas fa-share-alt"></i></span>
-    </div>
-  </div>
-  <div id="secureMenu_vertical" class="secureMenu-iconGroup vertical" style="z-index:9;">
-  {verticalEntries}
-    <div id="secureMenu_option-admin" title="Administration" onclick="showDialog('admin');" class="secureMenu-icon">
-      <span><i class="fas fa-cogs"></i></span>
-    </div>
-    <div id="secureMenu_option-moduleTrigger" title="Modules" onclick="triggerPane('module');" class="secureMenu-icon">
-      <span><i class="fas fa-puzzle-piece"></i></span>
-    </div>
-  </div>
-  <div id="secureMenu_panes">
-  {panels}
-  </div>
-  <div id="modals">
-  {modals}
-  </div>
-  <div id="secureMenu_pane-collab" class="secureMenu-pane vertical" style="display:none;">
-    
-<b>Collaborate</b>
-<hr>
-<button class="collab-lg" onclick="collab_showPage('rooms');" title="Chat Rooms">
-    <i class="fas fa-comments"></i>
-    <span id="secureMenu_notif-rooms" class="notif-badge" style="display: none;">0</span>
-</button><br>
-<button class="collab-lg" onclick="collab_showPage('todo');" title="To-Do Lists">
-    <i class="fas fa-clipboard-list"></i>
-    <span id="secureMenu_notif-todo" class="notif-badge" style="display: none;">0</span>
-</button><br>
-<button class="collab-lg" onclick="collab_showPage('people');" title="People and Direct Messages">
-    <i class="fas fa-users"></i>
-    <span id="secureMenu_notif-people" class="notif-badge" style="display: none;">0</span>
-</button><br>
-<div id="secureMenu_collab-rooms" class="collab-page">
-    <button class="collab-back" onclick="collab_hidePage('rooms');" title="Go Back"><i class="fas fa-arrow-left"></i></button>
-    <button class="collab-new" onclick="collab_startCreate('room');" title="New Room"><i class="fas fa-plus"></i></button>
-    <b>Chat Rooms</b>
-    <hr>
-    
-<div id="secureMenu_collab-room-6fbde1fc117640048beb18f9d28cb39e" class="collab-person">
-    <div class="status offline"><div class="status online" style="height:100%;"></div></div>
-    <div class="info">
-        Everyone<br>
-        <small><i><span class="online">1/1 online</span></i></small>
-    </div>
-    <button class="collab-chat" title="Open Room" onclick="collab_showChat('R6fbde1fc117640048beb18f9d28cb39e', 'Everyone');">
-        <i class="fas fa-comments"></i>
+    <div id="secureMenu_trigger" class="secureMenu-icon" title="Secure Menu" onclick="toggleSecureMenu();" style="z-index:10;">
         <span class="notif-badge" style="display: none;">0</span>
-    </button>
-</div>
-</div>
-<div id="secureMenu_collab-todo" class="collab-page">
-    <button class="collab-back" onclick="collab_hidePage('todo');" title="Go Back"><i class="fas fa-arrow-left"></i></button>
-    <button class="collab-new" onclick="collab_startCreate('list');" title="New List"><i class="fas fa-plus"></i></button>
-    <b>To-Do Lists</b>
-    <hr>
-    
-<div id="secureMenu_collab-list-6fbde1fc117640048beb18f9d28cb39e" class="collab-person">
-    <div class="status incomplete"><div class="status complete" style="height:75%;"></div></div>
-    <div class="info">
-        Example To-Do List<br>
-        <small><i><span class="done">3/4 finished</span></i></small>
+        <span><i class="fas fa-ellipsis-v"></i></span>
     </div>
-    <button class="collab-chat" title="Open List" onclick="collab_showList('6fbde1fc117640048beb18f9d28cb39e', 'Example To-Do List');">
-        <i class="fas fa-clipboard-list"></i>
-        <span class="notif-badge" style="display: none;">0</span>
-    </button>
-</div>
-</div>
-<div id="secureMenu_collab-people" class="collab-page">
-    <button class="collab-back" onclick="collab_hidePage('people');" title="Go Back"><i class="fas fa-arrow-left"></i></button>
-    <b>People</b>
-    <hr>
-    
-<div id="secureMenu_collab-person-fd2cd58021eb9764141c9e25e81e9458" class="collab-person">
-    <div class="status online"></div>
-    <div class="info">
-        <b>Thomas Boland</b><br>
-        <small><i><span class="page"><a href="/secureaccess" title="Secure Access Portal">Secure Access Portal</a></span></i></small>
+    <div id="secureMenu_horizontal" class="secureMenu-iconGroup horizontal" style="z-index:9;">
+        {horizontalEntries}
+        <div id="secureMenu_option-collabTrigger" title="Collaborate" onclick="triggerPane('collab');" class="secureMenu-icon">
+            <span class="notif-badge" style="display: none;">0</span>
+            <span><i class="fas fa-share-alt"></i></span>
+        </div>
     </div>
-    <button class="collab-chat" title="Open Chat" onclick="collab_showChat('Ufd2cd58021eb9764141c9e25e81e9458', 'Thomas Boland');">
-        <i class="fas fa-comment"></i>
-        <span class="notif-badge" style="display: none;">0</span>
-    </button>
-</div>
-</div>
-<div id="secureMenu_collab-list" class="collab-page">
-    <div class="title">
-        <b>List Name</b>
+    <div id="secureMenu_vertical" class="secureMenu-iconGroup vertical" style="z-index:9;">
+        {verticalEntries}
+        <div id="secureMenu_option-admin" title="Administration" onclick="showDialog('admin');" class="secureMenu-icon">
+            <span><i class="fas fa-cogs"></i></span>
+        </div>
+        <div id="secureMenu_option-moduleTrigger" title="Modules" onclick="triggerPane('module');" class="secureMenu-icon">
+            <span><i class="fas fa-puzzle-piece"></i></span>
+        </div>
+    </div>
+    <div id="secureMenu_panes">{panels}</div>
+    <div id="modals">{modals}</div>
+    <div id="secureMenu_pane-collab" class="secureMenu-pane vertical" style="display:none;"> 
+        <b>Collaborate</b>
         <hr>
-    </div>
-    <button class="collab-back" onclick="collab_hideList();" title="Go Back"><i class="fas fa-arrow-left"></i></button>
-    <div class="todos">
-    </div>
-    <div class="composer">
-        <form onsubmit="collab_addTodo();return false;">
-            <div class="input-group">
-                <input type="text" id="secureMenu_collab-todo-newentry" class="form-control" placeholder="New Item..." aria-label="New Item">
-                <div class="input-group-append">
-                    <button class="btn btn-outline-secondary" type="submit"><i class="fas fa-plus"></i></button>
+        <button class="collab-lg" onclick="collab_showPage('rooms');" title="Chat Rooms">
+            <i class="fas fa-comments"></i>
+            <span id="secureMenu_notif-rooms" class="notif-badge" style="display: none;">0</span>
+        </button><br>
+        <button class="collab-lg" onclick="collab_showPage('todo');" title="To-Do Lists">
+            <i class="fas fa-clipboard-list"></i>
+            <span id="secureMenu_notif-todo" class="notif-badge" style="display: none;">0</span>
+        </button><br>
+        <button class="collab-lg" onclick="collab_showPage('people');" title="People and Direct Messages">
+            <i class="fas fa-users"></i>
+            <span id="secureMenu_notif-people" class="notif-badge" style="display: none;">0</span>
+        </button><br>
+        <div id="secureMenu_collab-rooms" class="collab-page">
+            <button class="collab-back" onclick="collab_hidePage('rooms');" title="Go Back"><i class="fas fa-arrow-left"></i></button>
+            <button class="collab-new" onclick="collab_startCreate('room');" title="New Room"><i class="fas fa-plus"></i></button>
+            <b>Chat Rooms</b>
+            <hr>
+            <div id="secureMenu_collab-room-6fbde1fc117640048beb18f9d28cb39e" class="collab-person">
+                <div class="status offline">
+                    <div class="status online" style="height:100%;"></div>
                 </div>
+                <div class="info">
+                    Everyone<br>
+                    <small><i><span class="online">1/1 online</span></i></small>
+                </div>
+                <button class="collab-chat" title="Open Room" onclick="collab_showChat('R6fbde1fc117640048beb18f9d28cb39e', 'Everyone');">
+                    <i class="fas fa-comments"></i>
+                    <span class="notif-badge" style="display: none;">0</span>
+                </button>
             </div>
-        </form>
+        </div>
+        <div id="secureMenu_collab-todo" class="collab-page">
+            <button class="collab-back" onclick="collab_hidePage('todo');" title="Go Back"><i class="fas fa-arrow-left"></i></button>
+            <button class="collab-new" onclick="collab_startCreate('list');" title="New List"><i class="fas fa-plus"></i></button>
+            <b>To-Do Lists</b>
+            <hr>
+            <div id="secureMenu_collab-list-6fbde1fc117640048beb18f9d28cb39e" class="collab-person">
+                <div class="status incomplete">
+                    <div class="status complete" style="height:75%;"></div>
+                </div>
+                <div class="info">
+                    Example To-Do List<br>
+                    <small><i><span class="done">3/4 finished</span></i></small>
+                </div>
+                <button class="collab-chat" title="Open List" onclick="collab_showList('6fbde1fc117640048beb18f9d28cb39e', 'Example To-Do List');">
+                    <i class="fas fa-clipboard-list"></i>
+                    <span class="notif-badge" style="display: none;">0</span>
+                </button>
+            </div>
+        </div>
+        <div id="secureMenu_collab-people" class="collab-page">
+            <button class="collab-back" onclick="collab_hidePage('people');" title="Go Back"><i class="fas fa-arrow-left"></i></button>
+            <b>People</b>
+            <hr>
+            <div id="secureMenu_collab-person-fd2cd58021eb9764141c9e25e81e9458" class="collab-person">
+                <div class="status online"></div>
+                <div class="info">
+                    <b>Thomas Boland</b><br>
+                    <small><i><span class="page"><a href="/secureaccess" title="Secure Access Portal">Secure Access Portal</a></span></i></small>
+                </div>
+                <button class="collab-chat" title="Open Chat" onclick="collab_showChat('Ufd2cd58021eb9764141c9e25e81e9458', 'Thomas Boland');">
+                    <i class="fas fa-comment"></i>
+                    <span class="notif-badge" style="display: none;">0</span>
+                </button>
+            </div>
+        </div>
+        <div id="secureMenu_collab-list" class="collab-page">
+            <div class="title">
+                <b>List Name</b>
+                <hr>
+            </div>
+            <button class="collab-back" onclick="collab_hideList();" title="Go Back"><i class="fas fa-arrow-left"></i></button>
+            <div class="todos">
+            </div>
+            <div class="composer">
+                <form onsubmit="collab_addTodo();return false;">
+                    <div class="input-group">
+                        <input type="text" id="secureMenu_collab-todo-newentry" class="form-control" placeholder="New Item..." aria-label="New Item">
+                        <div class="input-group-append">
+                            <button class="btn btn-outline-secondary" type="submit"><i class="fas fa-plus"></i></button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div id="secureMenu_collab-chat" class="collab-page">
+            <div class="title">
+                <b>Chat Name</b>
+                <hr>
+            </div>
+            <button class="collab-back" onclick="collab_hideChat();" title="Go Back"><i class="fas fa-arrow-left"></i></button>
+            <div class="messages">
+            </div>
+            <div class="composer">
+                <form onsubmit="collab_sendMessage();return false;">
+                    <div class="input-group">
+                        <input type="text" id="secureMenu_collab-chat-newmessage" class="form-control" placeholder="Message..." aria-label="Message">
+                        <div class="input-group-append">
+                            <button class="btn btn-outline-secondary" type="submit"><i class="fab fa-telegram-plane"></i></button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div id="secureMenu_collab-create" class="collab-page">
+            <button class="collab-back" onclick="collab_hidePage('create');" title="Go Back"><i class="fas fa-arrow-left"></i></button>
+            <b>Create</b>
+            <hr>
+            <form onsubmit="collab_create();return false;">
+                <div class="form-group">
+                    <select class="form-control" id="secureMenu_collab-create-type">
+                        <option value="room" selected="">New Room</option>
+                        <option value="list">New List</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="secureMenu_collab-create-members">Participants</label>
+                    <select multiple="" class="form-control" id="secureMenu_collab-create-members">
+                        <option value="*" selected="">Everyone</option>
+                        <option value="fd2cd58021eb9764141c9e25e81e9458">Thomas Boland</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="secureMenu_collab-create-name">Name</label>
+                    <input type="text" class="form-control" id="secureMenu_collab-create-name" placeholder="Name">
+                </div>
+                <button type="submit" title="Create" class="collab-btn">Create</button>
+            </form>
+        </div>
     </div>
-</div>
-<div id="secureMenu_collab-chat" class="collab-page">
-    <div class="title">
-        <b>Chat Name</b>
+    <div id="secureMenu_pane-module" class="secureMenu-pane collapsed horizontal" style="display:none;">
+        <b>Modules</b>
         <hr>
+        <div></div>
     </div>
-    <button class="collab-back" onclick="collab_hideChat();" title="Go Back"><i class="fas fa-arrow-left"></i></button>
-    <div class="messages">
-    </div>
-    <div class="composer">
-        <form onsubmit="collab_sendMessage();return false;">
-            <div class="input-group">
-                <input type="text" id="secureMenu_collab-chat-newmessage" class="form-control" placeholder="Message..." aria-label="Message">
-                <div class="input-group-append">
-                    <button class="btn btn-outline-secondary" type="submit"><i class="fab fa-telegram-plane"></i></button>
-                </div>
-            </div>
-        </form>
-    </div>
-</div>
-<div id="secureMenu_collab-create" class="collab-page">
-    <button class="collab-back" onclick="collab_hidePage('create');" title="Go Back"><i class="fas fa-arrow-left"></i></button>
-    <b>Create</b>
-    <hr>
-    <form onsubmit="collab_create();return false;">
-        <div class="form-group">
-            <select class="form-control" id="secureMenu_collab-create-type">
-                <option value="room" selected="">New Room</option>
-                <option value="list">New List</option>
-            </select>
-        </div>
-        <div class="form-group">
-            <label for="secureMenu_collab-create-members">Participants</label>
-            <select multiple="" class="form-control" id="secureMenu_collab-create-members">
-                <option value="*" selected="">Everyone</option>
-                <option value="fd2cd58021eb9764141c9e25e81e9458">Thomas Boland</option>
-            </select>
-        </div>
-        <div class="form-group">
-            <label for="secureMenu_collab-create-name">Name</label>
-            <input type="text" class="form-control" id="secureMenu_collab-create-name" placeholder="Name">
-        </div>
-        <button type="submit" title="Create" class="collab-btn">Create</button>
-    </form>
 </div>
 <script>
     function collab_showPage(id) {
@@ -377,26 +380,7 @@
             $("#secureMenu_notif-people").show();
         }
     }
-</script>
-  </div>
-  <div id="secureMenu_pane-module" class="secureMenu-pane collapsed horizontal" style="display:none;">
-    <b>Modules</b>
-    <hr>
-    <div>
-        
-    </div>
-  </div>
-  <div id="secureMenu_pane-securepage" class="secureMenu-pane collapsed horizontal" style="display:none;">
-    <b>Secure Pages</b>
-    <hr>
-    <span onclick="createSecurePage();"><i class="fas fa-plus"></i></span>
-    <hr>
-    <div>
-        <a href="/secure/newpage">Test</a><br>
-            
-    </div>
-  </div>
-  <script>
+
     var secureMenuVisible = false;
     var secureMenuLastPane = "";
     var secureMenuPane = "";
@@ -435,4 +419,3 @@
       $("#secureMenu_pane-"+id).removeClass("collapsed");
     }
   </script>
-</div>

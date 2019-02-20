@@ -14,6 +14,9 @@ class SecureMenu
     // Singleton pattern
     private static $instance = null;
     
+    /**
+     * @return self
+     **/
     public static function Instance()
     {
         if (!self::$instance instanceof static) {
@@ -53,6 +56,18 @@ class SecureMenu
                 break;
         }
     }
+
+    public function addPanel(string $id, string $title, string $content, $direction=self::HORIZONTAL)
+    {
+        $panel = [
+            'id' => $id,
+            'title' => $title,
+            'content' => $content,
+            'direction' => ($direction == self::HORIZONTAL ? "horizontal" : "vertical"),
+        ];
+
+        array_push($this->panels, $panel);
+    }
     
     public function addModal(string $id, string $title, string $body, string $footer)
     {
@@ -76,7 +91,7 @@ class SecureMenu
         
         $secureMenuTemplate = file_get_contents(dirname(__FILE__) . "/templates/SecureMenu.template.html");
         $secureMenuEntryTemplate = file_get_contents(dirname(__FILE__) . "/templates/SecureMenuEntry.template.html");
-        
+        $secureMenuPanelTemplate = file_get_contents(dirname(__FILE__) . "/templates/SecureMenuPanel.template.html");
         $secureMenuModalTemplate = file_get_contents(dirname(__FILE__) . "/templates/SecureMenuModal.template.html");
         
         $compiledHorizontalEntries = "";
@@ -93,7 +108,11 @@ class SecureMenu
         foreach($reversedVerticalEntries as $entry) {
             $compiledVerticalEntries .= Utilities::fillTemplate($secureMenuEntryTemplate, $entry);
         }
-        
+
+        foreach(self::Instance()->panels as $panel) {
+            $compiledPanels .= Utilities::fillTemplate($secureMenuPanelTemplate, $panel);
+        }
+
         foreach(self::Instance()->modals as $modal) {
             $compiledModals .= Utilities::fillTemplate($secureMenuModalTemplate, $modal);
         }
@@ -107,21 +126,12 @@ class SecureMenu
         $menu = Utilities::fillTemplate($secureMenuTemplate, $template_vars);
         
         //return new Response($menu, false);
-
-        $securepages = [];
-        $stmt = Database::Instance()->prepare("SELECT pageid FROM content_pages WHERE secure=1 AND pageid NOT LIKE '_default/%';");
-        $stmt->execute();
-        $stmt->setFetchMode(PDO::FETCH_ASSOC);
-        $ps = $stmt->fetchAll();
-        foreach ($ps as $p) {
-            array_push($securepages, $p["pageid"]);
-        }
         
         $modals = "<div id=\"modals\">";
         $script = "<script>";
         $secure = "";
 
-        $secure .= $TEMPLATES["secure-menu"]($securepages, $availablemodules, $modules);
+        $secure .= $TEMPLATES["secure-menu"]($availablemodules, $modules);
 
         // Page manager menu
         if (User::$currentUser->permissions->admin_managepages) {

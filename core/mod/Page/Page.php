@@ -205,6 +205,30 @@ class Page
         }
         if (User::$currentUser->permissions->page_viewsecure) {
             SecureMenu::Instance()->addEntry("securepageTrigger", "Secure Pages", "triggerPane('securepage');", '<i class="fas fa-lock"></i>', SecureMenu::VERTICAL);
+            $secureListEntryTemplate = file_get_contents(dirname(__FILE__) . "/templates/SecurePagePanelEntry.template.html");
+            $securePageList = "";
+
+            $stmt = Database::Instance()->prepare("SELECT pageid FROM content_pages WHERE secure=1 AND pageid NOT LIKE '_default/%';");
+            $stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
+            $ps = $stmt->fetchAll();
+            foreach ($ps as $p) {
+                if (!in_array($p["pageid"], User::$currentUser->permissions->page_viewblacklist)) {
+                    $template_vars = [
+                        'url' => "/" . $p["pageid"],
+                        'title' => Page::getTitleFromId($p["pageid"]),
+                    ];
+                    $securePageList .= Utilities::fillTemplate($secureListEntryTemplate, $template_vars);
+                }
+            }
+            $template_vars = [
+                'create' => "",
+                'list' => $securePageList,
+            ];
+            if (User::$currentUser->permissions->page_createsecure) {
+                $template_vars['create'] = file_get_contents(dirname(__FILE__) . "/templates/SecurePagePanelCreate.template.html");
+            }
+            $panelContent = Utilities::fillTemplate(file_get_contents(dirname(__FILE__) . "/templates/SecurePagePanel.template.html"), $template_vars);
+            SecureMenu::Instance()->addPanel("securepage", "Secure Pages", $panelContent, SecureMenu::HORIZONTAL);
         }
         
         SecureMenu::Instance()->addEntry("home", "Home", "location.assign('/');", '<i class="fas fa-home"></i>', SecureMenu::HORIZONTAL);

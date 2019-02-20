@@ -19,15 +19,6 @@ $TEMPLATES = [
 
     $canChat = true; // temporary chat permission
 
-    $securePageListing = '';
-    foreach ($securepages as $sp) {
-        if (!in_array($sp, User::$currentUser->permissions->page_viewblacklist)) {
-            $spd = new Page($sp);
-            $securePageListing .= '<a href="/'.$sp.'">'.$spd->title.'</a><br />
-            ';
-        }
-    }
-
     $moduleListing = '';
     /*
     foreach($availablemodules as $m) {
@@ -86,15 +77,6 @@ $TEMPLATES = [
     <hr />
     <div>
         ' . $moduleListing . '
-    </div>
-  </div>' : '') . (User::$currentUser->permissions->page_viewsecure ? '
-  <div id="secureMenu_pane-securepage" class="secureMenu-pane collapsed horizontal" style="display:none;">
-    <b>Secure Pages</b>
-    <hr />' . (User::$currentUser->permissions->page_createsecure ? '
-    <span onclick="createSecurePage();"><i class="fas fa-plus"></i></span>
-    <hr />' : '') . '
-    <div>
-        ' . $securePageListing . '
     </div>
   </div>' : '') . '
   <script>
