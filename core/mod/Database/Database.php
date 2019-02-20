@@ -26,12 +26,16 @@ class Database extends PDO
     private $connectionStatus = "";
     private $connection = null;
     
-    public function __construct()
+    public function __construct($configFile="")
     {
-        global $db_config;
+        if (!file_exists($configFile)) {
+            $configFile = dirname(__FILE__) . "/config.ini";
+        }
+        
+        $db_config = parse_ini_file($configFile);
         
         try {
-            parent::__construct("mysql:host=" . $db_config->host . ";dbname=" . $db_config->database, $db_config->user, $db_config->pass);
+            parent::__construct("mysql:host=" . $db_config["host"] . ";dbname=" . $db_config["database"], $db_config["username"], $db_config["password"]);
             $this->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
             $this->connectionOpen = true;
         } catch(PDOException $e) {
