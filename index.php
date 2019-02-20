@@ -4,14 +4,10 @@ use \Lib\CCMS\CCMSCore;
 
 require_once "core/autoload.php";
 
-use \Lib\CCMS\Utilities;
 include "assets/server/templates.php";
 
 $https = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] != 'off') ? "https" : "http";
 $baseUrl = $https . "://" . $_SERVER["SERVER_NAME"];
-
-Utilities::load_jsons(); // Still need this for now for configuration info.
-                         // Should move this stuff to .ini files with a new loader class
 
 $core = new CCMSCore();
 $request = $core->buildRequest();

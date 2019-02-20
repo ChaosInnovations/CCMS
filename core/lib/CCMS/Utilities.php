@@ -9,12 +9,6 @@ use \PDO;
 
 class Utilities
 {
-    function load_jsons()
-    {
-        global $ccms_info;
-        $ccms_info = json_decode(file_get_contents($_SERVER["DOCUMENT_ROOT"] . "/assets/server/ccms-info.json", true));
-    }
-    
     function getconfig($property)
     {
         $stmt = Database::Instance()->prepare("SELECT * FROM config WHERE property=:property;");

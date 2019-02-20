@@ -857,7 +857,8 @@ $(document).keydown(function(event) {
 // Body
 "secure-modal-admin-bodyfoot" => function($pages, $users) {
 	global $TEMPLATES;
-	global $ccms_info;
+    
+	$ccms_info = parse_ini_file($_SERVER["DOCUMENT_ROOT"] . "/core/ccms-info.ini");
 	
 	$pagelist = "";
 	foreach ($pages as $page) {
@@ -873,7 +874,7 @@ $(document).keydown(function(event) {
 	$primaryemail = Utilities::getconfig("primaryemail");
 	$secondaryemail = Utilities::getconfig("secondaryemail");
 	
-	$releasedate = date("l, F j, Y", strtotime($ccms_info->release));
+	$releasedate = date("l, F j, Y", strtotime($ccms_info["release"]));
 	$creationdate = date("l, F j, Y", strtotime(Utilities::getconfig("creationdate")));
 	
 	return '
@@ -1016,10 +1017,10 @@ $(document).keydown(function(event) {
 				</div>':'').'
 		        <div class="tab-pane fade" id="dialog_admin_panel_ccms" role="tabpanel" aria-labelledby="dialog_admin_tab_ccms">
 					<dl>
-						<div class="row"><dt class="col-12 col-sm-4">Version</dt><dd class="col-12 col-sm-8">' . $ccms_info->version .'</dd></div>
+						<div class="row"><dt class="col-12 col-sm-4">Version</dt><dd class="col-12 col-sm-8">' . $ccms_info["version"] .'</dd></div>
 						<div class="row"><dt class="col-12 col-sm-4">Release Date</dt><dd class="col-12 col-sm-8">' . $releasedate . '</dd></div>
-						<div class="row"><dt class="col-12 col-sm-4">Author</dt><dd class="col-12 col-sm-8"><a href="mailto:' . $ccms_info->a_email .'" title="' . $ccms_info->a_email .'">' . $ccms_info->author .'</a></dd></div>
-						<div class="row"><dt class="col-12 col-sm-4">CCMS Website</dt><dd class="col-12 col-sm-8"><a href="' . $ccms_info->website .'" title="Chaos CMS Website">' . $ccms_info->website .'</a></dd></div>
+						<div class="row"><dt class="col-12 col-sm-4">Author</dt><dd class="col-12 col-sm-8"><a href="mailto:' . $ccms_info["a_email"] .'" title="' . $ccms_info["a_email"] .'">' . $ccms_info["author"] .'</a></dd></div>
+						<div class="row"><dt class="col-12 col-sm-4">CCMS Website</dt><dd class="col-12 col-sm-8"><a href="' . $ccms_info["website"] .'" title="Chaos CMS Website">' . $ccms_info["website"] .'</a></dd></div>
 						<div class="row"><dt class="col-12 col-sm-4">Website created</dt><dd class="col-12 col-sm-8">' . $creationdate .'</dd></div>
 					</dl>
 				</div>
