@@ -29,6 +29,7 @@ $TEMPLATES = [
 	}
 	
 	$moduleListing = '';
+    /*
 	foreach($availablemodules as $m) {
 		$mc = $modules[$m];
 		if (isset($mc->name) && method_exists($mc, "getModal")) {
@@ -36,6 +37,7 @@ $TEMPLATES = [
 			';
 		}
 	}
+    */
 	
 	return '
 <div id="secureMenu" class="secureMenu">

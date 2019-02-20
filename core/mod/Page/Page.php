@@ -130,6 +130,7 @@ class Page
 
         // Module menus
         if (User::$currentUser->permissions->admin_managesite) {
+            /*
             foreach ($availablemodules as $m) {
                 $mc = $modules[$m];
                 if (method_exists($mc, "getModal")) {
@@ -141,6 +142,7 @@ class Page
                     $script .= $mc->getScript();
                 }
             }
+            */
         }
 
         $modals .= "</div>";

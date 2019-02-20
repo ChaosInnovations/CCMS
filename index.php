@@ -13,37 +13,6 @@ $baseUrl = $https . "://" . $_SERVER["SERVER_NAME"];
 Utilities::load_jsons(); // Still need this for now for configuration info.
                          // Should move this stuff to .ini files with a new loader class
 
-// LOAD MODULES
-$modulepath = "assets/server_modules/";
-$availablemodules = ["builtin"];
-$modules = [];
-include "assets/server/builtin_placeholders.php";
-$modules["builtin"] = new builtin_placeholders();
-foreach (scandir($modulepath) as $path) {
-	if ($path != "." and $path != "..") {
-		if (file_exists("{$modulepath}{$path}/module.php")) {
-			include("{$modulepath}{$path}/module.php");
-			array_push($availablemodules, $path);
-			try {
-				$modclass = "\\module\\{$path}\\module";
-				$modules[$path] = new $modclass();
-			} catch (Exception $e) {
-				echo $e;
-			}
-		}
-	}
-}
-foreach ($availablemodules as $m) {
-	foreach ($modules[$m]->dependencies as $d) {
-		if (!in_array($d, $availablemodules)) {
-			array_splice($availablemodules, array_search($m, $availablemodules), 1);
-			unset($modules[$m]);
-			array_push($msgs, "Missing dependency for module ".$m.": ".$d.".");
-			break;
-		}
-	}
-}
-
 $core = new CCMSCore();
 $request = $core->buildRequest();
 $response = $core->processRequest($request);
@@ -133,11 +102,13 @@ if (isset($_GET["run_scheduled_tasks"])) {
                 $mod = "builtin";
                 $func = $funcparts[0];
             }
+            /*
             if (in_array($mod, $availablemodules)) {
                 if (method_exists($modules[$mod], $func)) {
                     $modules[$mod]->$func($args);
                 }
             }
+            */
         }
         $stmt = $conn->prepare("DELETE FROM schedule WHERE `index`=:idx;");
         $stmt->bindParam(":idx", $job["index"]);
