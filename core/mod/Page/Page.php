@@ -147,7 +147,7 @@ class Page
         $script .= "</script>";
 
         $header = $secure . $modals . $script . $top;
-        
+
         return $header;
     }
 
@@ -160,72 +160,6 @@ class Page
         return (new Page("_default/bottom"))->body;
     }
 
-    public function resolvePlaceholders()
-    {
-        global $availablemodules, $modules;
-        
-        $this->body = $this->getTop() . $this->body . $this->getBottom();
-
-        $placeholders = [];
-        preg_match_all("/\{{2}[^\}]+\}{2}/", $this->body, $placeholders);
-
-        foreach ($placeholders[0] as $pcode) {
-            
-            if ($pcode == null || $pcode == "") {
-                continue;
-            }
-
-            $pcode_trim = trim($pcode, "{}");
-
-            $placeparts = explode(">", $pcode_trim, 2);
-            $module = "builtin";
-            $func = $placeparts[0];
-            if (count($placeparts) == 2) {
-                $module = $placeparts[0];
-                $func = $placeparts[1];
-            }
-
-            $funcparts = explode(":", $func, 2);
-            $func = "place_" . $funcparts[0];
-            $args = [];
-            if (count($funcparts) == 2) {
-                $args = explode(";", $funcparts[1]);
-            }
-
-            if (!in_array($module, $availablemodules)) {
-                $content = "
-                    <script>
-                        console.warn('No such module \'{$mod}\'!');
-                    </script>
-                ";
-                $this->body = str_replace($pcode, $content, $this->body);
-                continue;
-            }
-
-            if (!method_exists($modules[$module], $func)) {
-                $content = "
-                    <script>
-                        console.warn('No function \'{$func}\' in module \'{$module}\'!');
-                    </script>
-                ";
-                $this->body = str_replace($pcode, $content, $this->body);
-                continue;
-            }
-
-            try {
-                $content = $modules[$module]->$func($args);
-            } catch (Exception $e) {
-                $content = "
-                    <script>
-                        console.error('Exception in \'{$func}\' in module \'{$module}\':\n{$e}');
-                    </script>
-                ";
-            }
-            
-            $this->body = str_replace($pcode, $content, $this->body);
-        }
-    }
-
     public function insertHead()
     {
         $pre = "";
@@ -235,13 +169,13 @@ class Page
         $sitetitle = Utilities::getconfig("websitetitle");
         echo "{$pre}<title>{$this->title} | {$sitetitle}</title>{$this->head}";
     }
-    
+
     public function getContent()
     {
         global $https;
         
-        $this->resolvePlaceholders();
-        
+        $this->body = $this->getTop() . $this->body . $this->getBottom();
+
         $content  = '<!DOCTYPE html>
 <html>
 	<head>
@@ -288,7 +222,7 @@ class Page
 
         return $content;
     }
-    
+
     public static function pageExists(string $pid)
     {
         $stmt = Database::Instance()->prepare("SELECT pageid FROM content_pages WHERE pageid=:pid;");
@@ -296,52 +230,52 @@ class Page
         $stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
         return count($stmt->fetchAll()) == 1;
     }
-    
+
     public static function getTitleFromId(string $pid)
     {
         $stmt = Database::Instance()->prepare("SELECT title FROM content_pages WHERE pageid=:pid;");
         $stmt->bindParam(":pid", $pid);
         $stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
         $pages = $stmt->fetchAll();
-        
+
         if (count($pages) != 1) {
             return "Unknown";
         }
-        
+
         return urldecode($pages[0]["title"]);
     }
-    
+
     public static function hook(Request $request)
     {
         $pageid = $request->getEndpoint();
-        
+
         if (!Page::pageExists($pageid)) {
             $pageid = "_default/notfound";
         }
-        
+
         $stmt = Database::Instance()->prepare("UPDATE users SET collab_pageid=:pid WHERE uid=:uid;");
         $stmt->bindParam(":pid", $pageid);
         $stmt->bindParam(":uid", User::$currentUser->uid);
         $stmt->execute();
-        
+
         $page = new Page($pageid);
-        
+
         return new Response($page->getContent(), false);
     }
-    
+
     public static function hookNewPage(Request $request)
     {
         if (isset($_POST["s"]) and $_POST["s"] and !User::$currentUser->permissions->page_createsecure) {
             return new Response("FALSE");
         }
-        
+
         if ((!isset($_POST["s"]) or !$_POST["s"]) and !User::$currentUser->permissions->page_create) {
             return new Response("FALSE");
         }
-        
+
         $secure = isset($_POST["s"]) and $_POST["s"];
         $npid = ($secure ? "secure/" : "") . "newpage";
-        
+
         $c = 0;
         $ok = !Page::pageExists($npid);
         while (!$ok) {
@@ -349,14 +283,14 @@ class Page
             $npid = ($secure ? "secure/" : "") . "newpage" . $c;
             $ok = !Page::pageExists($npid);
         }
-        
+
         $s = $secure ? "1" : "0";
         $now = date("Y-m-d");
-        
+
         $stmt = Database::Instance()->prepare("SELECT * FROM content_pages WHERE pageid='_default/page';");
         $stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
         $template = $stmt->fetchAll()[0];
-        
+
         $stmt = Database::Instance()->prepare("INSERT INTO content_pages VALUES (:pageid, :title, :head, :body, :usehead, :usetop, :usebottom, :secure, :now);");
         $stmt->bindParam(":pageid", $npid);
         $stmt->bindParam(":title", $template["title"]);
@@ -370,47 +304,47 @@ class Page
         $stmt->execute();
         return new Response($npid);
     }
-    
+
     public static function hookRemovePage(Request $request)
     {
         if (!isset($_POST["pid"]) or !Page::pageExists($_POST["pid"])) {
             return new Response("FALSE");
         }
-        
+
         $pid = $_POST["pid"];
         if (in_array($pid, ["", "secureaccess"]) || substr($pid, 0, 9) === "_default/") {
             return new Response("SPECIAL");
         }
-        
+
         if (!User::$currentUser->permissions->admin_managepages) {
             return new Response("FALSE");
         }
-        
+
         $stmt = Database::Instance()->prepare("DELETE FROM content_pages WHERE pageid=:pid;");
         $stmt->bindParam(":pid", $pid);
         $stmt->execute();
         return new Response("TRUE");
     }
-    
+
     public static function hookSecurePage(Request $request)
     {
         if (!isset($_POST["state"])) {
             return new Response("FALSE");
         }
-        
+
         if (!isset($_POST["pid"]) or !Page::pageExists($_POST["pid"])) {
             return new Response("FALSE");
         }
-        
+
         $pid = $_POST["pid"];
         if (in_array($pid, ["", "secureaccess"]) || substr($pid, 0, 9) === "_default/") {
             return new Response("SPECIAL");
         }
-        
+
         if (!User::$currentUser->permissions->admin_managepages) {
             return new Response("FALSE");
         }
-        
+
         $s = $_POST["state"] == "true" ? "1" : "0";
         $now = date("Y-m-d");
         $stmt = Database::Instance()->prepare("UPDATE content_pages SET secure=:secure, revision=:now WHERE pageid=:pid;");
@@ -420,7 +354,7 @@ class Page
         $stmt->execute();
         return new Response("TRUE");
     }
-    
+
     public static function hookCheckPid(Request $request)
     {
         if (!isset($_POST["pageid"]) ||
@@ -435,10 +369,10 @@ class Page
             in_array($_POST["pageid"], ["", "secureaccess"]) || substr($_POST["pageid"], 0, 9) === "_default/") {
             return new Response("FALSE");
         }
-        
+
         return new Response("TRUE");
     }
-    
+
     public static function hookEditPage(Request $request)
     {
         if (!isset($_POST["pageid"]) ||
@@ -451,33 +385,33 @@ class Page
             !isset($_POST["usebottom"])) {
             return new Response("FALSE");
         }
-        
+
         if (!Page::pageExists($_POST["pageid"])) {
             return new Response("FALSE");
         }
-        
+
         $page = new Page($_POST["pageid"]);
-        
-        if (!$authuser->permissions->page_edit ||
+
+        if (!User::$currentUser->permissions->page_edit ||
             ($page->secure && !User::$currentUser->permissions->page_editsecure) ||
             in_array($page->pageid, User::$currentUser->permissions->page_viewblacklist) ||
             in_array($page->pageid, User::$currentUser->permissions->page_editblacklist)) {
             return new Response("FALSE");
         }
-        
+
         $newpageid = $_POST["newpageid"];
-        
+
         if (!($newpageid == $page->pageid || !(in_array($page->pageid, ["", "secureaccess"]) || substr($page->pageid, 0, 9) === "_default/"))) {
             return new Response("FALSE");
         }
-        
+
         if (!(!Page::pageExists($newpageid) || $newpageid == $page->pageid) ||
             in_array($newpageid, ["TRUE", "FALSE"])) {
             return new Response("FALSE");
         }
-        
+
         $now = date("Y-m-d");
-        $stmt = Connection::Instance()->prepare("UPDATE content_pages SET pageid=:pageid, title=:title, head=:head, body=:body, usehead=:usehead, usetop=:usetop, usebottom=:usebottom, revision=:now WHERE pageid=:oldpid;");
+        $stmt = Database::Instance()->prepare("UPDATE content_pages SET pageid=:pageid, title=:title, head=:head, body=:body, usehead=:usehead, usetop=:usetop, usebottom=:usebottom, revision=:now WHERE pageid=:oldpid;");
         $stmt->bindParam(":pageid", $newpageid);
         $stmt->bindParam(":oldpid", $page->pageid);
         $stmt->bindParam(":title", $_POST["title"]);
@@ -488,11 +422,11 @@ class Page
         $stmt->bindParam(":usebottom", $_POST["usebottom"]);
         $stmt->bindParam(":now", $now);
         $stmt->execute();
-        
+
         if ($newpageid == $page->pageid) {
             return new Response("TRUE");
         }
-        
+
         return new Response($newpageid);
     }
 }

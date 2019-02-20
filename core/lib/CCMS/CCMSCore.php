@@ -40,7 +40,7 @@ class CCMSCore
             try {
                 $result = $hookFunctionName($request, $response);
             } catch (Exception $e) {
-                echo $e;
+                $response->append(new Response($e));
             }
             
             if ($result instanceof Response) {
