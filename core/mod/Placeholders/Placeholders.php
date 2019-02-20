@@ -4,6 +4,7 @@ namespace Mod;
 
 use \Lib\CCMS\Request;
 use \Lib\CCMS\Response;
+use \Lib\CCMS\Utilities;
 
 class Placeholders
 {
@@ -42,11 +43,11 @@ class Placeholders
                     try {
                         $result = $hookFunctionName($args, $func, $request);
                     } catch (Exception $e) {
-                        $result = "
-                            <script>
-                                console.error('Exception in \'{$func}\' in module \'{$module}\':\n{$e}');
-                            </script>
-                        ";
+                        $template_vars = [
+                            "function" => $func,
+                            "description" => $e,
+                        ];
+                        $result = Utilities::fillTemplate(file_get_contents(dirname(__FILE__) . "/PlaceholderException.template.html"), $template_vars);
                     }
                     
                     $content = str_replace($pcode, $result, $content);
@@ -63,10 +64,10 @@ class Placeholders
     
     public static function placeholderFallback($args, $func)
     {
-        return "
-            <script>
-                console.warn('No placeholder hooks matched \'{{{$func}}}\'!');
-            </script>
-        ";
+        $template_vars = [
+            "function" => $func,
+        ];
+        $result = Utilities::fillTemplate(file_get_contents(dirname(__FILE__) . "/PlaceholderFallback.template.html"), $template_vars);
+        return $result;
     }
 }
