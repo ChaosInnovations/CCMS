@@ -32,10 +32,13 @@ $hooks = [
     ['/^web:\/?api\/page\/checkpid\/?$/i',        "\Mod\Page::hookCheckPid"],
     
     ['/^web:\/?api\/contactform\/response\/?$/i', "\Mod\ContactForm::hookFormResponse"],
+    
 
     ['/(?!.*\.[a-z]*$)^web:.*$/i',                "\Mod\Page::hook"],                             // Capture all remaining hooks that don't have an extension
     
-    ['/(?!.*\.[a-z]*$)^web:.*$/',                 "\Mod\SecureMenu::hook"],
+    ['/(?!.*\.[a-z]*$)^web:.*$/i',                "\Mod\User::hookMenu"],
+    
+    ['/(?!.*\.[a-z]*$)^web:.*$/i',                "\Mod\SecureMenu::hook"],
 
     ['/^web:.*/',                                 "\Mod\Placeholders::hookEvaluatePlaceholders"], // Evaluate placeholders
 ];

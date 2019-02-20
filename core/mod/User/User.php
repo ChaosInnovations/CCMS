@@ -7,6 +7,7 @@ use \Lib\CCMS\Request;
 use \Lib\CCMS\Utilities;
 use \Mod\Database;
 use \Mod\Mailer;
+use \Mod\SecureMenu;
 use \Mod\User\AccountManager;
 use \Mod\User\UserPermissions;
 use \PDO;
@@ -193,6 +194,23 @@ class User
         $stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
 
         return count($stmt->fetchAll());
+    }
+    
+    public static function hookMenu(Request $request)
+    {
+        SecureMenu::Instance()->addEntry("account", "Account Details", "showDialog('account');", '<i class="fas fa-user-cog"></i>', SecureMenu::HORIZONTAL);
+        SecureMenu::Instance()->addEntry("signout", "Sign Out", "logout();", '<i class="fas fa-sign-out-alt"></i>', SecureMenu::HORIZONTAL);
+        
+        $template_vars = [
+            'name' => User::$currentUser->name,
+            'notifyChecked' => (User::$currentUser->notify ? ' checked' : ''),
+            'email' => User::$currentUser->email,
+            'registerdate' => User::$currentUser->registerdate,
+            'permissions' => User::$currentUser->rawperms,
+            'uid' => User::$currentUser->uid,
+        ];
+        $accountModalBody = Utilities::fillTemplate(file_get_contents(dirname(__FILE__) . "/templates/AccountModalBody.template.html"), $template_vars);
+        SecureMenu::Instance()->addModal("dialog_account", "Account Details", $accountModalBody, "");
     }
     
     public static function hookAuthenticateFromRequest(Request $request)

@@ -70,6 +70,10 @@ class SecureMenu
     {
         global $TEMPLATES, $availablemodules, $modules;
         
+        if (!User::$currentUser->permissions->toolbar) {
+            return;
+        }
+        
         $secureMenuTemplate = file_get_contents(dirname(__FILE__) . "/templates/SecureMenu.template.html");
         $secureMenuEntryTemplate = file_get_contents(dirname(__FILE__) . "/templates/SecureMenuEntry.template.html");
         
@@ -134,12 +138,6 @@ class SecureMenu
             $script .= $TEMPLATES["secure-modal-admin-script"]();
             $modals .= $TEMPLATES["secure-modal-end"];
         }
-
-        // Account menu
-        $modals .= $TEMPLATES["secure-modal-start"]("dialog_account", "Account Details", "lg");
-        $modals .= $TEMPLATES["secure-modal-account-bodyfoot"]();
-        $modals .= $TEMPLATES["secure-modal-end"];
-        $script .= $TEMPLATES["secure-modal-account-script"];
 
         // Module menus
         if (User::$currentUser->permissions->admin_managesite) {
