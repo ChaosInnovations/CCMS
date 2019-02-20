@@ -429,4 +429,9 @@ class Page
 
         return new Response($newpageid);
     }
+    
+    public static function placeholderPageId($args, $func, $request)
+    {
+        return $request->getEndpoint();
+    }
 }

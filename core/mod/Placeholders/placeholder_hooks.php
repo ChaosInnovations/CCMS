@@ -6,5 +6,7 @@
 
 $placeholder_hooks = [
     ['/^loginform$/', "\Mod\User::placeholderLoginForm"],
+    ['/^pageid$/', "\Mod\Page::placeholderPageId"],
+    
     ['/.*/', "\Mod\Placeholders::placeholderFallback"],
 ];

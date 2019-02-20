@@ -126,7 +126,7 @@ INSERT INTO `content_pages` VALUES('secure/newpage', 'Test', '', '%7B%7Bsitemap%
 INSERT INTO `content_pages` VALUES('secureaccess', 'Secure%20Access%20Portal', '', '%7B%7Bloginform%7D%7D', 1, 1, 1, 0, '2017-01-29');
 INSERT INTO `content_pages` VALUES('_default/bottom', 'Default%20Bottom', '', 'This%20goes%20after', 0, 0, 0, 1, '2018-09-21');
 INSERT INTO `content_pages` VALUES('_default/head', 'Default%20Head', '', '', 0, 0, 0, 1, '0000-00-00');
-INSERT INTO `content_pages` VALUES('_default/notfound', 'Page%20not%20found!', '', 'Page%20not%20Found%3A%20%3Ca%20href%3D%22%7B%7Bqueryerr%7D%7D%22%3E%7B%7Bqueryerr%7D%7D%3C%2Fa%3E', 1, 1, 1, 0, '2018-09-20');
+INSERT INTO `content_pages` VALUES('_default/notfound', 'Page%20not%20found!', '', 'Page%20not%20Found%3A%20%3Ca%20href%3D%22%7B%7Bpageid%7D%7D%22%3E%7B%7Bqueryerr%7D%7D%3C%2Fa%3E', 1, 1, 1, 0, '2018-09-20');
 INSERT INTO `content_pages` VALUES('_default/page', 'New%20Page', '', 'This%20is%20a%20new%20page!', 1, 1, 1, 1, '2018-09-21');
 INSERT INTO `content_pages` VALUES('_default/top', 'Default%20Top', '', 'This%20goes%20before', 0, 0, 0, 1, '2018-09-21');
 

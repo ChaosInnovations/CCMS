@@ -7,10 +7,6 @@ use \Mod\User;
 class builtin_placeholders {
 	public $dependencies = [];
 	
-	function place_queryerr() {
-		return $_SERVER['REQUEST_URI'];
-	}
-	
 	function place_contactform() {
 		$html = '
 <form onsubmit="module_builtin_contactus_submit();return false;">

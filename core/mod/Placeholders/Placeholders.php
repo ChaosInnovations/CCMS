@@ -40,7 +40,7 @@ class Placeholders
                     $result = "";
                     
                     try {
-                        $result = $hookFunctionName($args, $func);
+                        $result = $hookFunctionName($args, $func, $request);
                     } catch (Exception $e) {
                         $result = "
                             <script>
@@ -65,7 +65,7 @@ class Placeholders
     {
         return "
             <script>
-                console.warn('No placeholder hooks matched \'{$func}\'!');
+                console.warn('No placeholder hooks matched \'{{{$func}}}\'!');
             </script>
         ";
     }
