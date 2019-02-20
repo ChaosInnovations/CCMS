@@ -1,6 +1,6 @@
 <?php
 
-namespace Lib/PHPMailer;
+namespace Lib\PHPMailer;
 
 /**
  * PHPMailer POP-Before-SMTP Authentication Class.
