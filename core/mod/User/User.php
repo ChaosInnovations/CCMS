@@ -383,101 +383,101 @@ class User
     public static function placeholderLoginForm($args)
     {
         if (User::$currentUser->uid == null) {
-			$html = '
+            $html = '
 <form id="loginform" class="form" onsubmit="return loginSubmission();">
-	<div class="form-group">
-		<label class="col-form-label" for="loginemail">Email Address</label>
-		<div class="input-group">
-			<input type="email" id="loginemail" autocomplete="email" class="form-control border-right-0 border-secondary" title="Email" placeholder="Email Address" oninput="loginCheckEmail();">
-			<div class="input-group-append">
-				<div class="input-group-text bg-transparent border-left-0 border-secondary">
-					<i class="fas fa-times" style="display:none;"></i>
-					<i class="fas fa-check" style="display:none;"></i>
-				</div>
-			</div>
-		</div>
-	</div>
-	<div class="form-group">
-		<label class="col-form-label" for="loginpass">Current Password</label>
-		<div class="input-group">
-			<input type="password" id="loginpass" autocomplete="current-password" class="form-control border-right-0 border-secondary" title="Password" placeholder="Password" oninput="loginCheckPass();">
-			<div class="input-group-append">
-				<div class="input-group-text bg-transparent border-left-0 border-secondary">
-					<i class="fas fa-times" style="display:none;"></i>
-					<i class="fas fa-check" style="display:none;"></i>
-				</div>
-			</div>
-		</div>
-	</div>
-	<div class="form-group">
-		<input id="loginbutton" type="submit" class="btn btn-success" title="Log In" value="Log In">
-	</div>
+    <div class="form-group">
+        <label class="col-form-label" for="loginemail">Email Address</label>
+        <div class="input-group">
+            <input type="email" id="loginemail" autocomplete="email" class="form-control border-right-0 border-secondary" title="Email" placeholder="Email Address" oninput="loginCheckEmail();">
+            <div class="input-group-append">
+                <div class="input-group-text bg-transparent border-left-0 border-secondary">
+                    <i class="fas fa-times" style="display:none;"></i>
+                    <i class="fas fa-check" style="display:none;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="form-group">
+        <label class="col-form-label" for="loginpass">Current Password</label>
+        <div class="input-group">
+            <input type="password" id="loginpass" autocomplete="current-password" class="form-control border-right-0 border-secondary" title="Password" placeholder="Password" oninput="loginCheckPass();">
+            <div class="input-group-append">
+                <div class="input-group-text bg-transparent border-left-0 border-secondary">
+                    <i class="fas fa-times" style="display:none;"></i>
+                    <i class="fas fa-check" style="display:none;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="form-group">
+        <input id="loginbutton" type="submit" class="btn btn-success" title="Log In" value="Log In">
+    </div>
 </form>
 <script>
 var isLoggingIn = false;
 
 function loginCheckEmail() {
-	module_ajax("checkuser", {email: $("#loginemail").val()}, function (data) {
-		if (data == "TRUE") {
-			$("#loginemail").parent().removeClass("has-error");
-			$("#loginemail").parent().addClass("has-success");
-			$("#loginemail").parent().find(".fa-times").hide();
-			$("#loginemail").parent().find(".fa-check").show();
-		} else {
-			$("#loginemail").parent().removeClass("has-success");
-			$("#loginemail").parent().addClass("has-error");
-			$("#loginemail").parent().find(".fa-check").hide();
-			$("#loginemail").parent().find(".fa-times").show();
-		}
-	});
-	loginCheckPass();
+    module_ajax("checkuser", {email: $("#loginemail").val()}, function (data) {
+        if (data == "TRUE") {
+            $("#loginemail").parent().removeClass("has-error");
+            $("#loginemail").parent().addClass("has-success");
+            $("#loginemail").parent().find(".fa-times").hide();
+            $("#loginemail").parent().find(".fa-check").show();
+        } else {
+            $("#loginemail").parent().removeClass("has-success");
+            $("#loginemail").parent().addClass("has-error");
+            $("#loginemail").parent().find(".fa-check").hide();
+            $("#loginemail").parent().find(".fa-times").show();
+        }
+    });
+    loginCheckPass();
 }
 
 function loginCheckPass() {
-	module_ajax("checkpass", {email: $("#loginemail").val(), password: $("#loginpass").val()}, function(data) {
-		if (data == "TRUE") {
-			$("#loginpass").parent().removeClass("has-error");
-			$("#loginpass").parent().addClass("has-success");
-			$("#loginpass").parent().find(".fa-times").hide();
-			$("#loginpass").parent().find(".fa-check").show();
-			loginSubmission();
-		} else {
-			$("#loginpass").parent().removeClass("has-success");
-			$("#loginpass").parent().addClass("has-error");
-			$("#loginpass").parent().find(".fa-check").addClass("hidden");
-			$("#loginpass").parent().find(".fa-times").removeClass("hidden");
-		}
-	});
+    module_ajax("checkpass", {email: $("#loginemail").val(), password: $("#loginpass").val()}, function(data) {
+        if (data == "TRUE") {
+            $("#loginpass").parent().removeClass("has-error");
+            $("#loginpass").parent().addClass("has-success");
+            $("#loginpass").parent().find(".fa-times").hide();
+            $("#loginpass").parent().find(".fa-check").show();
+            loginSubmission();
+        } else {
+            $("#loginpass").parent().removeClass("has-success");
+            $("#loginpass").parent().addClass("has-error");
+            $("#loginpass").parent().find(".fa-check").addClass("hidden");
+            $("#loginpass").parent().find(".fa-times").removeClass("hidden");
+        }
+    });
 }
 
 function loginSubmission() {
-	if (isLoggingIn) {
-		return false;
-	}
-	isLoggingIn = true;
-	$("#loginbutton")[0].disabled = true;
-	module_ajax("newtoken", {email: $("#loginemail").val(), password: $("#loginpass").val()}, function(data) {
-		if (data != "FALSE") {
-			var d = new Date(Date.now()+(3600000*24*30));
-			document.cookie = "token="+data+"; expires="+d.toUTCString()+"; path=/";
-			if (window.location.search.indexOf("?n") == -1) {
-				window.location.reload(true);
-			} else {
-				var url = BASE_URL + "/" + window.location.search.substr(window.location.search.indexOf("?n")+3);
-				window.location.assign(url);
-			}
-		} else {
-			$("#loginbutton")[0].disabled = false;
-			isLoggingIn = false;
-		}
-	});
-	return false;
+    if (isLoggingIn) {
+        return false;
+    }
+    isLoggingIn = true;
+    $("#loginbutton")[0].disabled = true;
+    module_ajax("newtoken", {email: $("#loginemail").val(), password: $("#loginpass").val()}, function(data) {
+        if (data != "FALSE") {
+            var d = new Date(Date.now()+(3600000*24*30));
+            document.cookie = "token="+data+"; expires="+d.toUTCString()+"; path=/";
+            if (window.location.search.indexOf("?n") == -1) {
+                window.location.reload(true);
+            } else {
+                var url = BASE_URL + "/" + window.location.search.substr(window.location.search.indexOf("?n")+3);
+                window.location.assign(url);
+            }
+        } else {
+            $("#loginbutton")[0].disabled = false;
+            isLoggingIn = false;
+        }
+    });
+    return false;
 }
 </script>';
-			return $html;
-		} else {
-			$html = "<h5 class=\"card-title\">You're logged in.</h5>";
-			$html .= "<h6 class=\"card-subtitle mb-2 text-muted\">You now have access to these pages:</h6>";
+            return $html;
+        } else {
+            $html = "<h5 class=\"card-title\">You're logged in.</h5>";
+            $html .= "<h6 class=\"card-subtitle mb-2 text-muted\">You now have access to these pages:</h6>";
             $html .= "<div class=\"list-group\">";
             $stmt = Database::Instance()->prepare("SELECT pageid, title FROM content_pages WHERE secure=1 AND pageid NOT LIKE '_default/%' ORDER BY pageid ASC;");
             $stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
@@ -489,7 +489,7 @@ function loginSubmission() {
                 }
             }
             $html .= "</div>";
-			return $html;
-		}
+            return $html;
+        }
     }
 }

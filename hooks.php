@@ -30,6 +30,8 @@ $hooks = [
     ['/^web:\/?api\/page\/edit\/?$/i',            "\Mod\Page::hookEditPage"],
     ['/^web:\/?api\/page\/secure\/?$/i',          "\Mod\Page::hookSecurePage"],
     ['/^web:\/?api\/page\/checkpid\/?$/i',        "\Mod\Page::hookCheckPid"],
+    
+    ['/^web:\/?api\/contactform\/response\/?$/i', "\Mod\ContactForm::hookFormResponse"],
 
     ['/(?!.*\.[a-z]*$)^web:.*$/i',                "\Mod\Page::hook"],                             // Capture all remaining hooks that don't have an extension
 

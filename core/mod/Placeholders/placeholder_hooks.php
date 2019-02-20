@@ -5,8 +5,10 @@
 // will replace the matching placeholder tag
 
 $placeholder_hooks = [
-    ['/^loginform$/', "\Mod\User::placeholderLoginForm"],
-    ['/^pageid$/', "\Mod\Page::placeholderPageId"],
+    ['/^loginform$/i', "\Mod\User::placeholderLoginForm"],
+    ['/^pageid$/i', "\Mod\Page::placeholderPageId"],
+    
+    ['/^contactform$/i', "\Mod\ContactForm::placeholderForm"],
     
     ['/.*/', "\Mod\Placeholders::placeholderFallback"],
 ];
