@@ -34,6 +34,8 @@ $hooks = [
     ['/^web:\/?api\/contactform\/response\/?$/i', "\Mod\ContactForm::hookFormResponse"],
 
     ['/(?!.*\.[a-z]*$)^web:.*$/i',                "\Mod\Page::hook"],                             // Capture all remaining hooks that don't have an extension
+    
+    ['/(?!.*\.[a-z]*$)^web:.*$/',                 "\Mod\SecureMenu::hook"],
 
     ['/^web:.*/',                                 "\Mod\Placeholders::hookEvaluatePlaceholders"], // Evaluate placeholders
 ];

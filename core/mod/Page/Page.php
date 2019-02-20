@@ -64,93 +64,11 @@ class Page
 
     public function getTop()
     {
-        global $TEMPLATES, $availablemodules, $modules;
-
-        $securepages = [];
-        $stmt = Database::Instance()->prepare("SELECT pageid FROM content_pages WHERE secure=1 AND pageid NOT LIKE '_default/%';");
-        $stmt->execute();
-        $stmt->setFetchMode(PDO::FETCH_ASSOC);
-        $ps = $stmt->fetchAll();
-        foreach ($ps as $p) {
-            array_push($securepages, $p["pageid"]);
+        if (!$this->usetop) {
+            return "";
         }
 
-        $top = "";
-        if ($this->usetop) {
-            $top = (new Page("_default/top"))->body;
-        }
-
-        if (!User::$currentUser->permissions->toolbar) {
-            return $top;
-        }
-
-        $modals = "<div id=\"modals\">";
-        $script = "<script>";
-        $secure = "";
-
-        $secure .= $TEMPLATES["secure-menu"]($securepages, $availablemodules, $modules);
-
-        // Edit menu
-        if (
-            ($this->secure ? User::$currentUser->permissions->page_editsecure : User::$currentUser->permissions->page_edit) &&
-            (!in_array($this->pageid, User::$currentUser->permissions->page_editblacklist))
-        ) {
-            $modals .= $TEMPLATES["secure-modal-start"]("dialog_edit", "Edit Page", "lg");
-            $modals .= $TEMPLATES["secure-modal-edit-bodyfoot"]($this);
-            $modals .= $TEMPLATES["secure-modal-end"];
-            $script .= $TEMPLATES["secure-modal-edit-script"](
-                $this->pageid,
-                $this->rawtitle,
-                $this->rawhead,
-                $this->rawbody
-            );
-        }
-
-        // Page manager menu
-        if (User::$currentUser->permissions->admin_managepages) {
-            $stmt = Database::Instance()->prepare("SELECT pageid, title, secure, revision FROM content_pages ORDER BY pageid ASC;");
-            $stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
-            $pages = $stmt->fetchAll();
-
-            $stmt = Database::Instance()->prepare("SELECT * FROM users;");
-            $stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
-            $users = $stmt->fetchAll();
-
-            $modals .= $TEMPLATES["secure-modal-start"]("dialog_admin", "Administration", "lg");
-            $modals .= $TEMPLATES["secure-modal-admin-bodyfoot"]($pages, $users);
-            $script .= $TEMPLATES["secure-modal-admin-script"]();
-            $modals .= $TEMPLATES["secure-modal-end"];
-        }
-
-        // Account menu
-        $modals .= $TEMPLATES["secure-modal-start"]("dialog_account", "Account Details", "lg");
-        $modals .= $TEMPLATES["secure-modal-account-bodyfoot"]();
-        $modals .= $TEMPLATES["secure-modal-end"];
-        $script .= $TEMPLATES["secure-modal-account-script"];
-
-        // Module menus
-        if (User::$currentUser->permissions->admin_managesite) {
-            /*
-            foreach ($availablemodules as $m) {
-                $mc = $modules[$m];
-                if (method_exists($mc, "getModal")) {
-                    $modals .= $TEMPLATES["secure-modal-start"]("dialog_module_".$m, $mc->name, "lg");
-                    $modals .= $mc->getModal();
-                    $modals .= $TEMPLATES["secure-modal-end"];
-                }
-                if (method_exists($mc, "getScript")) {
-                    $script .= $mc->getScript();
-                }
-            }
-            */
-        }
-
-        $modals .= "</div>";
-        $script .= "</script>";
-
-        $header = $secure . $modals . $script . $top;
-
-        return $header;
+        return (new Page("_default/top"))->body;
     }
 
     public function getBottom()
@@ -186,6 +104,7 @@ class Page
 		<link rel="stylesheet" href="/assets/site/css/bootstrap-4.1.1/css/bootstrap.min.css" media="all">
 		<link rel="stylesheet" href="/assets/site/css/site-1.3.3.css" media="all">
 		<link rel="stylesheet" type="text/css" href="/assets/site/js/codemirror/lib/codemirror.css" media="all">
+        <link rel="stylesheet" href="/core/mod/SecureMenu/securemenu-1.0.0.css" media="all">
 		<script src="/assets/site/js/jquery-3.3.1.min.js"></script>';
         $content .= $this->insertHead();
         $content .= "<script>var SERVER_NAME = \"{$_SERVER["SERVER_NAME"]}\", SERVER_HTTPS = \"{$https}\";</script>";

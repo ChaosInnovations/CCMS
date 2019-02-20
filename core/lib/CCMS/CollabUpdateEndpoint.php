@@ -39,17 +39,17 @@ class CollabUpdateEndpoint
                     $stmt = Database::Instance()->prepare("SELECT uid FROM users;");
                     $stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
                     foreach($stmt->fetchAll() as $u) {
-                        notify($u["uid"], "R" . $rid);
+                        (new User($u["uid"]))->notify("R" . $rid);
                     }
                 } else {
                     $members = explode(";", $room["room_members"]);
                     foreach($members as $m) {
-                        notify($m, "R" . $rid);
+                        (new User($m))->notify("R" . $rid);
                     }
                 }
             } else {
                 $uid = substr($_POST["chat"], 1);
-                notify($uid, "U" . User::$currentUser->uid);
+                (new User($uid))->notify("U" . User::$currentUser->uid);
             }
         }
         
@@ -68,12 +68,12 @@ class CollabUpdateEndpoint
                 $stmt = Database::Instance()->prepare("SELECT uid FROM users;");
                 $stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
                 foreach($stmt->fetchAll() as $u) {
-                    notify($u["uid"], "L" . $_POST["list"]);
+                    (new User($u["uid"]))->notify("L" . $_POST["list"]);
                 }
             } else {
                 $members = explode(";", $list["list_participants"]);
                 foreach($members as $m) {
-                    notify($m, "L" . $_POST["list"]);
+                    (new User($m))->notify("L" . $_POST["list"]);
                 }
             }
         }
@@ -92,12 +92,12 @@ class CollabUpdateEndpoint
                 $stmt = Database::Instance()->prepare("SELECT uid FROM users;");
                 $stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
                 foreach($stmt->fetchAll() as $u) {
-                    notify($u["uid"], "L" . $_POST["list"]);
+                    (new User($u["uid"]))->notify("L" . $_POST["list"]);
                 }
             } else {
                 $members = explode(";", $list["list_participants"]);
                 foreach($members as $m) {
-                    notify($m, "L" . $_POST["list"]);
+                    (new User($m))->notify("L" . $_POST["list"]);
                 }
             }
         }
@@ -116,12 +116,12 @@ class CollabUpdateEndpoint
                 $stmt = Database::Instance()->prepare("SELECT uid FROM users;");
                 $stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
                 foreach($stmt->fetchAll() as $u) {
-                    notify($u["uid"], "L" . $_POST["list"]);
+                    (new User($u["uid"]))->notify("L" . $_POST["list"]);
                 }
             } else {
                 $members = explode(";", $list["list_participants"]);
                 foreach($members as $m) {
-                    notify($m, "L" . $_POST["list"]);
+                    (new User($m))->notify("L" . $_POST["list"]);
                 }
             }
         }
@@ -142,12 +142,12 @@ class CollabUpdateEndpoint
                 $stmt = Database::Instance()->prepare("SELECT uid FROM users;");
                 $stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
                 foreach($stmt->fetchAll() as $u) {
-                    notify($u["uid"], ($_POST["new_type"] == "list"?"L":"R") . $_POST["new_id"]);
+                    (new User($u["uid"]))->notify(($_POST["new_type"] == "list"?"L":"R") . $_POST["new_id"]);
                 }
             } else {
                 $members = explode(";", $_POST["new_members"]);
                 foreach($members as $m) {
-                    notify($m, ($_POST["new_type"] == "list"?"L":"R") . $_POST["new_id"]);
+                    (new User($m))->notify(($_POST["new_type"] == "list"?"L":"R") . $_POST["new_id"]);
                 }
             }
         }
@@ -256,7 +256,7 @@ class CollabUpdateEndpoint
             $stmt->bindParam(":cid", $_POST["chat"]);
             $stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
             $messages = array_reverse($stmt->fetchAll());
-            unnotify(User::$currentUser->uid, $_POST["chat"]);
+            User::$currentUser->unnotify($_POST["chat"]);
             
             foreach ($messages as $message) {
                 $stmt = Database::Instance()->prepare("SELECT name FROM users WHERE uid=:uid;");
@@ -296,7 +296,7 @@ class CollabUpdateEndpoint
             $stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
             $entries= $stmt->fetchAll();
             
-            unnotify(User::$currentUser->uid, "L" . $_POST["list"]);
+            User::$currentUser->unnotify("L" . $_POST["list"]);
             
             foreach ($entries as $entry) {
                 $data = ["id"=>$entry["todo_id"],"label"=>$entry["todo_label"],"done"=>$entry["todo_done"]];

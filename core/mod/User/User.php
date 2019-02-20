@@ -101,7 +101,7 @@ class User
     public function notify($what)
     {
         global $TEMPLATES;
-        if (User::$currentUser->uid == $uid) {
+        if (User::$currentUser->uid == $this->uid) {
             return;
         }
         $what .= ";";

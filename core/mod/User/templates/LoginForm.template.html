@@ -54,7 +54,7 @@ function module_user_loginCheckPass() {
             $("#module_user_loginpass").parent().addClass("has-success");
             $("#module_user_loginpass").parent().find(".fa-times").hide();
             $("#module_user_loginpass").parent().find(".fa-check").show();
-            loginSubmission();
+            module_user_loginSubmission();
         } else {
             $("#module_user_loginpass").parent().removeClass("has-success");
             $("#module_user_loginpass").parent().addClass("has-error");
