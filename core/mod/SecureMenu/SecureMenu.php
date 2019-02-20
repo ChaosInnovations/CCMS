@@ -4,15 +4,105 @@ namespace Mod;
 
 use \Lib\CCMS\Request;
 use \Lib\CCMS\Response;
+use \Lib\CCMS\Utilities;
 use \Mod\Page;
 use \Mod\User;
 use \PDO;
 
 class SecureMenu
 {
+    // Singleton pattern
+    private static $instance = null;
+    
+    public static function Instance()
+    {
+        if (!self::$instance instanceof static) {
+            self::$instance = new static();
+        }
+        
+        return self::$instance;
+    }
+    
+    const HORIZONTAL = 0;
+    const VERTICAL = 1;
+    
+    private $horizontalEntries = [];
+    private $verticalEntries = [];
+    private $panels = [];
+    private $modals = [];
+    
+    private function __construct()
+    {
+    }
+    
+    public function addEntry(string $id, string $title, string $function, $icon="", $side=self::HORIZONTAL)
+    {
+        $entry = [
+            'id' => $id,
+            'title' => $title,
+            'onclick' => $function,
+            'content' => $icon,
+        ];
+        
+        switch ($side) {
+            case (self::HORIZONTAL):
+                array_push($this->horizontalEntries, $entry);
+                break;
+            case (self::VERTICAL):
+                array_push($this->verticalEntries, $entry);
+                break;
+        }
+    }
+    
+    public function addModal(string $id, string $title, string $body, string $footer)
+    {
+        $modal = [
+            'id' => $id,
+            'title' => $title,
+            'body' => $body,
+            'footer' => $footer,
+        ];
+        
+        array_push($this->modals, $modal);
+    }
+    
     public static function hook(Request $request)
     {
         global $TEMPLATES, $availablemodules, $modules;
+        
+        $secureMenuTemplate = file_get_contents(dirname(__FILE__) . "/templates/SecureMenu.template.html");
+        $secureMenuEntryTemplate = file_get_contents(dirname(__FILE__) . "/templates/SecureMenuEntry.template.html");
+        
+        $secureMenuModalTemplate = file_get_contents(dirname(__FILE__) . "/templates/SecureMenuModal.template.html");
+        
+        $compiledHorizontalEntries = "";
+        $compiledVerticalEntries = "";
+        $compiledPanels = "";
+        $compiledModals = "";
+        
+        $reversedHorizontalEntries = array_reverse(self::Instance()->horizontalEntries);
+        foreach($reversedHorizontalEntries as $entry) {
+            $compiledHorizontalEntries .= Utilities::fillTemplate($secureMenuEntryTemplate, $entry);
+        }
+        
+        $reversedVerticalEntries = array_reverse(self::Instance()->verticalEntries);
+        foreach($reversedVerticalEntries as $entry) {
+            $compiledVerticalEntries .= Utilities::fillTemplate($secureMenuEntryTemplate, $entry);
+        }
+        
+        foreach(self::Instance()->modals as $modal) {
+            $compiledModals .= Utilities::fillTemplate($secureMenuModalTemplate, $modal);
+        }
+        
+        $template_vars = [
+            'horizontalEntries' => $compiledHorizontalEntries,
+            'verticalEntries' => $compiledVerticalEntries,
+            'panels' => $compiledPanels,
+            'modals' => $compiledModals,
+        ];
+        $menu = Utilities::fillTemplate($secureMenuTemplate, $template_vars);
+        
+        return new Response($menu, false);
 
         $securepages = [];
         $stmt = Database::Instance()->prepare("SELECT pageid FROM content_pages WHERE secure=1 AND pageid NOT LIKE '_default/%';");

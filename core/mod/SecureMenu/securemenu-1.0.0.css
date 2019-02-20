@@ -1,8 +1,12 @@
+.modal-lg {
+    max-width: 90%;
+}
+
 .secureMenu {
     position:fixed;
     left:20px;
     bottom:20px;
-    z-index:1001;
+    z-index:2000;
 }
   
 .secureMenu > .secureMenu-icon {
