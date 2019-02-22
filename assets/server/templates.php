@@ -591,14 +591,9 @@ $TEMPLATES = [
 "secure-modal-admin-bodyfoot" => function() {
     global $TEMPLATES;
 
-    $ccms_info = parse_ini_file($_SERVER["DOCUMENT_ROOT"] . "/core/ccms-info.ini");
-
     $websitetitle = Utilities::getconfig("websitetitle");
     $primaryemail = Utilities::getconfig("primaryemail");
     $secondaryemail = Utilities::getconfig("secondaryemail");
-
-    $releasedate = date("l, F j, Y", strtotime($ccms_info["release"]));
-    $creationdate = date("l, F j, Y", strtotime(Utilities::getconfig("creationdate")));
 
     return '
 <div class="modal-body">
@@ -606,7 +601,6 @@ $TEMPLATES = [
         <div class="col-12 col-md-3 mb-3">
             <div class="nav flex-md-column flex-row nav-pills" id="dialog_admin_tabs" role="tablist" aria-orientation="vertical">
                 ' . (User::$currentUser->permissions->admin_managesite ? '<a class="nav-link flex-sm-fill text-center text-md-left" id="dialog_admin_tab_site" data-toggle="pill" href="#dialog_admin_panel_site" role="tab" aria-controls="dialog_admin_panel_site" aria-selected="false">Site</a>':'').'
-                <a class="nav-link flex-sm-fill text-center text-md-left" id="dialog_admin_tab_ccms" data-toggle="pill" href="#dialog_admin_panel_ccms" role="tab" aria-controls="dialog_admin_panel_ccms" aria-selected="false">Chaos CMS</a>
             </div>
         </div>
         <div class="col-12 col-md-9">
@@ -632,15 +626,6 @@ $TEMPLATES = [
                         </div>
                     </form>
                 </div>':'').'
-                <div class="tab-pane fade" id="dialog_admin_panel_ccms" role="tabpanel" aria-labelledby="dialog_admin_tab_ccms">
-                    <dl>
-                        <div class="row"><dt class="col-12 col-sm-4">Version</dt><dd class="col-12 col-sm-8">' . $ccms_info["version"] .'</dd></div>
-                        <div class="row"><dt class="col-12 col-sm-4">Release Date</dt><dd class="col-12 col-sm-8">' . $releasedate . '</dd></div>
-                        <div class="row"><dt class="col-12 col-sm-4">Author</dt><dd class="col-12 col-sm-8"><a href="mailto:' . $ccms_info["a_email"] .'" title="' . $ccms_info["a_email"] .'">' . $ccms_info["author"] .'</a></dd></div>
-                        <div class="row"><dt class="col-12 col-sm-4">CCMS Website</dt><dd class="col-12 col-sm-8"><a href="' . $ccms_info["website"] .'" title="Chaos CMS Website">' . $ccms_info["website"] .'</a></dd></div>
-                        <div class="row"><dt class="col-12 col-sm-4">Website created</dt><dd class="col-12 col-sm-8">' . $creationdate .'</dd></div>
-                    </dl>
-                </div>
             </div>
         </div>
     </div>

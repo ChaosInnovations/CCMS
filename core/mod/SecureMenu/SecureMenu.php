@@ -80,6 +80,23 @@ class SecureMenu
         
         array_push($this->modals, $modal);
     }
+
+    public static function hookAboutMenu(Request $request)
+    {
+        $ccms_info = parse_ini_file($_SERVER["DOCUMENT_ROOT"] . "/core/ccms-info.ini");
+
+        $template_vars =[
+            'version' => $ccms_info["version"],
+            'releasedate' => date("l, F j, Y", strtotime($ccms_info["release"])),
+            'authoremail' => $ccms_info["a_email"],
+            'authorname' => $ccms_info["author"],
+            'ccmswebsite' => $ccms_info["website"],
+            'creationdate' => date("l, F j, Y", strtotime(Utilities::getconfig("creationdate"))),
+        ];
+        $aboutModalBody = Utilities::fillTemplate(file_get_contents(dirname(__FILE__) . "/templates/AboutModal.template.html"), $template_vars);
+        SecureMenu::Instance()->addModal("dialog_about", "About", $aboutModalBody, "");
+        SecureMenu::Instance()->addEntry("about", "About", "showDialog('about');", '<i class="fas fa-question"></i>', SecureMenu::VERTICAL);
+    }
     
     public static function hook(Request $request)
     {

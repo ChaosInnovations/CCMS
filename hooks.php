@@ -10,6 +10,7 @@
 
 $hooks = [
     ['/.*/',                                      "\Mod\Database::hookOpenConnection"],           // Connect to database
+
     ['/^web:.*/',                                 "\Mod\User::hookAuthenticateFromRequest"],      // Sign in
 
     ['/^web:\/?api\/checkuser\/?$/i',             "\Mod\User::hookCheckUser"],                    // Check that the username is correct
@@ -32,7 +33,6 @@ $hooks = [
     ['/^web:\/?api\/page\/checkpid\/?$/i',        "\Mod\Page::hookCheckPid"],
     
     ['/^web:\/?api\/contactform\/response\/?$/i', "\Mod\ContactForm::hookFormResponse"],
-    
 
     ['/(?!.*\.[a-z]*$)^web:.*$/i',                "\Mod\Page::hook"],                             // Capture all remaining hooks that don't have an extension
     
@@ -40,6 +40,7 @@ $hooks = [
 
     ['/(?!.*\.[a-z]*$)^web:.*$/i',                "\Mod\ModuleMenu::hookAddToSecureMenu"],
     
+    ['/(?!.*\.[a-z]*$)^web:.*$/i',                "\Mod\SecureMenu::hookAboutMenu"],
     ['/(?!.*\.[a-z]*$)^web:.*$/i',                "\Mod\SecureMenu::hook"],
 
     ['/(?!.*\.[a-z]*$)^web:.*$/i',                "\Mod\Placeholders::hookEvaluatePlaceholders"], // Evaluate placeholders
