@@ -31,10 +31,10 @@ class ModuleMenu
 
     }
 
-    public function addEntry(string $id, string $title)
+    public function addEntry(string $onclick, string $title)
     {
         $entry = [
-            'id' => $id,
+            'onclick' => $onclick,
             'title' => $title,
         ];
         array_push($this->entries, $entry);

@@ -135,16 +135,12 @@ class SecureMenu
 
         // Page manager menu
         if (User::$currentUser->permissions->admin_managepages) {
-            $stmt = Database::Instance()->prepare("SELECT pageid, title, secure, revision FROM content_pages ORDER BY pageid ASC;");
-            $stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
-            $pages = $stmt->fetchAll();
-
             $stmt = Database::Instance()->prepare("SELECT * FROM users;");
             $stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
             $users = $stmt->fetchAll();
 
             $modals .= $TEMPLATES["secure-modal-start"]("dialog_admin", "Administration", "lg");
-            $modals .= $TEMPLATES["secure-modal-admin-bodyfoot"]($pages, $users);
+            $modals .= $TEMPLATES["secure-modal-admin-bodyfoot"]($users);
             $script .= $TEMPLATES["secure-modal-admin-script"]();
             $modals .= $TEMPLATES["secure-modal-end"];
         }

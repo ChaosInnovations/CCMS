@@ -6,6 +6,7 @@ use \Lib\CCMS\Response;
 use \Lib\CCMS\Request;
 use \Lib\CCMS\Utilities;
 use \Mod\Database;
+use \Mod\ModuleMenu;
 use \Mod\SecureMenu;
 use \Mod\User;
 use \PDO;
@@ -229,6 +230,40 @@ class Page
             }
             $panelContent = Utilities::fillTemplate(file_get_contents(dirname(__FILE__) . "/templates/SecurePagePanel.template.html"), $template_vars);
             SecureMenu::Instance()->addPanel("securepage", "Secure Pages", $panelContent, SecureMenu::HORIZONTAL);
+        }
+
+        if (User::$currentUser->permissions->admin_managepages) {
+            $pageListEntryTemplate = file_get_contents(dirname(__FILE__) . "/templates/PagesModalEntry.template.html");
+            $pageListEntryToolsTemplate = file_get_contents(dirname(__FILE__) . "/templates/PagesModalEntryTools.template.html");
+            $compiledPageList = "";
+
+            $stmt = Database::Instance()->prepare("SELECT pageid, title, secure, revision FROM content_pages ORDER BY pageid ASC;");
+            $stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
+            $pages = $stmt->fetchAll();
+            foreach ($pages as $pageData) {
+                $tools = "";
+                if (!in_array($pageData["pageid"], ["home", "secureaccess"])) {
+                    $toolsTempateVars = [
+                        'pageid' => $pageData["pageid"],
+                        'checked' => ($pageData["secure"] ? ' checked' : ''),
+                    ];
+                    $tools = Utilities::fillTemplate($pageListEntryToolsTemplate, $toolsTempateVars);
+                }
+                $template_vars = [
+                    'pageid' => $pageData["pageid"],
+                    'title' => urldecode($pageData["title"]),
+                    'revisiondate' => date("l, F j, Y", strtotime($pageData["revision"])),
+                    'tools' => $tools,
+                ];
+                $compiledPageList .= Utilities::fillTemplate($pageListEntryTemplate, $template_vars);
+            }
+
+            $template_vars = [
+                'pagelist' => $compiledPageList,
+            ];
+            $pageListBody = Utilities::fillTemplate(file_get_contents(dirname(__FILE__) . "/templates/PagesModalBody.template.html"), $template_vars);
+            SecureMenu::Instance()->addModal("dialog_pages", "Manage Pages", $pageListBody, "");
+            ModuleMenu::Instance()->addEntry("showDialog('pages');", "Manage Pages");
         }
         
         SecureMenu::Instance()->addEntry("home", "Home", "location.assign('/');", '<i class="fas fa-home"></i>', SecureMenu::HORIZONTAL);

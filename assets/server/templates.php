@@ -587,23 +587,6 @@ $TEMPLATES = [
 // Administration Modal
 //====================
 
-"secure-modal-admin-pagerow" => function ($page) {
-    $pid = $page["pageid"];
-    $check = $page["secure"] ? ' checked' : '';
-    $secure = '
-<input type="checkbox" id="dialog_admin_pages_secure_' . $pid . '" onclick="dialog_admin_pages_togglesecure(\'' . $pid . '\');"' . $check . '>';
-    $remove = '
-<button class="btn btn-outline-danger" title="Delete Page" onclick="dialog_admin_pages_delete(\'' . $pid . '\');"><i class="fas fa-trash"></i></button>';
-    if (in_array($page["pageid"], ["home", "secureaccess"])) {
-        $secure = '';
-        $remove = '';
-    }
-    $date = date("l, F j, Y", strtotime($page["revision"]));
-    return '
-<tr><td><a href="/' . $pid . '">' . $pid . '</a></td><td>' . urldecode($page["title"]) . '</td><td>' . $date . '</td><td>' . $secure . '</td><td>' . $remove . '</td></tr>';
-},
-
-
 "secure-modal-admin-usertools" => function ($uid, $email) {
     return '
 <button class="btn btn-outline-danger" title="Delete Account" onclick="dialog_admin_users_delete(\'' . $uid . '\');"><i class="fas fa-trash"></i></button>
@@ -647,15 +630,10 @@ $TEMPLATES = [
 },
 
 // Body
-"secure-modal-admin-bodyfoot" => function($pages, $users) {
+"secure-modal-admin-bodyfoot" => function($users) {
     global $TEMPLATES;
 
     $ccms_info = parse_ini_file($_SERVER["DOCUMENT_ROOT"] . "/core/ccms-info.ini");
-
-    $pagelist = "";
-    foreach ($pages as $page) {
-        $pagelist .= $TEMPLATES["secure-modal-admin-pagerow"]($page);
-    }
 
     $userlist = "";
     foreach ($users as $user) {
@@ -674,22 +652,13 @@ $TEMPLATES = [
     <div class="row">
         <div class="col-12 col-md-3 mb-3">
             <div class="nav flex-md-column flex-row nav-pills" id="dialog_admin_tabs" role="tablist" aria-orientation="vertical">
-                <a class="nav-link flex-sm-fill text-center text-md-left active" id="dialog_admin_tab_pages" data-toggle="pill" href="#dialog_admin_panel_pages" role="tab" aria-controls="dialog_admin_panel_pages" aria-selected="true">Pages</a>
                 ' . (User::$currentUser->permissions->owner ? '<a class="nav-link flex-sm-fill text-center text-md-left" id="dialog_admin_tab_users" data-toggle="pill" href="#dialog_admin_panel_users" role="tab" aria-controls="dialog_admin_panel_users" aria-selected="false">Users</a>':'').'
                 ' . (User::$currentUser->permissions->admin_managesite ? '<a class="nav-link flex-sm-fill text-center text-md-left" id="dialog_admin_tab_site" data-toggle="pill" href="#dialog_admin_panel_site" role="tab" aria-controls="dialog_admin_panel_site" aria-selected="false">Site</a>':'').'
                 <a class="nav-link flex-sm-fill text-center text-md-left" id="dialog_admin_tab_ccms" data-toggle="pill" href="#dialog_admin_panel_ccms" role="tab" aria-controls="dialog_admin_panel_ccms" aria-selected="false">Chaos CMS</a>
             </div>
         </div>
         <div class="col-12 col-md-9">
-            <div class="tab-content" id="dialog_admin_panels">
-                <div class="tab-pane fade show active" id="dialog_admin_panel_pages" role="tabpanel" aria-labelledby="dialog_admin_tab_pages">
-                    <table class="table table-responsive table-striped">
-                        <thead>
-                            <tr><th>Page ID</th><th>Title</th><th>Last Revision</th><th><i class="fas fa-lock"></i></th><th>Delete</th></tr>
-                        </thead>
-                        <tbody>' . $pagelist . '</tbody>
-                    </table>
-                </div>' . (User::$currentUser->permissions->owner ? '
+            <div class="tab-content" id="dialog_admin_panels">' . (User::$currentUser->permissions->owner ? '
                 <div class="tab-pane fade" id="dialog_admin_panel_users" role="tabpanel" aria-labelledby="dialog_admin_tab_users">
                     <form role="edit" onsubmit="dialog_admin_users_new();return false;">
                         <div class="form-group row">
@@ -829,36 +798,6 @@ $TEMPLATES = [
 
 "secure-modal-admin-script" => function() {
     return '
-function dialog_admin_pages_togglesecure(pid) {
-    state = $("#dialog_admin_pages_secure_" + pid).prop("checked");
-    module_ajax("page/secure", {pid: pid, state: state}, function(data) {
-        if (data == "FALSE") {
-            $("#dialog_admin-pages_secure_" + pid).prop("checked", !state);
-            window.alert("Couldn\'t change secure state.");
-        } else if (data == "SPECIAL") {
-            window.alert("Can\'t change security of \'home,\' \'default,\' or \'secureaccess\' pages!");
-        } else {
-            console.log(data);
-            console.log("Changed security of \'" + pid + ".\'");
-        }
-    });
-}
-
-function dialog_admin_pages_delete(pid) {
-    if (!window.confirm("Are you sure you want to permanently delete this page?", "Yes", "No")) {
-        return;
-    }
-    module_ajax("page/remove", {pid: pid}, function (data) {
-        if (data == "FALSE") {
-            window.alert("Couldn\'t delete page.");
-        } else if (data == "SPECIAL") {
-            window.alert("Can\'t delete \'home,\' \'default,\' or \'secureaccess\' pages!");
-        } else {
-            window.location.reload(true);
-        }
-    });
-}
-
 function dialog_admin_users_check_email() {
     module_ajax("checkuser", {email: $("#dialog_admin_users_newemail").val()}, function (data) {
         if (data == "TRUE") {
