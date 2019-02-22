@@ -42,5 +42,5 @@ $hooks = [
     
     ['/(?!.*\.[a-z]*$)^web:.*$/i',                "\Mod\SecureMenu::hook"],
 
-    ['/^web:.*/',                                 "\Mod\Placeholders::hookEvaluatePlaceholders"], // Evaluate placeholders
+    ['/(?!.*\.[a-z]*$)^web:.*$/i',                "\Mod\Placeholders::hookEvaluatePlaceholders"], // Evaluate placeholders
 ];
