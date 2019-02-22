@@ -211,6 +211,37 @@ class User
         ];
         $accountModalBody = Utilities::fillTemplate(file_get_contents(dirname(__FILE__) . "/templates/AccountModalBody.template.html"), $template_vars);
         SecureMenu::Instance()->addModal("dialog_account", "Account Details", $accountModalBody, "");
+
+        if (User::$currentUser->permissions->owner) {
+            $userListEntryTemplate = file_get_contents(dirname(__FILE__) . "/templates/UsersModalEntry.template.html");
+            $compiledUserList = "";
+
+            $stmt = Database::Instance()->prepare("SELECT * FROM users;");
+            $stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
+            $users = $stmt->fetchAll();
+            foreach ($users as $userData) {
+                $user = new User($userData["uid"]);
+                $template_vars = [
+                    'userid' => $userData["uid"],
+                    'name' => $userData["name"],
+                    'email' => $userData["email"],
+                    'registerdate' => date("l, F j, Y", strtotime($userData["registered"])),
+                    'permissions' => $userData["permissions"],
+                    'viewblacklistvisible' => (!$user->permissions->page_viewsecure ? ' style="display:none;"' : ''),
+                    'viewblacklist' => $userData["permviewbl"],
+                    'editblacklistvisible' => (!$user->permissions->page_editsecure ? ' style="display:none;"' : ''),
+                    'editblacklist' => $userData["permeditbl"],
+                ];
+                $compiledUserList .= Utilities::fillTemplate($userListEntryTemplate, $template_vars);
+            }
+
+            $template_vars = [
+                'userlist' => $compiledUserList,
+            ];
+            $userListBody = Utilities::fillTemplate(file_get_contents(dirname(__FILE__) . "/templates/UsersModalBody.template.html"), $template_vars);
+            SecureMenu::Instance()->addModal("dialog_users", "Manage Users", $userListBody, "");
+            ModuleMenu::Instance()->addEntry("showDialog('users');", "Manage Users");
+        }
     }
     
     public static function hookAuthenticateFromRequest(Request $request)
@@ -397,23 +428,25 @@ class User
             $stmt->bindParam(":uid", User::$currentUser->uid);
             $stmt->execute();
         }
-        if (isset($_POST["permissions"]) and User::$currentUser->permissions->owner) {
-            $stmt = Database::Instance()->prepare("UPDATE users SET permissions=:new WHERE uid=:uid;");
-            $stmt->bindParam(":new", $_POST["permissions"]);
-            $stmt->bindParam(":uid", $_POST["uid"]);
-            $stmt->execute();
-        }
-        if (isset($_POST["permviewbl"]) and User::$currentUser->permissions->owner) {
-            $stmt = Database::Instance()->prepare("UPDATE users SET permviewbl=:new WHERE uid=:uid;");
-            $stmt->bindParam(":new", $_POST["permviewbl"]);
-            $stmt->bindParam(":uid", $_POST["uid"]);
-            $stmt->execute();
-        }
-        if (isset($_POST["permeditbl"]) and User::$currentUser->permissions->owner) {
-            $stmt = Database::Instance()->prepare("UPDATE users SET permeditbl=:new WHERE uid=:uid;");
-            $stmt->bindParam(":new", $_POST["permeditbl"]);
-            $stmt->bindParam(":uid", $_POST["uid"]);
-            $stmt->execute();
+        if (User::$currentUser->uid != $_POST["uid"]) {
+            if (isset($_POST["permissions"]) and User::$currentUser->permissions->owner) {
+                $stmt = Database::Instance()->prepare("UPDATE users SET permissions=:new WHERE uid=:uid;");
+                $stmt->bindParam(":new", $_POST["permissions"]);
+                $stmt->bindParam(":uid", $_POST["uid"]);
+                $stmt->execute();
+            }
+            if (isset($_POST["permviewbl"]) and User::$currentUser->permissions->owner) {
+                $stmt = Database::Instance()->prepare("UPDATE users SET permviewbl=:new WHERE uid=:uid;");
+                $stmt->bindParam(":new", $_POST["permviewbl"]);
+                $stmt->bindParam(":uid", $_POST["uid"]);
+                $stmt->execute();
+            }
+            if (isset($_POST["permeditbl"]) and User::$currentUser->permissions->owner) {
+                $stmt = Database::Instance()->prepare("UPDATE users SET permeditbl=:new WHERE uid=:uid;");
+                $stmt->bindParam(":new", $_POST["permeditbl"]);
+                $stmt->bindParam(":uid", $_POST["uid"]);
+                $stmt->execute();
+            }
         }
         return new Response("TRUE");
     }
