@@ -432,10 +432,9 @@ class User
             $pdatas = $stmt->fetchAll();
             foreach ($pdatas as $pd) {
                 if (User::$currentUser->permissions->page_viewsecure and !in_array($pd["pageid"], User::$currentUser->permissions->page_viewblacklist)) {
-                    $title = urldecode($pd["title"]);
                     $template_vars = [
                         "pageid" => $pd["pageid"],
-                        "title" => $pd["title"],
+                        "title" => urldecode($pd["title"]),
                     ];
                     $pagelist .= Utilities::fillTemplate($pagelistTemplate, $template_vars);
                 }
