@@ -6,6 +6,7 @@ use \Lib\CCMS\Request;
 use \Lib\CCMS\Response;
 use \Lib\CCMS\Utilities;
 use \Mod\Page;
+use \Mod\SecureMenu\Panel;
 use \Mod\User;
 use \PDO;
 
@@ -31,6 +32,7 @@ class SecureMenu
     
     private $horizontalEntries = [];
     private $verticalEntries = [];
+    /** @var Panel[] $panels description */
     private $panels = [];
     private $modals = [];
     
@@ -57,15 +59,8 @@ class SecureMenu
         }
     }
 
-    public function addPanel(string $id, string $title, string $content, $direction=self::HORIZONTAL)
+    public function addPanel(Panel $panel)
     {
-        $panel = [
-            'id' => $id,
-            'title' => $title,
-            'content' => $content,
-            'direction' => ($direction == self::HORIZONTAL ? "horizontal" : "vertical"),
-        ];
-
         array_push($this->panels, $panel);
     }
     
@@ -108,7 +103,6 @@ class SecureMenu
         
         $secureMenuTemplate = file_get_contents(dirname(__FILE__) . "/templates/SecureMenu.template.html");
         $secureMenuEntryTemplate = file_get_contents(dirname(__FILE__) . "/templates/SecureMenuEntry.template.html");
-        $secureMenuPanelTemplate = file_get_contents(dirname(__FILE__) . "/templates/SecureMenuPanel.template.html");
         $secureMenuModalTemplate = file_get_contents(dirname(__FILE__) . "/templates/SecureMenuModal.template.html");
         
         $compiledHorizontalEntries = "";
@@ -127,7 +121,7 @@ class SecureMenu
         }
 
         foreach(self::Instance()->panels as $panel) {
-            $compiledPanels .= Utilities::fillTemplate($secureMenuPanelTemplate, $panel);
+            $compiledPanels .= $panel->getCompiledPanel();
         }
 
         foreach(self::Instance()->modals as $modal) {

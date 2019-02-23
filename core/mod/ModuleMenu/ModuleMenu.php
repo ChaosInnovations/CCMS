@@ -5,6 +5,7 @@ namespace Mod;
 use \Lib\CCMS\Request;
 use \Lib\CCMS\Utilities;
 use \Mod\SecureMenu;
+use \Mod\SecureMenu\Panel;
 use \Mod\User;
 
 class ModuleMenu
@@ -57,6 +58,6 @@ class ModuleMenu
         $content = Utilities::fillTemplate($panelTemplate, ['list' => $compiledPanelEntries]);
         
         SecureMenu::Instance()->addEntry("moduleTrigger", "Modules", "triggerPane('module');", '<i class="fas fa-puzzle-piece"></i>', SecureMenu::VERTICAL);
-        SecureMenu::Instance()->addPanel("module", "Modules", $content, SecureMenu::HORIZONTAL);
+        SecureMenu::Instance()->addPanel(new Panel("module", "Modules", $content, Panel::SLIDE_HORIZONTAL));
     }
 }

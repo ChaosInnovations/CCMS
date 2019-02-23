@@ -8,6 +8,7 @@ use \Lib\CCMS\Utilities;
 use \Mod\Database;
 use \Mod\ModuleMenu;
 use \Mod\SecureMenu;
+use \Mod\SecureMenu\Panel;
 use \Mod\User;
 use \PDO;
 
@@ -229,7 +230,7 @@ class Page
                 $template_vars['create'] = file_get_contents(dirname(__FILE__) . "/templates/SecurePagePanelCreate.template.html");
             }
             $panelContent = Utilities::fillTemplate(file_get_contents(dirname(__FILE__) . "/templates/SecurePagePanel.template.html"), $template_vars);
-            SecureMenu::Instance()->addPanel("securepage", "Secure Pages", $panelContent, SecureMenu::HORIZONTAL);
+            SecureMenu::Instance()->addPanel(new Panel("securepage", "Secure Pages", $panelContent, Panel::SLIDE_HORIZONTAL));
         }
 
         if (User::$currentUser->permissions->admin_managepages) {
