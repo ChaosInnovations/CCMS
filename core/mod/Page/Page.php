@@ -108,6 +108,7 @@ class Page
 		<link rel="stylesheet" href="/assets/site/css/site-1.3.3.css" media="all">
 		<link rel="stylesheet" type="text/css" href="/assets/site/js/codemirror/lib/codemirror.css" media="all">
         <link rel="stylesheet" href="/core/mod/SecureMenu/securemenu-1.0.0.css" media="all">
+        <link rel="stylesheet" href="/core/mod/Collaboration/collaboration-1.0.0.css" media="all">
 		<script src="/assets/site/js/jquery-3.3.1.min.js"></script>';
         $content .= $this->insertHead();
         $content .= "<script>var SERVER_NAME = \"{$_SERVER["SERVER_NAME"]}\", SERVER_HTTPS = \"{$https}\";</script>";

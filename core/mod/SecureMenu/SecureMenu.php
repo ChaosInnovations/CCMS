@@ -95,8 +95,6 @@ class SecureMenu
     
     public static function hook(Request $request)
     {
-        global $TEMPLATES, $availablemodules, $modules;
-        
         if (!User::$currentUser->permissions->toolbar) {
             return;
         }

@@ -3,6 +3,7 @@
 namespace Mod\SecureMenu;
 
 use \Lib\CCMS\Utilities;
+use \Mod\SecureMenu\PanelPage;
 
 class Panel
 {

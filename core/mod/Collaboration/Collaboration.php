@@ -9,6 +9,7 @@ use \Mod\Database;
 use \Mod\Page;
 use \Mod\SecureMenu;
 use \Mod\SecureMenu\Panel;
+use \Mod\SecureMenu\PanelPage;
 use \Mod\User;
 use \PDO;
 
@@ -17,17 +18,89 @@ class Collaboration
     public static function hookMenu(Request $request)
     {
         $panelTemplate = file_get_contents(dirname(__FILE__) . "/templates/CollaborationPanelContent.template.html");
-        //$panelEntryTemplate = file_get_contents(dirname(__FILE__) . "/PanelEntry.template.html");
+        $entryTemplate = file_get_contents(dirname(__FILE__) . "/templates/CollaborationPanelEntry.template.html");
+        $listBodyTemplate = file_get_contents(dirname(__FILE__) . "/templates/CollaborationPanelListBody.template.html");
+        $chatBodyTemplate = file_get_contents(dirname(__FILE__) . "/templates/CollaborationPanelChatBody.template.html");
+        $createBodyTemplate = file_get_contents(dirname(__FILE__) . "/templates/CollaborationPanelCreateBody.template.html");
 
-        //$compiledPanelEntries = "";
-        //foreach(self::Instance()->entries as $entry) {
-        //    $compiledPanelEntries .= Utilities::fillTemplate($panelEntryTemplate, $entry);
-        //}
+        $collaborationPanel = new Panel("collaborate", "Collaborate", $panelTemplate, Panel::SLIDE_VERTICAL);
 
-        $content = Utilities::fillTemplate($panelTemplate, []);
+        $stmt = Database::Instance()->prepare("SELECT room_id, room_name FROM collab_rooms ORDER BY room_name ASC;");
+        $stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
+        $rooms = $stmt->fetchAll();
+        $roomContent = "";
+        foreach ($rooms as $room) {
+            $template_vars = [
+                'itemType' => "room",
+                'itemId' => $room["room_id"],
+                'itemName' => $room["room_name"],
+                'buttonTitle' => "Open Room",
+                'buttonAction' => "collab_showChat('R{$room['room_id']}', '{$room['room_name']}');",
+                'buttonIcon' => "<i class=\"fas fa-comments\"></i>",
+            ];
+            $roomContent .= Utilities::fillTemplate($entryTemplate, $template_vars);
+        }
+        $roomsPage = new PanelPage("rooms", "Chat Rooms", $roomContent, PanelPage::SIZE_MD);
+        $roomsPage->setLeftIcon("secureMenu_hidePage('collaborate-rooms');", "Go Back", "<i class=\"fas fa-arrow-left\"></i>");
+        $roomsPage->setRightIcon("collab_startCreate('room');", "New Room", "<i class=\"fas fa-plus\"></i>");
+        $collaborationPanel->addPage($roomsPage);
+
+        $stmt = Database::Instance()->prepare("SELECT list_id, list_name FROM collab_lists;");
+        $stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
+        $lists = $stmt->fetchAll();
+        $listContent = "";
+        foreach($lists as $list) {
+            $template_vars = [
+                'itemType' => "list",
+                'itemId' => $list["list_id"],
+                'itemName' => $list["list_name"],
+                'buttonTitle' => "Open List",
+                'buttonAction' => "collab_showList('{$list['list_id']}', '{$list['list_name']}');",
+                'buttonIcon' => "<i class=\"fas fa-clipboard\"></i>",
+            ];
+            $listContent .= Utilities::fillTemplate($entryTemplate, $template_vars);
+        }
+        $todosPage = new PanelPage("todos", "To-Do Lists", $listContent, PanelPage::SIZE_MD);
+        $todosPage->setLeftIcon("secureMenu_hidePage('collaborate-todos');", "Go Back", "<i class=\"fas fa-arrow-left\"></i>");
+        $todosPage->setRightIcon("collab_startCreate('list');", "New List", "<i class=\"fas fa-plus\"></i>");
+        $collaborationPanel->addPage($todosPage);
+
+        $stmt = Database::Instance()->prepare("SELECT uid, name FROM users ORDER BY name ASC;");
+        $stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
+        $users = $stmt->fetchAll();
+        $peopleContent = "";
+        $memberSelection = ""; // Used by Create page
+        foreach ($users as $user) {
+            $memberSelection .= '<option value="' . $user["uid"] . '">' . $user["name"] . '</option>';  // Used by Create page
+            $template_vars = [
+                'itemType' => "person",
+                'itemId' => $user['uid'],
+                'itemName' => $user['name'],
+                'buttonTitle' => "Open Chat",
+                'buttonAction' => "collab_showChat('U{$user['uid']}', '{$user['name']}');",
+                'buttonIcon' => "<i class=\"fas fa-comment\"></i>",
+            ];
+            $peopleContent .= Utilities::fillTemplate($entryTemplate, $template_vars);
+        }
+        $peoplePage = new PanelPage("people", "People", $peopleContent, PanelPage::SIZE_MD);
+        $peoplePage->setLeftIcon("secureMenu_hidePage('collaborate-people');", "Go Back", "<i class=\"fas fa-arrow-left\"></i>");
+        $collaborationPanel->addPage($peoplePage);
+
+        $listPage = new PanelPage("list", "List Name", $listBodyTemplate, PanelPage::SIZE_LG);
+        $listPage->setLeftIcon("collab_hideList();", "Go Back", "<i class=\"fas fa-arrow-left\"></i>");
+        $collaborationPanel->addPage($listPage);
+
+        $chatPage = new PanelPage("chat", "Chat Name", $chatBodyTemplate, PanelPage::SIZE_LG);
+        $chatPage->setLeftIcon("collab_hideChat();", "Go Back", "<i class=\"fas fa-arrow-left\"></i>");
+        $collaborationPanel->addPage($chatPage);
+
+        $createContent = Utilities::fillTemplate($createBodyTemplate, ['members' => $memberSelection]);
+        $createPage = new PanelPage("create", "Create", $createContent, PanelPage::SIZE_LG);
+        $createPage->setLeftIcon("secureMenu_hidePage('collaborate-create');", "Go Back", "<i class=\"fas fa-arrow-left\"></i>");
+        $collaborationPanel->addPage($createPage);
         
         SecureMenu::Instance()->addEntry("collaborateTrigger", "Collaborate", "triggerPane('collaborate');", '<i class="fas fa-share-alt"></i>', SecureMenu::HORIZONTAL);
-        SecureMenu::Instance()->addPanel(new Panel("collaborate", "Collaborate", $content, Panel::SLIDE_VERTICAL));
+        SecureMenu::Instance()->addPanel($collaborationPanel);
     }
 
     public static function hookUpdate(Request $request)

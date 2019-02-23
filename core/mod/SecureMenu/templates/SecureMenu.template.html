@@ -51,4 +51,24 @@ function triggerPane(id) {
     $("#secureMenu_pane-"+id).show();
     $("#secureMenu_pane-"+id).removeClass("collapsed");
 }
+function secureMenu_showPage(id) {
+    var page = $("#secureMenu_page-" + id);
+    var panel = page.parent();
+    page.addClass("out");
+    panel.removeClass("sm");
+    panel.removeClass("md");
+    panel.removeClass("lg");
+    panel.addClass(page.data("size"));
+}
+function secureMenu_hidePage(id) {
+    var page = $("#secureMenu_page-" + id);
+    var panel = page.parent();
+    page.removeClass("out");
+    panel.removeClass("sm");
+    panel.removeClass("md");
+    panel.removeClass("lg");
+    // Restore panel to size of any other open page
+    var openPage = $("#" + panel[0].id + ">.secureMenu-page.out").last();
+    panel.addClass(openPage.data("size"));
+}
 </script>
