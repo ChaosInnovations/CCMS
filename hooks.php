@@ -24,7 +24,7 @@ $hooks = [
 
     ['/^web:\/?api\/config\/set\/?$/i',           "\Lib\CCMS\Utilities::hookSetConfig"],          // Set configuration
 
-    ['/^web:\/?api\/collab_update\/?$/i',         "\Lib\CCMS\CollabUpdateEndpoint::hook"],        // Collaboration status update
+    ['/^web:\/?api\/collab_update\/?$/i',         "\Mod\Collaboration::hookUpdate"],              // Collaboration status update
 
     ['/^web:\/?api\/page\/new\/?$/i',             "\Mod\Page::hookNewPage"],
     ['/^web:\/?api\/page\/remove\/?$/i',          "\Mod\Page::hookRemovePage"],
@@ -35,6 +35,8 @@ $hooks = [
     ['/^web:\/?api\/contactform\/response\/?$/i', "\Mod\ContactForm::hookFormResponse"],
 
     ['/(?!.*\.[a-z]*$)^web:.*$/i',                "\Mod\Page::hook"],                             // Capture all remaining hooks that don't have an extension
+
+    ['/^web:\/?api\/collab_update\/?$/i',         "\Mod\Collaboration::hookMenu"],              // Collaboration status update
     
     ['/(?!.*\.[a-z]*$)^web:.*$/i',                "\Mod\User::hookMenu"],
 

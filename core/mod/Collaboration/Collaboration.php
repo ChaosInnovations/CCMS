@@ -1,6 +1,6 @@
 <?php
 
-namespace Lib\CCMS;
+namespace Mod;
 
 use \Lib\CCMS\Response;
 use \Lib\CCMS\Request;
@@ -9,9 +9,13 @@ use \Mod\Page;
 use \Mod\User;
 use \PDO;
 
-class CollabUpdateEndpoint
+class Collaboration
 {
-    public static function hook(Request $request)
+    public static function hookMenu(Request $request)
+    {
+    
+    }
+    public static function hookUpdate(Request $request)
     {
         // Keepalive
         $stmt = Database::Instance()->prepare("UPDATE users SET collab_lastseen=UTC_TIMESTAMP WHERE uid=:uid;");
