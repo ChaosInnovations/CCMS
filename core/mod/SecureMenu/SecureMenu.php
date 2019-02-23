@@ -141,44 +141,6 @@ class SecureMenu
             'modals' => $compiledModals,
         ];
         $menu = Utilities::fillTemplate($secureMenuTemplate, $template_vars);
-        
-        //return new Response($menu, false);
-        
-        $modals = "<div id=\"modals\">";
-        $script = "<script>";
-        $secure = "";
-
-        $secure .= $TEMPLATES["secure-menu"]();
-
-        // Page manager menu
-        if (User::$currentUser->permissions->admin_managepages) {
-            $modals .= $TEMPLATES["secure-modal-start"]("dialog_admin", "Administration", "lg");
-            $modals .= $TEMPLATES["secure-modal-admin-bodyfoot"]();
-            $script .= $TEMPLATES["secure-modal-admin-script"]();
-            $modals .= $TEMPLATES["secure-modal-end"];
-        }
-
-        // Module menus
-        if (User::$currentUser->permissions->admin_managesite) {
-            /*
-            foreach ($availablemodules as $m) {
-                $mc = $modules[$m];
-                if (method_exists($mc, "getModal")) {
-                    $modals .= $TEMPLATES["secure-modal-start"]("dialog_module_".$m, $mc->name, "lg");
-                    $modals .= $mc->getModal();
-                    $modals .= $TEMPLATES["secure-modal-end"];
-                }
-                if (method_exists($mc, "getScript")) {
-                    $script .= $mc->getScript();
-                }
-            }
-            */
-        }
-
-        $modals .= "</div>";
-        $script .= "</script>";
-
-        $menu = $menu . $modals . $script;
 
         return new Response($menu, false);
     }
