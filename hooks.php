@@ -36,7 +36,7 @@ $hooks = [
 
     ['/(?!.*\.[a-z]*$)^web:.*$/i',                "\Mod\Page::hook"],                             // Capture all remaining hooks that don't have an extension
 
-    ['/^web:\/?api\/collab_update\/?$/i',         "\Mod\Collaboration::hookMenu"],              // Collaboration status update
+    ['/(?!.*\.[a-z]*$)^web:.*$/i',                "\Mod\Collaboration::hookMenu"],              // Collaboration status update
     
     ['/(?!.*\.[a-z]*$)^web:.*$/i',                "\Mod\User::hookMenu"],
 

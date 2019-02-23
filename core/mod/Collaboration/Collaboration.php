@@ -4,8 +4,11 @@ namespace Mod;
 
 use \Lib\CCMS\Response;
 use \Lib\CCMS\Request;
+use \Lib\CCMS\Utilities;
 use \Mod\Database;
 use \Mod\Page;
+use \Mod\SecureMenu;
+use \Mod\SecureMenu\Panel;
 use \Mod\User;
 use \PDO;
 
@@ -13,8 +16,20 @@ class Collaboration
 {
     public static function hookMenu(Request $request)
     {
-    
+        $panelTemplate = file_get_contents(dirname(__FILE__) . "/templates/CollaborationPanelContent.template.html");
+        //$panelEntryTemplate = file_get_contents(dirname(__FILE__) . "/PanelEntry.template.html");
+
+        //$compiledPanelEntries = "";
+        //foreach(self::Instance()->entries as $entry) {
+        //    $compiledPanelEntries .= Utilities::fillTemplate($panelEntryTemplate, $entry);
+        //}
+
+        $content = Utilities::fillTemplate($panelTemplate, []);
+        
+        SecureMenu::Instance()->addEntry("collaborateTrigger", "Collaborate", "triggerPane('collaborate');", '<i class="fas fa-share-alt"></i>', SecureMenu::HORIZONTAL);
+        SecureMenu::Instance()->addPanel(new Panel("collaborate", "Collaborate", $content, Panel::SLIDE_VERTICAL));
     }
+
     public static function hookUpdate(Request $request)
     {
         // Keepalive
