@@ -17,7 +17,6 @@
 // LOGS: install.log
 
 // If ?status then return value of STATE file if it exists, otherwise return -1
-// If ?setup then save setup data
 // If ?go=[ver] then try download of http://ccms.chaosinnovations.com/pkg/[ver].zip
 //   If successful, return 1, close connection, and download in background. Update STATE with progress
 //     Update STATE and unpack
@@ -44,8 +43,6 @@ start();
 
 if (isset($_GET["status"])) {
 	echo getState();
-} else if (isset($_GET["setup"])) {
-	echo saveSetup();
 } else if (isset($_GET["go"])) {
 	if (validPkg($_GET["go"])) {
 		set_time_limit(0);
@@ -63,14 +60,14 @@ if (isset($_GET["status"])) {
 	file_put_contents("STATE", "0:0");
 	stop();
 	doAsyncVersionCheck();
-} else if (explode(":", getState())[0] == "5") {
-	echo setupFrontend();
+} else if(explode(":", getState())[0] == 5) {
+	header("Location: /");
+	echo "Redirecting you to <a href=\"/.\">index.php</a>";
 	stop();
 } else {
 	echo installerFrontend();
 	stop();
 }
-
 
 function start() {
 	ob_end_clean();
@@ -308,123 +305,6 @@ setInterval(function(){$.get("?status",stateUpdate);}, 100);
 	</body>
 </html>
 ';
-}
-
-function setupFrontend() {
-	echo '<!DOCTYPE html>
-<html>
-	<head>
-		<title>Install CCMS</title>
-		<style>
-.hide {
-	display: none;
-}
-		</style>
-	</head>
-	<body>
-		<h1>Setup CCMS</h1>
-		<div id="step1">
-		<h2>Step <span id="step">1</span> of 2: <span id="stepname">Database</span></h2>
-		<div id="stepProgress"><progress value="1" max="2"></progress></div>
-		<div id="formErrors"></div>
-		<form id="setupForm" onsubmit="return false;">
-			<div id="pg1frm">
-				<b>Host: </b><input id="db-host" type="text" placeholder="Host" value="localhost"></input><br />
-				<b>Username: </b><input id="db-user" type="text" placeholder="Username" value=""></input><br />
-				<b>Password: </b><input id="db-pass" type="text" placeholder="Password" value=""></input><br />
-				<b>Database: </b><input id="db-db" type="text" placeholder="Database" value=""></input><br />
-				<button onclick="gotoPage(\'2\');">Next</button>
-			</div>
-			<div id="pg2frm" class="hide">
-			    <b>Name: </b><input id="admin-name" type="text" placeholder="Admin Name" value=""></input><br />
-				<b>Email Address: </b><input id="admin-email" type="text" placeholder="Admin Email" value=""></input><br />
-				<b>Password: </b><input id="admin-pass" type="text" placeholder="Admin Password" value=""></input><br />
-				<button onclick="gotoPage(\'1\');">Previous</button>
-				<button onclick="processForm();">Finish</button>
-			</div>
-		</form>
-		</div>
-		<script>
-
-function gotoPage(page) {
-	document.getElementById("pg1frm").className = "hide";
-	document.getElementById("pg2frm").className = "hide";
-	document.getElementById("pg"+page+"frm").className = "";
-	document.getElementById("step").innerHTML = page;
-	document.getElementById("stepname").innerHTML = ["","Database","Administrator Account"][page];
-	document.getElementById("stepProgress").innerHTML = \'<progress value="\'+page+\'" max="2"></progress>\';
-	return false;
-}
-
-var $={};$.x=function(){return new XMLHttpRequest();};$.s=function(u,c,m,d,a){a=a===undefined?true:a;var x=$.x();x.open(m,u,a);x.onreadystatechange=function(){if(x.readyState==4){c(x.responseText);}};if(m=="POST"){x.setRequestHeader("Content-type","application/x-www-form-urlencoded");}x.send(d);};$.get=function(q,c,a){$.s(q,c,"GET",null,a);};$.post=function(q,d,c,a){var f=[];for(var k in d){f.push(encodeURIComponent(k)+"="+encodeURIComponent(d[k]));}$.s(q,c,"POST",f.join("&"),a);}
-
-function raiseError(code) {
-	// Error codes:
-	//  0   :
-	//  1** : Missing form data
-	//  101 : Please provide a database host.
-	//  102 : Please provide a database username.
-	//  103 : Please provide a database password.
-	//  104 : Please provide a database name.
-	//  105 : Please provide an email host.
-	//  106 : Please provide an email username.
-	//  107 : Please provide an email password.
-	//  108 : Please provide a website title.
-	//  109 : Please provide an administrator email.
-	//  110 : Please provide an administrator password.
-	//  2** : Invalid credentials
-	//  5** : Success
-	//  501 : Form OK, Redirecting
-	var err = {
-		// 1** : Missing form data
-		101 : "Please provide a database host",
-		// 5** : Success
-		501 : "Setup complete! If this page doesn\'t automaically redirect, click <a href=\"./\">here.</a>"
-	};
-	document.getElementById("formErrors").innerHTML = err[code];
-}
-
-function processForm() {
-	// 1. Evaluate data
-	// 1.0 Get data
-	var data = {"db":{"host":null,"user":null,"pass":null,"data":null},"admin":{"name":null,"email":null,"pass":null}};
-	data["db"]["host"] = document.getElementById("db-host").value;
-	data["db"]["user"] = document.getElementById("db-user").value;
-	data["db"]["pass"] = document.getElementById("db-pass").value;
-	data["db"]["data"] = document.getElementById("db-db").value;
-	data["admin"]["name"] = document.getElementById("admin-name").value;
-	data["admin"]["email"] = document.getElementById("admin-email").value;
-	data["admin"]["pass"] = document.getElementById("admin-pass").value;
-	// 1.1 Check fields are non-empty - do later
-	// 1.2 Check database credentials - do later	
-	// 1.3 Check email formatting - do later
-	var dataJson = JSON.stringify(data);
-	// 2 Save setup
-	$.post("?setup", {"data":dataJson}, function(d){
-		// 3 Redirect to index.php (should do a self-check and if OK, delete setup.php and STATE)	
-		if (d == "OK") {
-			raiseError(501);
-			setTimeout(function(){location = "./";}, 1500);
-		}
-	});
-	return false;
-}
-		</script>
-	</body>
-</html>
-';
-}
-
-// Form processing:
-// 1. Write provisioning file
-// 2. Redirect to index.php (should do a self-check and if OK, delete setup.php and STATE)
-
-function saveSetup() {
-	if (!isset($_POST["data"])) {
-		return "ERR";
-	}
-	file_put_contents("provisioning.json", $_POST["data"]);
-	return "OK";
 }
 
 function errorMsg() {
