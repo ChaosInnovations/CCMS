@@ -15,6 +15,22 @@ use \PDO;
 
 class Collaboration
 {
+    public static function hookVerifyConfiguration(Request $request)
+    {
+        $db = Database::Instance();
+
+        $stmt = $db->prepare("SHOW TABLES LIKE 'collab_rooms'");
+        $stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
+        if (count($stmt->fetchAll())) {
+            return;
+        }
+
+        $dbTemplate = file_get_contents(dirname(__FILE__) . "/templates/database.template.sql");
+
+        $stmt = $db->prepare($dbTemplate);
+        $stmt->execute();
+    }
+
     public static function hookMenu(Request $request)
     {
         $panelTemplate = file_get_contents(dirname(__FILE__) . "/templates/CollaborationPanelContent.template.html");

@@ -90,7 +90,7 @@ class Page
             $pre = (new Page("_default/head"))->head;
         }
         $sitetitle = Utilities::getconfig("websitetitle");
-        echo "{$pre}<title>{$this->title} | {$sitetitle}</title>{$this->head}";
+        return "{$pre}<title>{$this->title} | {$sitetitle}</title>{$this->head}";
     }
 
     public function getContent()
@@ -168,6 +168,22 @@ class Page
         }
 
         return urldecode($pages[0]["title"]);
+    }
+
+    public static function hookVerifyConfiguration(Request $request)
+    {
+        $db = Database::Instance();
+
+        $stmt = $db->prepare("SHOW TABLES LIKE 'content_pages'");
+        $stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
+        if (count($stmt->fetchAll())) {
+            return;
+        }
+
+        $dbTemplate = file_get_contents(dirname(__FILE__) . "/templates/database.template.sql");
+
+        $stmt = $db->prepare($dbTemplate);
+        $stmt->execute();
     }
 
     public static function hook(Request $request)

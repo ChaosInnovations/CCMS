@@ -10,6 +10,13 @@ class CCMSCore
 {
     public function __construct()
     {
+        // Delete setup script and STATE if it still exists (first time launch)
+        if (file_exists("STATE") && file_get_contents("STATE") == "5:0") {
+            // Remove setup files
+            unlink("setup.php");
+            unlink("STATE");
+        }
+        
         date_default_timezone_set("UTC");
     }
     
