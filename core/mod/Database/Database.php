@@ -4,6 +4,8 @@ namespace Mod;
 
 use \Lib\CCMS\Response;
 use \Lib\CCMS\Request;
+use \Lib\CCMS\Utilities;
+use \Mod\Database\Setup;
 use \PDO;
 use \PDOException;
 
@@ -31,11 +33,16 @@ class Database extends PDO
         if (!file_exists($configFile)) {
             $configFile = dirname(__FILE__) . "/config.ini";
         }
+
+        if (!file_exists($configFile)) {
+            $this->connectionStatus = "Configuration file missing";
+            return;
+        }
         
-        $db_config = parse_ini_file($configFile);
-        
+        $db_config = parse_ini_file($configFile, true);
+
         try {
-            parent::__construct("mysql:host=" . $db_config["host"] . ";dbname=" . $db_config["database"], $db_config["username"], $db_config["password"]);
+            parent::__construct("{$db_config["driver"]}:host=" . $db_config["host"] . ";dbname=" . $db_config["database"]["primary"], $db_config["account"]["username"], $db_config["account"]["password"]);
             $this->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
             $this->connectionOpen = true;
         } catch(PDOException $e) {
@@ -52,14 +59,19 @@ class Database extends PDO
     {
         return $this->connectionStatus;
     }
-    
-    
+
     public static function hookOpenConnection(Request $request)
     {
         $instance = self::Instance();
+
+        if ($instance->isConnectionOpen()) {
+            return;
+        }
         
-        if (!$instance->isConnectionOpen()) {
+        if ($instance->connectionStatus !== "Configuration file missing") {
             return new Response("No database connection. Reason:\n" . $instance->getConnectionStatus());
         }
+
+        return Setup::hookConfiguration($request);
     }
 }
