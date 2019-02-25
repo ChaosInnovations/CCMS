@@ -18,7 +18,7 @@
   	position:relative;
     width:40px;
     height:40px;
-    border-radius:20px;
+    border-radius:10px;
     border:1px solid #FFF;
     background-color:#000;
     color:#FFF;
@@ -90,7 +90,7 @@
     height:220px;
 	max-width:70%;
 	max-height:70%;
-    border-radius:5px;
+    border-radius:10px;
     border:1px solid #FFF;
   	padding-top:0.15rem;
     padding-left:10px;
@@ -99,8 +99,7 @@
     background-color:#000;
     color:#FFF;
     transition: width, height 0.5s, 0.5s;
-    overflow-y:auto;
-	overflow-x:hidden;
+    overflow: hidden;
 }
 
 .secureMenu-pane.sm {
