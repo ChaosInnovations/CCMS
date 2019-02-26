@@ -60,6 +60,13 @@ class Database extends PDO
         return $this->connectionStatus;
     }
 
+    public function execute($statement)
+    {
+        $s = $this->prepare($statement);
+        $s->execute();$s->setFetchMode(PDO::FETCH_ASSOC);
+        return $s->fetchAll();
+    }
+
     public static function hookOpenConnection(Request $request)
     {
         $instance = self::Instance();

@@ -11,7 +11,6 @@
 $hooks = [
     ['/.*/',                                      "\Mod\Database::hookOpenConnection"],           // Connect to database
     ['/.*/',                                      "\Mod\User::hookVerifyConfiguration"],          // Verify database configuration
-    ['/.*/',                                      "\Mod\Page::hookVerifyConfiguration"],          // Verify database configuration
     ['/.*/',                                      "\Mod\Collaboration::hookVerifyConfiguration"], // Verify database configuration
 
     ['/^web:.*/',                                 "\Mod\User::hookAuthenticateFromRequest"],      // Sign in

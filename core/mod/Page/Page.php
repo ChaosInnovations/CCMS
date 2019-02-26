@@ -2,6 +2,7 @@
 
 namespace Mod;
 
+use \Lib\CCMS\ContentType;
 use \Lib\CCMS\Response;
 use \Lib\CCMS\Request;
 use \Lib\CCMS\Utilities;
@@ -12,8 +13,31 @@ use \Mod\SecureMenu\Panel;
 use \Mod\User;
 use \PDO;
 
-class Page
+class Page extends ContentType
 {
+    private static $table = null;
+    private static function table() {
+        if (!self::$table instanceof ContentType) {
+            self::$table = new ContentType("content_pages");
+            if (!self::$table->tableExists) {
+                $columns = [
+                    "`pageid` varchar(255) NOT NULL",
+                    "`title` text NOT NULL",
+                    "`head` longtext NOT NULL",
+                    "`body` longtext NOT NULL",
+                    "`usehead` tinyint(1) NOT NULL DEFAULT '1'",
+                    "`usetop` tinyint(1) NOT NULL DEFAULT '1'",
+                    "`usebottom` tinyint(1) NOT NULL DEFAULT '1'",
+                    "`secure` tinyint(1) NOT NULL",
+                    "`revision` date NOT NULL",
+                    "UNIQUE KEY `pageid` (`pageid`)",
+                ];
+                self::$table->createTable($columns);
+            }
+        }
+        return self::$table;
+    }
+
     public $pageid = "";
     public $rawtitle = "Empty%20Page";
     public $title = "Empty Page";
@@ -42,10 +66,7 @@ class Page
             </div>
         ";
 
-        $stmt = Database::Instance()->prepare("SELECT * FROM content_pages WHERE pageid=:pid;");
-        $stmt->bindParam(":pid", $this->pageid);
-        $stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
-        $pages = $stmt->fetchAll();
+        $pages = self::table()->getTableEntry("pageid", $this->pageid);
 
         if (count($pages) != 1) {
             return;
@@ -150,40 +171,18 @@ class Page
 
     public static function pageExists(string $pid)
     {
-        $stmt = Database::Instance()->prepare("SELECT pageid FROM content_pages WHERE pageid=:pid;");
-        $stmt->bindParam(":pid", $pid);
-        $stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
-        return count($stmt->fetchAll()) == 1;
+        return self::table()->tableEntryExists("pageid", $pid);
     }
 
     public static function getTitleFromId(string $pid)
     {
-        $stmt = Database::Instance()->prepare("SELECT title FROM content_pages WHERE pageid=:pid;");
-        $stmt->bindParam(":pid", $pid);
-        $stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
-        $pages = $stmt->fetchAll();
+        $pages = self::table()->getTableEntry("pageid", $pid);
 
         if (count($pages) != 1) {
             return "Unknown";
         }
 
         return urldecode($pages[0]["title"]);
-    }
-
-    public static function hookVerifyConfiguration(Request $request)
-    {
-        $db = Database::Instance();
-
-        $stmt = $db->prepare("SHOW TABLES LIKE 'content_pages'");
-        $stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
-        if (count($stmt->fetchAll())) {
-            return;
-        }
-
-        $dbTemplate = file_get_contents(dirname(__FILE__) . "/templates/database.template.sql");
-
-        $stmt = $db->prepare($dbTemplate);
-        $stmt->execute();
     }
 
     public static function hook(Request $request)
@@ -196,6 +195,7 @@ class Page
             $pageid = "_default/notfound";
         }
 
+        // This should be moved to the Collaboration module
         $stmt = Database::Instance()->prepare("UPDATE users SET collab_pageid=:pid WHERE uid=:uid;");
         $stmt->bindParam(":pid", $pageid);
         $stmt->bindParam(":uid", User::$currentUser->uid);
@@ -313,21 +313,22 @@ class Page
         $s = $secure ? "1" : "0";
         $now = date("Y-m-d");
 
-        $stmt = Database::Instance()->prepare("SELECT * FROM content_pages WHERE pageid='_default/page';");
-        $stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
-        $template = $stmt->fetchAll()[0];
+        $template = self::table()->getTableEntry("pageid", "_default/page")[0];
 
-        $stmt = Database::Instance()->prepare("INSERT INTO content_pages VALUES (:pageid, :title, :head, :body, :usehead, :usetop, :usebottom, :secure, :now);");
-        $stmt->bindParam(":pageid", $npid);
-        $stmt->bindParam(":title", $template["title"]);
-        $stmt->bindParam(":head", $template["head"]);
-        $stmt->bindParam(":body", $template["body"]);
-        $stmt->bindParam(":usehead", $template["usehead"]);
-        $stmt->bindParam(":usetop", $template["usetop"]);
-        $stmt->bindParam(":usebottom", $template["usebottom"]);
-        $stmt->bindParam(":now", $now);
-        $stmt->bindParam(":secure", $s);
-        $stmt->execute();
+        $values = [
+            $npid,
+            $template["title"],
+            $template["head"],
+            $template["body"],
+            $template["usehead"],
+            $template["usetop"],
+            $template["usebottom"],
+            $now,
+            $s,
+        ];
+
+        self::table()->addEntry($values);
+
         return new Response($npid);
     }
 
@@ -346,9 +347,8 @@ class Page
             return new Response("FALSE");
         }
 
-        $stmt = Database::Instance()->prepare("DELETE FROM content_pages WHERE pageid=:pid;");
-        $stmt->bindParam(":pid", $pid);
-        $stmt->execute();
+        self::table()->dropEntry("pageid", $pid);
+        
         return new Response("TRUE");
     }
 
