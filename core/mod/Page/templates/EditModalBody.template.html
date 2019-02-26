@@ -52,7 +52,7 @@ function dialog_edit_check_pageid() {
         <div class="col-sm-9 col-md-10">
             <input type="text" id="dialog_edit_pagetitle" name="pagetitle" class="form-control" title="Page Title" placeholder="Page Title" />
             <script>
-var pagetitle = decodeURIComponent("{rawtitle}");
+var pagetitle = atob("{rawtitle}");
 $("#dialog_edit_pagetitle").val(pagetitle);
             </script>
         </div>
@@ -66,7 +66,7 @@ $("#dialog_edit_pagetitle").val(pagetitle);
             </div>
             <textarea id="dialog_edit_head" name="head" class="form-control" title="Page Head" placeholder="Page Head" rows="8"></textarea>
             <script>
-var head = decodeURIComponent("{rawhead}");
+var head = atob("{rawhead}");
 $("#dialog_edit_head").val(head);
             </script>
         </div>
@@ -84,7 +84,7 @@ $("#dialog_edit_head").val(head);
                 <label class="form-check-label" for="dialog_edit_usebottom">Also append default bottom</label>
             </div>
             <script>
-var body = decodeURIComponent("{rawbody}");
+var body = atob("{rawbody}");
 $("#dialog_edit_body").val(body);
             </script>
         </div>

@@ -64,7 +64,11 @@ class Database extends PDO
     {
         $s = $this->prepare($statement);
         $s->execute();$s->setFetchMode(PDO::FETCH_ASSOC);
-        return $s->fetchAll();
+        try {
+            return $s->fetchAll();
+        } catch(PDOException $e) {
+            
+        }
     }
 
     public static function hookOpenConnection(Request $request)

@@ -33,6 +33,13 @@ class Page extends ContentType
                     "UNIQUE KEY `pageid` (`pageid`)",
                 ];
                 self::$table->createTable($columns);
+
+                $db = Database::Instance();
+
+                $dbTemplate = file_get_contents(dirname(__FILE__) . "/templates/database.template.sql");
+
+                $stmt = $db->prepare($dbTemplate);
+                $stmt->execute();
             }
         }
         return self::$table;
@@ -79,9 +86,9 @@ class Page extends ContentType
         $this->usehead = $pdata["usehead"];
         $this->usetop = $pdata["usetop"];
         $this->usebottom = $pdata["usebottom"];
-        $this->title = urldecode($this->rawtitle);
-        $this->head = urldecode($this->rawhead);
-        $this->body = urldecode($this->rawbody);
+        $this->title = base64_decode($this->rawtitle);
+        $this->head = base64_decode($this->rawhead);
+        $this->body = base64_decode($this->rawbody);
         $this->secure = $pdata["secure"];
         $this->revision = date("l, F j, Y", strtotime($pdata["revision"]));
     }
@@ -260,16 +267,18 @@ class Page extends ContentType
             $pages = $stmt->fetchAll();
             foreach ($pages as $pageData) {
                 $tools = "";
-                if (!in_array($pageData["pageid"], ["home", "secureaccess"])) {
+                if (!in_array($pageData["pageid"], ["", "secureaccess"]) && substr($pageData["pageid"], 0, 9) !== "_default/") {
                     $toolsTempateVars = [
                         'pageid' => $pageData["pageid"],
                         'checked' => ($pageData["secure"] ? ' checked' : ''),
                     ];
                     $tools = Utilities::fillTemplate($pageListEntryToolsTemplate, $toolsTempateVars);
+                } else {
+                    $tools = "<td></td>";
                 }
                 $template_vars = [
                     'pageid' => $pageData["pageid"],
-                    'title' => urldecode($pageData["title"]),
+                    'title' => base64_decode($pageData["title"]),
                     'revisiondate' => date("l, F j, Y", strtotime($pageData["revision"])),
                     'tools' => $tools,
                 ];
@@ -436,15 +445,19 @@ class Page extends ContentType
             return new Response("FALSE");
         }
 
+        $title=base64_encode(urldecode($_POST["title"]));
+        $head=base64_encode(urldecode($_POST["head"]));
+        $body=base64_encode(urldecode($_POST["body"]));        
+
         $now = date("Y-m-d");
         $stmt = Database::Instance()->prepare("UPDATE content_pages SET pageid=:pageid, title=:title, head=:head, body=:body, usehead=:usehead, usetop=:usetop, usebottom=:usebottom, revision=:now WHERE pageid=:oldpid;");
         $stmt->bindParam(":pageid", $newpageid);
         $stmt->bindParam(":oldpid", $page->pageid);
-        $stmt->bindParam(":title", $_POST["title"]);
+        $stmt->bindParam(":title", $title);
         $stmt->bindParam(":usehead", $_POST["usehead"]);
-        $stmt->bindParam(":head", $_POST["head"]);
+        $stmt->bindParam(":head", $head);
         $stmt->bindParam(":usetop", $_POST["usetop"]);
-        $stmt->bindParam(":body", $_POST["body"]);
+        $stmt->bindParam(":body", $body);
         $stmt->bindParam(":usebottom", $_POST["usebottom"]);
         $stmt->bindParam(":now", $now);
         $stmt->execute();
@@ -470,7 +483,7 @@ class Page extends ContentType
             if ($pd["secure"] == "1" and !User::$currentUser->permissions->page_viewsecure or in_array($pd["pageid"], User::$currentUser->permissions->page_viewblacklist)) {
                 continue;
             } else {
-                $title = urldecode($pd["title"]);
+                $title = base64_decode($pd["title"]);
                 $content  .= "<li><a href=\"/{$pd["pageid"]}\" title=\"{$title}\">{$title}</a></li>";
             }
         }

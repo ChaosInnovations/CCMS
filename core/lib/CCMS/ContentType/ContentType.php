@@ -15,7 +15,7 @@ class ContentType
         $this->tableName = $tableName;
         $this->db = new Database();
 
-        $tables = $this->db->prepare("SHOW TABLES LIKE '{$tableName}'");
+        $tables = $this->db->execute("SHOW TABLES LIKE '{$tableName}'");
         $this->tableExists = count($tables) === 1;
     }
 
@@ -28,10 +28,9 @@ class ContentType
 
     protected function createTable($columns) {
         $columnList = implode(",", $columns);
-        $statement = "CREATE TABLE IF NOT EXISTS `{$this->tableName}` ({$columnList});";
-        $this->db->execute($statement);
+        $this->db->execute("CREATE TABLE IF NOT EXISTS `{$this->tableName}` ({$columnList});");
         
-        $tables = $this->db->prepare("SHOW TABLES LIKE '{$tableName}'");
+        $tables = $this->db->execute("SHOW TABLES LIKE '{$this->tableName}'");
         $this->tableExists = count($tables) === 1;
     }
 

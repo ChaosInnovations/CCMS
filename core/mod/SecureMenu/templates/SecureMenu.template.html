@@ -1,7 +1,9 @@
 <div id="secureMenu" class="secureMenu">
-    <div id="secureMenu_trigger" class="secureMenu-icon" title="Secure Menu" onclick="toggleSecureMenu();" style="z-index:10;">
-        <span class="notif-badge" style="display: none;">0</span>
-        <span><i class="fas fa-ellipsis-v"></i></span>
+    <div id="secureMenu_trigger" title="Secure Menu" class="secureMenu-icon" onclick="toggleSecureMenu();" style="z-index:10;">
+        <div>
+            <span class="notif-badge" style="display: none;">0</span>
+            <span><i class="fas fa-ellipsis-v"></i></span>
+        </div>
     </div>
     <div id="secureMenu_horizontal" class="secureMenu-iconGroup horizontal" style="z-index:9;">
         {horizontalEntries}
@@ -19,16 +21,14 @@ var secureMenuPane = "";
 function toggleSecureMenu() {
     secureMenuVisible = !secureMenuVisible;
     if (secureMenuVisible) {
-        $("#secureMenu_horizontal").addClass("visible");
-        $("#secureMenu_vertical").addClass("visible");
+        $("#secureMenu").addClass("open");
         $("#secureMenu_trigger").addClass("active");
         triggerPane(secureMenuLastPane);
     } else {
         secureMenuLastPane = secureMenuPane;
         triggerPane(secureMenuPane);
-        $("#secureMenu_horizontal").removeClass("visible");
-        $("#secureMenu_vertical").removeClass("visible");
         $("#secureMenu_trigger").removeClass("active");
+        $("#secureMenu").removeClass("open");
     }
 }
 function triggerPane(id) {

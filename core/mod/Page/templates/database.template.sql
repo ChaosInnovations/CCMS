@@ -1,23 +1,10 @@
-CREATE TABLE IF NOT EXISTS `content_pages` (
-  `pageid` varchar(255) NOT NULL,UNIQUE KEY `pageid` (`pageid`),
-  `title` text NOT NULL,
-  `head` longtext NOT NULL,
-  `body` longtext NOT NULL,
-  `usehead` tinyint(1) NOT NULL DEFAULT '1',
-  `usetop` tinyint(1) NOT NULL DEFAULT '1',
-  `usebottom` tinyint(1) NOT NULL DEFAULT '1',
-  `secure` tinyint(1) NOT NULL,
-  `revision` date NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-
-INSERT INTO `content_pages` VALUES('', 'Home%20Page', '%3Cstyle%3E%0A%20%20h1%20%7B%0A%20%20%20%20font-size%3A%202rem%3B%0A%20%20%7D%0A%3C%2Fstyle%3E', '%3Cdiv%20class%3D%22container%22%3E%0A%20%20%3Ch1%3EContent!%3C%2Fh1%3E%0A%3C%2Fdiv%3E', 1, 0, 1, 0, '2018-09-21');
-INSERT INTO `content_pages` VALUES('secure/newpage', 'Test', '', '%7B%7Bsitemap%7D%7D', 1, 1, 1, 1, '2018-09-21');
-INSERT INTO `content_pages` VALUES('secureaccess', 'Secure%20Access%20Portal', '', '%7B%7Bloginform%7D%7D', 1, 1, 1, 0, '2017-01-29');
-INSERT INTO `content_pages` VALUES('_default/bottom', 'Default%20Bottom', '', 'This%20goes%20after', 0, 0, 0, 1, '2018-09-21');
-INSERT INTO `content_pages` VALUES('_default/head', 'Default%20Head', '', '', 0, 0, 0, 1, '0000-00-00');
-INSERT INTO `content_pages` VALUES('_default/notfound', 'Page%20not%20found!', '', 'Page%20not%20Found%3A%20%3Ca%20href%3D%22%7B%7Bpageid%7D%7D%22%3E%7B%7Bqueryerr%7D%7D%3C%2Fa%3E', 1, 1, 1, 0, '2018-09-20');
-INSERT INTO `content_pages` VALUES('_default/page', 'New%20Page', '', 'This%20is%20a%20new%20page!', 1, 1, 1, 1, '2018-09-21');
-INSERT INTO `content_pages` VALUES('_default/top', 'Default%20Top', '', 'This%20goes%20before', 0, 0, 0, 1, '2018-09-21');
+INSERT INTO `content_pages` VALUES('', 'SG9tZSBQYWdl', '', 'PGRpdiBjbGFzcz0iY29udGFpbmVyIj4KICA8ZGl2IGNsYXNzPSJjYXJkIG1iLTQiPgogICAgPGgyIGNsYXNzPSJjYXJkLWhlYWRlciI+SXQgd29ya3MhPC9oMj4KICAgIDxkaXYgY2xhc3M9ImNhcmQtYm9keSI+CiAgICAgIHt7c2l0ZW1hcH19CiAgICA8L2Rpdj4KICA8L2Rpdj4KPC9kaXY+', 1, 1, 1, 0, '2019-02-26');
+INSERT INTO `content_pages` VALUES('secureaccess', 'U2VjdXJlIEFjY2VzcyBQb3J0YWw=', '', 'PGRpdiBjbGFzcz0iY29udGFpbmVyIj4KICA8ZGl2IGNsYXNzPSJjYXJkIG1iLTQiPgogICAgPGgyIGNsYXNzPSJjYXJkLWhlYWRlciI+V2VibWFzdGVyIExvZ2luPC9oMj4KICAgIDxkaXYgY2xhc3M9ImNhcmQtYm9keSI+CiAgICAgIHt7bG9naW5mb3JtfX0KICAgIDwvZGl2PgogIDwvZGl2Pgo8L2Rpdj4=', 1, 1, 1, 0, '2019-02-26');
+INSERT INTO `content_pages` VALUES('_default/bottom', 'RGVmYXVsdCBCb3R0b20=', '', 'PG5hdiBjbGFzcz0ibmF2YmFyIGZpeGVkLWJvdHRvbSBuYXZiYXItbGlnaHQgYmctbGlnaHQganVzdGlmeS1jb250ZW50LWVuZCI+CiAgPGEgY2xhc3M9Im5hdmJhci1icmFuZCIgaHJlZj0iIyI+RGVmYXVsdCBQYWdlIEJvdHRvbSBTZWN0aW9uPC9hPgo8L25hdj4=', 0, 1, 0, 1, '2019-02-26');
+INSERT INTO `content_pages` VALUES('_default/head', 'RGVmYXVsdCBIZWFk', 'PG1ldGEgbmFtZT0idmlld3BvcnQiIGNvbnRlbnQ9IndpZHRoPWRldmljZS13aWR0aCxpbml0aWFsLXNjYWxlPTEsbWF4aW11bS1zY2FsZT0xLHVzZXItc2NhbGFibGU9bm8iIC8+', 'VXNlIHRoaXMgX2RlZmF1bHQgcGFnZSB0byBlZGl0IHRoZSBkZWZhdWx0IDxjb2RlPiZsdDtoZWFkJmd0OzwvY29kZT4gYmxvY2su', 0, 1, 1, 1, '2019-02-26');
+INSERT INTO `content_pages` VALUES('_default/notfound', 'UGFnZSBOb3QgRm91bmQ=', '', 'PGRpdiBjbGFzcz0iY29udGFpbmVyIj4KICA8ZGl2IGNsYXNzPSJjYXJkIG1iLTQiPgogICAgPGgyIGNsYXNzPSJjYXJkLWhlYWRlciI+UGFnZSBub3QgRm91bmQhPC9oMj4KICAgIDxkaXYgY2xhc3M9ImNhcmQtYm9keSI+CiAgICAgIDxwPjxhIGhyZWY9Ii97e3BhZ2VpZH19Ij4ve3twYWdlaWR9fTwvYT4gd2Fzbid0IGZvdW5kIG9uIHRoaXMgc2l0ZS48L3A+CiAgICAgIDxwPjxhIGhyZWY9Ii8iPkdvIEhvbWU8L2E+PC9wPgogICAgPC9kaXY+CiAgPC9kaXY+CjwvZGl2Pg==', 1, 1, 1, 0, '2019-02-26');
+INSERT INTO `content_pages` VALUES('_default/page', 'TmV3IFBhZ2U=', '', 'PGRpdiBjbGFzcz0iY29udGFpbmVyIj4KICA8ZGl2IGNsYXNzPSJjYXJkIG1iLTQiPgogICAgPGgyIGNsYXNzPSJjYXJkLWhlYWRlciI+VGhpcyBpcyBhIG5ldyBwYWdlPC9oMj4KICAgIDxkaXYgY2xhc3M9ImNhcmQtYm9keSI+CiAgICAgIDxwPkxvcmVtIGlwc3VtIGRvbG9yIHNpdCBhbWV0LCBjb25zZWN0ZXR1ciBhZGlwaXNjaW5nIGVsaXQuIEludGVnZXIgaW4gbW9sZXN0aWUgb2Rpby4gSW50ZWdlciB2ZWwgY29tbW9kbyB0b3J0b3IuIFByb2luIHRlbXB1cyBlbGl0IHF1aXMgbGliZXJvIHZvbHV0cGF0LCBldSBzYWdpdHRpcyBuZXF1ZSBncmF2aWRhLiBEb25lYyBzZWQgbGVvIHNpdCBhbWV0IHVybmEgdWx0cmljZXMgcnV0cnVtLiBBbGlxdWFtIGRvbG9yIG51bmMsIGV1aXNtb2QgZXUgbWkgZXUsIGNvbnNlY3RldHVyIHVsdHJpY2VzIGxvcmVtLiBNYXVyaXMgdGVtcG9yIGVyb3MgdmVsIGV1aXNtb2Qgc2FnaXR0aXMuIFByYWVzZW50IHF1aXMgbWF1cmlzIGluIG5pc2kgbG9ib3J0aXMgaW50ZXJkdW0gZWdldCBldCBuaWJoLiBWZXN0aWJ1bHVtIGVnZXN0YXMgbG9yZW0gZXUgb3JjaSBjb25ndWUsIGlkIHZlc3RpYnVsdW0gc2VtIGNvbmRpbWVudHVtLiBQaGFzZWxsdXMgdnVscHV0YXRlLCBxdWFtIGluIGVsZW1lbnR1bSBjb25kaW1lbnR1bSwgcmlzdXMgdmVsaXQgcG9ydGEgZGlhbSwgaGVuZHJlcml0IGNvbnNlY3RldHVyIGVzdCBsZW8gc2l0IGFtZXQgbGFjdXMuIFZpdmFtdXMgaWQgbmlzbCBub24gYW50ZSBjb252YWxsaXMgcmhvbmN1cyBlZ2V0IGlkIG5pc2wuIEluIGhhYyBoYWJpdGFzc2UgcGxhdGVhIGRpY3R1bXN0LiBDbGFzcyBhcHRlbnQgdGFjaXRpIHNvY2lvc3F1IGFkIGxpdG9yYSB0b3JxdWVudCBwZXIgY29udWJpYSBub3N0cmEsIHBlciBpbmNlcHRvcyBoaW1lbmFlb3MuIEluIHNlZCBlbmltIGJsYW5kaXQgbmVxdWUgdGluY2lkdW50IHRlbXBvci48L3A+CiAgICA8L2Rpdj4KICA8L2Rpdj4KPC9kaXY+', 1, 1, 1, 1, '2019-02-26');
+INSERT INTO `content_pages` VALUES('_default/top', 'RGVmYXVsdCBUb3A=', '', 'PG5hdiBjbGFzcz0ibmF2YmFyIG5hdmJhci1leHBhbmQtbGcgbmF2YmFyLWRhcmsgYmctcHJpbWFyeSBtYi00Ij4KICA8YSBjbGFzcz0ibmF2YmFyLWJyYW5kIiBocmVmPSIjIj5EZWZhdWx0IFBhZ2UgVG9wIFNlY3Rpb248L2E+CjwvbmF2Pg==', 0, 0, 0, 1, '2019-02-26');
 
 
 /* TEMPORARY SITE CONFIGURATION DEFAULTS */

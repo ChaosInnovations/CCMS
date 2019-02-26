@@ -17,6 +17,6 @@ class Column
     }
 
     public function getCompiled() {
-        
+
     }
 }
