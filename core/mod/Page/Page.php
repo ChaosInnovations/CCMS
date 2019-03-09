@@ -121,7 +121,7 @@ class Page extends ContentType
         return "{$pre}<title>{$this->title} | {$sitetitle}</title>{$this->head}";
     }
 
-    public function getContent()
+    public function getContent(Request $request)
     {
         global $https;
         
@@ -139,7 +139,7 @@ class Page extends ContentType
         <link rel="stylesheet" href="/core/mod/Collaboration/collaboration-1.0.0.css" media="all">
 		<script src="/assets/site/js/jquery-3.3.1.min.js"></script>';
         $content .= $this->insertHead();
-        $content .= "<script>var SERVER_NAME = \"{$_SERVER["SERVER_NAME"]}\", SERVER_HTTPS = \"{$https}\";</script>";
+        $content .= "<script>var BASE_URL = \"{$request->baseUrl}\";</script>";
         $content .= '
         <style>
 			.navbar .nav li * {
@@ -169,7 +169,8 @@ class Page extends ContentType
 		<script type="text/javascript" src="/assets/site/js/codemirror/mode/html/html.js"></script>
 		<script type="text/javascript" src="/assets/site/js/codemirror/mode/css/css.js"></script>
 		<script type="text/javascript" src="/assets/site/js/codemirror/mode/javascript/javascript.js"></script>
-		<script type="text/javascript" src="/assets/site/js/codemirror/mode/htmlmixed/htmlmixed.js"></script>
+        <script type="text/javascript" src="/assets/site/js/codemirror/mode/htmlmixed/htmlmixed.js"></script>
+        <script src="/core/mod/FireSock/js/firesock-0.1.0.js"></script>
 	</body>
 </html>';
 
@@ -189,7 +190,7 @@ class Page extends ContentType
             return "Unknown";
         }
 
-        return urldecode($pages[0]["title"]);
+        return base64_decode($pages[0]["title"]);
     }
 
     public static function hook(Request $request)
@@ -295,7 +296,7 @@ class Page extends ContentType
         
         SecureMenu::Instance()->addEntry("home", "Home", "location.assign('/');", '<i class="fas fa-home"></i>', SecureMenu::HORIZONTAL);
 
-        return new Response($page->getContent(), false);
+        return new Response($page->getContent($request), false);
     }
 
     public static function hookNewPage(Request $request)

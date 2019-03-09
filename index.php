@@ -4,9 +4,6 @@ use \Lib\CCMS\CCMSCore;
 
 require_once "core/autoload.php";
 
-$https = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] != 'off') ? "https" : "http";
-$baseUrl = $https . "://" . $_SERVER["SERVER_NAME"];
-
 $core = new CCMSCore();
 $request = $core->buildRequest();
 $response = $core->processRequest($request);

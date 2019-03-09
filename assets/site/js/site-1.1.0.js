@@ -1,5 +1,3 @@
-var BASE_URL = SERVER_HTTPS + "://" + SERVER_NAME;
-
 function logout() {
 	//Delete token cookie
 	document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:01 GMT; path=/";
