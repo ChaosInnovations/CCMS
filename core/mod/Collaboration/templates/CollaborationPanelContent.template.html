@@ -75,6 +75,9 @@ function collab_sendMessage() {
         return;
     }
     $("#secureMenu_collab-chat-newmessage").val("");
+    if (f$.connection) {
+        f$.connection.send("collabUpdate", JSON.stringify({chat:collab_chat,list:collab_list,message:msg}));
+    }
     module_ajax("collab_update", {chat:collab_chat,list:collab_list,message:msg}, collab_update_callback);
 }
 function collab_addTodo() {

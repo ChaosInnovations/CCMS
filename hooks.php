@@ -13,6 +13,9 @@ $hooks = [
     ['/.*/',                                      "\Mod\User::hookVerifyConfiguration"],          // Verify database configuration
     ['/.*/',                                      "\Mod\Collaboration::hookVerifyConfiguration"], // Verify database configuration
 
+    ['/^cli:\/?firesock\/?$/',                   "\Mod\FireSock::hookStartServer"],             // Start WS Server
+    ['/.*/',                                      "\Mod\FireSock::hookVerifyServer"],            // Check that WS Server is running.
+
     ['/^web:.*/',                                 "\Mod\User::hookAuthenticateFromRequest"],      // Sign in
 
     ['/^web:\/?api\/checkuser\/?$/i',             "\Mod\User::hookCheckUser"],                    // Check that the username is correct

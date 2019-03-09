@@ -99,10 +99,10 @@ class User
         return password_verify($password, $this->pwdHash);
     }
     
-    public function notify($what)
+    public function notify($from, $what)
     {
         global $TEMPLATES;
-        if (User::$currentUser->uid == $this->uid) {
+        if ($from->uid == $this->uid) {
             return;
         }
         $what .= ";";
@@ -139,15 +139,15 @@ class User
             }
             
             $template_vars = [
-                "senderName" => User::$currentUser->name,
+                "senderName" => $from->name,
                 "recipientName" => $rn,
             ];
             $htmlBody = Utilities::fillTemplate(file_get_contents(dirname(__FILE__) . "/templates/ChatNotificationEmail.template.html"), $template_vars);
             $altBody = Utilities::fillTemplate(file_get_contents(dirname(__FILE__) . "/templates/ChatNotificationEmail.template.txt"), $template_vars);
             
             $oldFrom = Mailer::NotifInstance()->from;
-            Mailer::NotifInstance()->from = User::$currentUser->name;
-            $mail = Mailer::NotifInstance()->compose([[$this->email, $this->name]], User::$currentUser->name." sent a message", $htmlBody, $altBody);
+            Mailer::NotifInstance()->from = $from->name;
+            $mail = Mailer::NotifInstance()->compose([[$this->email, $this->name]], $from->name." sent a message", $htmlBody, $altBody);
             $mail->send();
             Mailer::NotifInstance()->from = $oldFrom;
         }
