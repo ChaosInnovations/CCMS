@@ -33,9 +33,7 @@ function toggleSecureMenu() {
 }
 function triggerPane(id) {
     $(".secureMenu-pane").addClass("collapsed");
-    $("#secureMenu_option-collabTrigger").removeClass("active");
-    $("#secureMenu_option-moduleTrigger").removeClass("active");
-    $("#secureMenu_option-securepageTrigger").removeClass("active");
+    $(".secureMenu-iconGroup > .secureMenu-icon").removeClass("active");
     setTimeout(function(){
         $(".secureMenu-pane:not(#secureMenu_pane-"+id+")").hide();
     }, 500);
