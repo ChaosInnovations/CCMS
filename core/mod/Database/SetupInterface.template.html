@@ -108,7 +108,7 @@ function save_configuration() {
             }
             $("#modalPages").carousel(1);
             $("#configurationProgress").width("67%");
-        } catch {
+        } catch (err) {
             $("#form-feedback-1").text("The server had a bad response.").show();
         }
     }).fail(function(data) {
@@ -140,7 +140,7 @@ function select_database() {
             }
             $("#modalPages").carousel(2);
             $("#configurationProgress").width("100%");
-        } catch {
+        } catch (err) {
             $("#form-feedback-2").text("The server had a bad response.").show();
         }
     }).fail(function(data) {
@@ -174,7 +174,7 @@ function create_database() {
             $("#databaseSelect").val($("#newDatabase").val());
             $("#modalPages").carousel(2);
             $("#configurationProgress").width("100%");
-        } catch {
+        } catch (err) {
             $("#form-feedback-3").text("The server had a bad response.").show();
         }
     }).fail(function(data) {

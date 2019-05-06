@@ -1,8 +1,7 @@
 <?php
 
-if (!isset($_SERVER["DOCUMENT_ROOT"]) || !$_SERVER["DOCUMENT_ROOT"]) {
-    $_SERVER["DOCUMENT_ROOT"] =  dirname(__FILE__, 2);
-}
+// Set DOCUMENT_ROOT to the correct root document
+$_SERVER["DOCUMENT_ROOT"] = dirname(__FILE__, 2);
 
 require_once $_SERVER["DOCUMENT_ROOT"]."/core/lib/Autoloader.php";
 
