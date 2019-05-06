@@ -11,6 +11,18 @@
     <span id="secureMenu_notif-people" class="notif-badge" style="display: none;">0</span>
 </button><br>
 <script>
+
+var collabSubscription = new f$.Subscription("collabUpdate");
+collabSubscription.onReceived = function(msg) {
+    var updateStr = msg.substr(13);
+    if (updateStr == "ok") {
+        return;
+    }
+    collab_update_callback(updateStr);
+}
+f$.connection.subscribe(collabSubscription);
+f$.connection.send("collabUpdate", "subscribe");
+
 function collab_startCreate(type) {
     $("#secureMenu_collab-create-type").val(type);
     secureMenu_showPage("collaborate-create");
@@ -87,18 +99,39 @@ function collab_addTodo() {
         return;
     }
     $("#secureMenu_collab-todo-newentry").val("");
-    module_ajax("collab_update", {chat:collab_chat,list:collab_list,entry:label}, collab_update_callback);
+    if (f$.connection) {
+        f$.connection.send("collabUpdate", JSON.stringify({chat:collab_chat,list:collab_list,entry:label}));
+    } else {
+        module_ajax("collab_update", {chat:collab_chat,list:collab_list,entry:label}, collab_update_callback);
+    }
 }
 function collab_check(id) {
-    module_ajax("collab_update", {chat:collab_chat,list:collab_list,check_entry:id}, collab_update_callback);
+    if (f$.connection) {
+        f$.connection.send("collabUpdate", JSON.stringify({chat:collab_chat,list:collab_list,check_entry:id}));
+    } else {
+        module_ajax("collab_update", {chat:collab_chat,list:collab_list,check_entry:id}, collab_update_callback);
+    }
 }
 function collab_deleteTodo(id) {
-    module_ajax("collab_update", {chat:collab_chat,list:collab_list,delete_entry:id}, collab_update_callback);
+    if (f$.connection) {
+        f$.connection.send("collabUpdate", JSON.stringify({chat:collab_chat,list:collab_list,delete_entry:id}));
+    } else {
+        module_ajax("collab_update", {chat:collab_chat,list:collab_list,delete_entry:id}, collab_update_callback);
+    }
     $("#secureMenu_collab-todo-"+id)[0].remove();
 }
-$(document).ready(function() {setInterval(collab_update, 3000);collab_update();});
+$(document).ready(function() {
+    if (!f$.connection) {
+        setInterval(collab_update, 3000);
+        collab_update();
+    }
+});
 function collab_update() {
-    module_ajax("collab_update", {chat:collab_chat,list:collab_list}, collab_update_callback);
+    if (f$.connection) {
+        f$.connection.send("collabUpdate", JSON.stringify({chat:collab_chat,list:collab_list}));
+    } else {
+        module_ajax("collab_update", {chat:collab_chat,list:collab_list}, collab_update_callback);
+    }
 }
 function collab_update_callback(data) {
     var data = JSON.parse(data);

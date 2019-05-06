@@ -153,7 +153,7 @@ class User
         }
     }
 
-    function unnotify($what)
+    public function unnotify($what)
     {
         $what .= ";";
         $stmt = Database::Instance()->prepare("UPDATE users SET collab_notifs = REPLACE(`collab_notifs`,:what,'') WHERE uid=:uid;");

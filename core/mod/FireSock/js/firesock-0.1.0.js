@@ -75,19 +75,9 @@ f$.connection.onOpen = function() {
     authSubscription.onReceived = function(msg) {
     }
 
-    var testSubscription = new f$.Subscription("collabUpdate");
-    testSubscription.onReceived = function(msg) {
-        console.log("Got a collab update: ");
-        var updateStr = msg.substr(13);
-        console.log(updateStr);
-    }
-
     f$.connection.subscribe(authSubscription);
     f$.connection.send("user", "subscribe");
     f$.connection.send("user", JSON.stringify({function: "authenticate", token: Token()}));
-    
-    f$.connection.subscribe(testSubscription);
-    f$.connection.send("collabUpdate", "subscribe");
 }
 
 f$.connection.open(location.hostname, "9000");
