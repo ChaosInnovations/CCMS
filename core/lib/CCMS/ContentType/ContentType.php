@@ -48,7 +48,7 @@ class ContentType
     protected function addEntry($values) {
         $keys = ":" . implode(",:", array_keys($values));
         $stmt = Database::Instance()->prepare("INSERT INTO content_pages VALUES ({$keys});");
-        foreach ($values as $key => $value) {
+        foreach ($values as $key => &$value) {
             $stmt->bindParam(":{$key}", $value);
         }
         $stmt->execute();

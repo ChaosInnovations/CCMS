@@ -312,12 +312,9 @@ class Page extends ContentType
         $secure = isset($_POST["s"]) and $_POST["s"];
         $npid = ($secure ? "secure/" : "") . "newpage";
 
-        $c = 0;
-        $ok = !Page::pageExists($npid);
-        while (!$ok) {
-            $c++;
-            $npid = ($secure ? "secure/" : "") . "newpage" . $c;
-            $ok = !Page::pageExists($npid);
+        $c = 1;
+        while (Page::pageExists($npid)) {
+            $npid = ($secure ? "secure/" : "") . "newpage" . $c++;
         }
 
         $s = $secure ? "1" : "0";
@@ -333,8 +330,8 @@ class Page extends ContentType
             $template["usehead"],
             $template["usetop"],
             $template["usebottom"],
-            $now,
             $s,
+            $now,
         ];
 
         self::table()->addEntry($values);
