@@ -352,7 +352,7 @@ class User
         $now = date("Y-m-d");
         $pwd = password_hash($defaultPassword, PASSWORD_DEFAULT);
         
-        $stmt = $Database::Instance()->prepare("INSERT INTO users VALUES (:uid, :pwd, :email, :name, :now, :perms, '', '', 0, NULL, '', 1, 0);");
+        $stmt = Database::Instance()->prepare("INSERT INTO users VALUES (:uid, :pwd, :email, :name, :now, :perms, '', '', 0, NULL, '', 1, 0);");
         $stmt->bindParam(":uid", $uid);
         $stmt->bindParam(":pwd", $pwd);
         $stmt->bindParam(":email", $email);

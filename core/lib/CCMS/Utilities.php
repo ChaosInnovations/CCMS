@@ -9,7 +9,7 @@ use \PDO;
 
 class Utilities
 {
-    function getconfig($property)
+    public static function getconfig($property)
     {
         $stmt = Database::Instance()->prepare("SELECT * FROM config WHERE property=:property;");
         $stmt->bindParam(":property", $property);
@@ -21,7 +21,7 @@ class Utilities
         return $result[0]["value"];
     }
 
-    function setconfig($property, $value)
+    public static function setconfig($property, $value)
     {
         $stmt = Database::Instance()->prepare("UPDATE config SET {$property}=:val WHERE 1=1;");
         $stmt->bindParam(":val", $value);
