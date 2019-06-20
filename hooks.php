@@ -13,8 +13,11 @@ $hooks = [
     ['/.*/',                                      "\Mod\User::hookVerifyConfiguration"],          // Verify database configuration
     ['/.*/',                                      "\Mod\Collaboration::hookVerifyConfiguration"], // Verify database configuration
 
-    ['/^cli:\/?firesock\/?$/',                   "\Mod\FireSock::hookStartServer"],             // Start WS Server
-    ['/.*/',                                      "\Mod\FireSock::hookVerifyServer"],            // Check that WS Server is running.
+    ['/^cli:\/?firesock\/?$/',                    "\Mod\FireSock::hookStartServer"],              // Start WS Server
+    ['/.*/',                                      "\Mod\FireSock::hookVerifyServer"],             // Check that WS Server is running.
+    ['/^web:\/?api\/firesock\/newlongpoll\/?$/i', "\Mod\FireSock::hookLongPollToken"],            // FireSock long-polling fallback request token
+    ['/^web:\/?api\/firesock\/longpoll\/?$/i',    "\Mod\FireSock::hookLongPoll"],                 // FireSock long-polling fallback for outbound data (pushes)
+    ['/^web:\/?api\/firesock\/longpoll-in\/?$/i', "\Mod\FireSock::hookLongPollInbound"],          // FireSock long-polling fallback for inbound data
 
     ['/^web:.*/',                                 "\Mod\User::hookAuthenticateFromRequest"],      // Sign in
 
