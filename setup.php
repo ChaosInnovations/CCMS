@@ -28,11 +28,11 @@
 //     Start OOBE
 
 
-$VERSION = "1.1";
-$RELEASE = "June 1, 2018";
+$VERSION = "1.2";
+$RELEASE = "June 20, 2019";
 
 
-//$SRV_URL = "http://ccms.chaosinnovations.com";
+//$SRV_URL = "http://ccms.thomasboland.me";
 $SRV_URL = "http://localhost/ccms";
 function PKG_URL($ver) {global $SRV_URL;return "{$SRV_URL}/pkg/{$ver}/{$ver}.zip";}
 $VER_URL = $SRV_URL . "/latest.php";
