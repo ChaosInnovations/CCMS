@@ -25,7 +25,7 @@ class WebSocketServer
 
         $this->maxBufferSize = $bufferLength;
 
-        if (!$this->masterSocket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP)) {
+        if (!$this->masterSocket = \socket_create(AF_INET, SOCK_STREAM, SOL_TCP)) {
             $this->logger->log("Failed to start server: socket_create()", "Initialize");
             return;
         }

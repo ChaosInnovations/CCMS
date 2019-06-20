@@ -46,11 +46,6 @@ class CollaborationSubscription implements ISubscription {
         }
 
         $currentUser = $this->user->subscriptions["user"]->userObject;
-
-        // Keepalive
-        $stmt = Database::Instance()->prepare("UPDATE users SET collab_lastseen=UTC_TIMESTAMP WHERE uid=:uid;");
-        $stmt->bindParam(":uid", $currentUser->uid);
-        $stmt->execute();
         
         // Send message
         if (isset($args["message"])) {
@@ -185,12 +180,23 @@ class CollaborationSubscription implements ISubscription {
                 }
             }
         }
+
+        $this->tick(true);
     }
 
-    public function tick() {
+    public function tick($forceUpdate=false) {
         $args = $this->lastArgs;
 
+        if (!isset($this->user->subscriptions["user"])) {
+            return;
+        }
+
         $currentUser = $this->user->subscriptions["user"]->userObject;
+
+        // Keepalive
+        $stmt = Database::Instance()->prepare("UPDATE users SET collab_lastseen=UTC_TIMESTAMP WHERE uid=:uid;");
+        $stmt->bindParam(":uid", $currentUser->uid);
+        $stmt->execute();
 
         // update object
         $update = ["users"=>[],"rooms"=>[],"lists"=>[],"todo"=>[],"chat"=>[],"notifs"=>[]];
@@ -199,7 +205,7 @@ class CollaborationSubscription implements ISubscription {
         $timeSinceLastTick = $now - $this->lastTickTime;
         $isUpdateTick = $timeSinceLastTick >= $this->updateTickInterval;
 
-        if ($isUpdateTick) {
+        if ($forceUpdate || $isUpdateTick) {
             $this->lastTickTime = $now;
             // User statuses
             $stmt = Database::Instance()->prepare("SELECT uid, collab_lastseen, collab_pageid FROM users;");
@@ -227,7 +233,7 @@ class CollaborationSubscription implements ISubscription {
                 if ($elapsed_weeks >= 100) {
                     $ls2 = "a long time ago";
                 }
-                $data = ["uid"=>$user["uid"],"online"=>strtotime($user["collab_lastseen"])>strtotime("now")-10,"lastseen"=>$user["collab_lastseen"],"lastseen_informal"=>$ls2,"page_id"=>$user["collab_pageid"],"page_title"=>Page::getTitleFromId($user["collab_pageid"])];
+                $data = ["uid"=>$user["uid"],"online"=>strtotime($user["collab_lastseen"])>strtotime("now")-30,"lastseen"=>$user["collab_lastseen"],"lastseen_informal"=>$ls2,"page_id"=>$user["collab_pageid"],"page_title"=>Page::getTitleFromId($user["collab_pageid"])];
 
                 array_push($update["users"], $data);
             }
@@ -356,11 +362,14 @@ class CollaborationSubscription implements ISubscription {
         $stmt = Database::Instance()->prepare("SELECT collab_notifs FROM users WHERE uid=:uid;");
         $stmt->bindParam(":uid", $currentUser->uid);
         $stmt->execute();$stmt->setFetchMode(PDO::FETCH_ASSOC);
-        foreach (explode(";", $stmt->fetchAll()[0]["collab_notifs"]) as $notif) {
-            if ($notif == "") {
-                continue;
+        $results = $stmt->fetchAll();
+        if (count($results) > 0) {
+            foreach (explode(";", $results[0]["collab_notifs"]) as $notif) {
+                if ($notif == "") {
+                    continue;
+                }
+                array_push($update["notifs"], $notif);
             }
-            array_push($update["notifs"], $notif);
         }
 
         $this->server->send($this->user, "{$this->hook} " . json_encode($update));
