@@ -121,62 +121,6 @@ class Page extends ContentType
         return "{$pre}<title>{$this->title} | {$sitetitle}</title>{$this->head}";
     }
 
-    public function getContent(Request $request)
-    {
-        global $https;
-        
-        $this->body = $this->getTop() . $this->body . $this->getBottom();
-
-        $content  = '<!DOCTYPE html>
-<html>
-	<head>
-		<meta charset="utf-8" />
-		<link rel="stylesheet" href="/assets/site/css/fontawesome-5.0.13/css/fontawesome-all.min.css" media="all">
-		<link rel="stylesheet" href="/assets/site/css/bootstrap-4.1.1/css/bootstrap.min.css" media="all">
-		<link rel="stylesheet" href="/assets/site/css/site-1.3.3.css" media="all">
-		<link rel="stylesheet" type="text/css" href="/assets/site/js/codemirror/lib/codemirror.css" media="all">
-        <link rel="stylesheet" href="/core/mod/SecureMenu/securemenu-1.0.0.css" media="all">
-        <link rel="stylesheet" href="/core/mod/Collaboration/collaboration-1.0.0.css" media="all">
-		<script src="/assets/site/js/jquery-3.3.1.min.js"></script>';
-        $content .= $this->insertHead();
-        $content .= "<script>var BASE_URL = \"{$request->baseUrl}\";</script>";
-        $content .= '
-        <style>
-			.navbar .nav li * {
-				color: #fff !important;
-			}
-			.notice-body {
-				width: 100%;
-				padding-right: 50px;
-			}
-			.close {
-				z-index: 999;
-			}
-			.monospace {
-				font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
-			}
-		</style>
-	</head>
-	<body id="page">';
-        $content .= $this->body;
-        $content .= '
-		<script src="/assets/site/js/js.cookie.js"></script>
-		<script src="/assets/site/js/popper.min.js"></script>
-		<script src="/assets/site/css/bootstrap-4.1.1/js/bootstrap.min.js"></script>
-		<script src="/assets/site/js/site-1.1.0.js"></script>
-        <script type="text/javascript" src="/assets/site/js/codemirror/lib/codemirror.js"></script>
-        <script type="text/javascript" src="/assets/site/js/codemirror/mode/xml/xml.js"></script>
-		<script type="text/javascript" src="/assets/site/js/codemirror/mode/html/html.js"></script>
-		<script type="text/javascript" src="/assets/site/js/codemirror/mode/css/css.js"></script>
-		<script type="text/javascript" src="/assets/site/js/codemirror/mode/javascript/javascript.js"></script>
-        <script type="text/javascript" src="/assets/site/js/codemirror/mode/htmlmixed/htmlmixed.js"></script>
-        <script src="/core/mod/FireSock/js/firesock-0.1.0.js"></script>
-	</body>
-</html>';
-
-        return $content;
-    }
-
     public static function pageExists(string $pid)
     {
         return self::table()->tableEntryExists("pageid", $pid);
@@ -193,10 +137,8 @@ class Page extends ContentType
         return base64_decode($pages[0]["title"]);
     }
 
-    public static function hook(Request $request)
+    public static function hookMain(Request $request)
     {
-        global $baseUrl;
-        
         $pageid = $request->getEndpoint();
 
         if (!Page::pageExists($pageid)) {
@@ -205,7 +147,23 @@ class Page extends ContentType
 
         $page = new Page($pageid);
 
-        return new Response($page->getContent($request), false);
+        $page->body = $page->getTop() . $page->body . $page->getBottom();
+
+        $template_vars = [
+            'baseUrl' => $request->baseUrl,
+            'head' => $page->insertHead(),
+            'body' => $page->body,
+        ];
+        $content = Utilities::fillTemplate(file_get_contents(dirname(__FILE__) . "/templates/PageMain.template.html"), $template_vars);
+
+        return new Response($content, false);
+    }
+
+    public static function hookClose(Request $request)
+    {
+        $content = file_get_contents(dirname(__FILE__) . "/templates/PageClose.template.html");
+
+        return new Response($content, false);
     }
 
     public static function hookMenu(Request $request)

@@ -42,7 +42,7 @@ $hooks = [
     
     ['/^web:\/?api\/contactform\/response\/?$/i', "\Mod\ContactForm::hookFormResponse"],
 
-    ['/(?!.*\.[a-z]*$)^web:.*$/i',                "\Mod\Page::hook"],                             // Capture all remaining hooks that don't have an extension
+    ['/(?!.*\.[a-z]*$)^web:.*$/i',                "\Mod\Page::hookMain"],                         // Open and write page for remaining hooks (without extensions)
 
                                                                                                   // SecureMenu hooks
     ['/(?!.*\.[a-z]*$)^web:.*$/i',                "\Mod\Page::hookMenu"],                         // Page module menu entries
@@ -50,7 +50,10 @@ $hooks = [
     ['/(?!.*\.[a-z]*$)^web:.*$/i',                "\Mod\User::hookMenu"],
     ['/(?!.*\.[a-z]*$)^web:.*$/i',                "\Mod\ModuleMenu::hookAddToSecureMenu"],
     ['/(?!.*\.[a-z]*$)^web:.*$/i',                "\Mod\SecureMenu::hookAboutMenu"],
-    ['/(?!.*\.[a-z]*$)^web:.*$/i',                "\Mod\SecureMenu::hook"],
 
-    ['/(?!.*\.[a-z]*$)^web:.*$/i',                "\Mod\Placeholders::hookEvaluatePlaceholders"], // Evaluate placeholders
+    ['/(?!.*\.[a-z]*$)^web:.*$/i',                "\Mod\SecureMenu::hook"],                        // Display secure menu
+
+    ['/(?!.*\.[a-z]*$)^web:.*$/i',                "\Mod\Page::hookClose"],                         // Close page
+
+    ['/(?!.*\.[a-z]*$)^web:.*$/i',                "\Mod\Placeholders::hookEvaluatePlaceholders"],  // Evaluate placeholders
 ];
