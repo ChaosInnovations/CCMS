@@ -2,10 +2,10 @@
 
 namespace Mod;
 
-use \Lib\CCMS\ContentType;
 use \Lib\CCMS\Response;
 use \Lib\CCMS\Request;
 use \Lib\CCMS\Utilities;
+use \Lib\ContentType;
 use \Mod\Database;
 use \Mod\ModuleMenu;
 use \Mod\SecureMenu;

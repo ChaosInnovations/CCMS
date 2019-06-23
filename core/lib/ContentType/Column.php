@@ -1,5 +1,7 @@
 <?php
 
+namespace Lib\ContentType;
+
 class Column
 {
     private $name = "";

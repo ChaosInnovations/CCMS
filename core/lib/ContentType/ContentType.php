@@ -1,6 +1,6 @@
 <?php
 
-namespace Lib\CCMS;
+namespace Lib;
 
 use Mod\Database;
 use \PDO;
