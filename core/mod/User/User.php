@@ -7,6 +7,7 @@ use \Lib\CCMS\Request;
 use \Lib\CCMS\Utilities;
 use \Mod\Database;
 use \Mod\Mailer;
+use \Mod\Page;
 use \Mod\SecureMenu;
 use \Mod\User\AccountManager;
 use \Mod\User\UserPermissions;
@@ -483,7 +484,7 @@ class User
                 if (User::$currentUser->permissions->page_viewsecure and !in_array($pd["pageid"], User::$currentUser->permissions->page_viewblacklist)) {
                     $template_vars = [
                         "pageid" => $pd["pageid"],
-                        "title" => urldecode($pd["title"]),
+                        "title" => Page::getTitleFromId($pd["pageid"]),
                     ];
                     $pagelist .= Utilities::fillTemplate($pagelistTemplate, $template_vars);
                 }
