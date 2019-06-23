@@ -7,14 +7,8 @@
     left:20px;
     bottom:20px;
     z-index:2000;
-    opacity:0.6;
-    transition: opacity 0.3s;
 }
 
-.secureMenu:hover, .secureMenu.open {
-    opacity: 1;
-}
-  
 .secureMenu > .secureMenu-icon {
     left:0;
     bottom:0;
