@@ -338,7 +338,7 @@ class User
             "url" => Utilities::getconfig("websitetitle"),
             "organization" => $pagelist,
             "password" => $defaultPassword,
-            "signinUrl" => $baseUrl . "/secureaccess",
+            "signinUrl" => $baseUrl . "/admin",
         ];
         $htmlBody = Utilities::fillTemplate(file_get_contents(dirname(__FILE__) . "/templates/NewUserEmail.template.html"), $template_vars);
         $altBody = Utilities::fillTemplate(file_get_contents(dirname(__FILE__) . "/templates/NewUserEmail.template.txt"), $template_vars);
