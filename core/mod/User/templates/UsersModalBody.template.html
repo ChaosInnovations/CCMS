@@ -86,12 +86,14 @@
 </form>
 <hr width="90%" />
 <h4>Current Users</h4>
-<table class="table table-responsive table-striped">
-    <thead>
-        <tr><th>Name</th><th>Email</th><th>Permissions</th><th>Registered On</th><th>Tools</th></tr>
-    </thead>
-    <tbody>{userlist}</tbody>
-</table>
+<div class="table-responsive">
+    <table class="table table-striped">
+        <thead>
+            <tr><th>Name</th><th>Email</th><th>Permissions</th><th>Registered On</th><th>Tools</th></tr>
+        </thead>
+        <tbody>{userlist}</tbody>
+    </table>
+</div>
 <script>
 function dialog_admin_users_check_email() {
     module_ajax("checkuser", {email: $("#dialog_admin_users_newemail").val()}, function (data) {
