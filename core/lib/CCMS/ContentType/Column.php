@@ -12,7 +12,7 @@ class Column
         $this->name = $name;
         $this->type = $type;
         $this->nullable = $nullable;
-        $this->defaultValu = $defaultValue;
+        $this->defaultValue = $defaultValue;
         $this->extras = $extras;
     }
 

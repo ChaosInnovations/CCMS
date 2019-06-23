@@ -3,7 +3,6 @@
 namespace Mod\User;
 
 use \Mod\FireSock\ISubscription;
-use \Mod\User;
 use \Mod\User\AccountManager;
 
 class UserSubscription implements ISubscription {

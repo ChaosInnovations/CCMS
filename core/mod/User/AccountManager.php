@@ -5,7 +5,6 @@ namespace Mod\User;
 use \Lib\CCMS\Response;
 use \Lib\CCMS\Request;
 use \Mod\Database;
-use \Mod\User;
 use \PDO;
 
 class AccountManager
