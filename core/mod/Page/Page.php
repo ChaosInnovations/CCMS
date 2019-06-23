@@ -168,8 +168,6 @@ class Page extends ContentType
 
     public static function hookMenu(Request $request)
     {
-        global $baseUrl;
-        
         $pageid = $request->getEndpoint();
 
         if (!Page::pageExists($pageid)) {
@@ -181,7 +179,7 @@ class Page extends ContentType
         if (User::$currentUser->permissions->page_edit) {
             SecureMenu::Instance()->addEntry("edit", "Edit Page", "showDialog('edit');", '<i class="fas fa-edit"></i>', SecureMenu::VERTICAL);
             $template_vars = [
-                'baseUrl' => $baseUrl,
+                'baseUrl' => $request->baseUrl,
                 'useheadChecked' => ($page->usehead ? ' checked' : ''),
                 'usetopChecked' => ($page->usetop ? ' checked' : ''),
                 'usebottomChecked' => ($page->usebottom ? ' checked' : ''),
