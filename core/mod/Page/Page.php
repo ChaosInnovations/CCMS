@@ -240,7 +240,7 @@ class Page extends ContentType
                     ];
                     $tools = Utilities::fillTemplate($pageListEntryToolsTemplate, $toolsTempateVars);
                 } else {
-                    $tools = "<td></td>";
+                    $tools = "</td><td>";
                 }
                 $template_vars = [
                     'pageid' => $pageData["pageid"],

@@ -1,9 +1,11 @@
-<table class="table table-responsive table-striped">
-    <thead>
-        <tr><th>Page ID</th><th>Title</th><th>Last Revision</th><th><i class="fas fa-lock"></i></th><th>Delete</th></tr>
-    </thead>
-    <tbody>{pagelist}</tbody>
-</table>
+<div class="table-responsive">
+    <table class="table table-striped">
+        <thead>
+            <tr><th>Page ID</th><th>Title</th><th>Last Revision</th><th><i class="fas fa-lock"></i></th><th>Delete</th></tr>
+        </thead>
+        <tbody>{pagelist}</tbody>
+    </table>
+</div>
 <script>
 function dialog_admin_pages_togglesecure(pid) {
     state = $("#dialog_admin_pages_secure_" + pid).prop("checked");
