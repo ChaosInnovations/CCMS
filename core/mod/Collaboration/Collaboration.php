@@ -33,6 +33,14 @@ class Collaboration
 
     public static function hookMenu(Request $request)
     {
+        $pageid = $request->getEndpoint();
+
+        // Update user's last visited page
+        $stmt = Database::Instance()->prepare("UPDATE users SET collab_pageid=:pid WHERE uid=:uid;");
+        $stmt->bindParam(":pid", $pageid);
+        $stmt->bindParam(":uid", User::$currentUser->uid);
+        $stmt->execute();
+
         $panelTemplate = file_get_contents(dirname(__FILE__) . "/templates/CollaborationPanelContent.template.html");
         $entryTemplate = file_get_contents(dirname(__FILE__) . "/templates/CollaborationPanelEntry.template.html");
         $listBodyTemplate = file_get_contents(dirname(__FILE__) . "/templates/CollaborationPanelListBody.template.html");

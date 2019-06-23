@@ -203,12 +203,6 @@ class Page extends ContentType
             $pageid = "_default/notfound";
         }
 
-        // This should be moved to the Collaboration module
-        $stmt = Database::Instance()->prepare("UPDATE users SET collab_pageid=:pid WHERE uid=:uid;");
-        $stmt->bindParam(":pid", $pageid);
-        $stmt->bindParam(":uid", User::$currentUser->uid);
-        $stmt->execute();
-
         $page = new Page($pageid);
         
         if (User::$currentUser->permissions->page_edit) {
