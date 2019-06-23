@@ -204,6 +204,21 @@ class Page extends ContentType
         }
 
         $page = new Page($pageid);
+
+        return new Response($page->getContent($request), false);
+    }
+
+    public static function hookMenu(Request $request)
+    {
+        global $baseUrl;
+        
+        $pageid = $request->getEndpoint();
+
+        if (!Page::pageExists($pageid)) {
+            $pageid = "_default/notfound";
+        }
+
+        $page = new Page($pageid);
         
         if (User::$currentUser->permissions->page_edit) {
             SecureMenu::Instance()->addEntry("edit", "Edit Page", "showDialog('edit');", '<i class="fas fa-edit"></i>', SecureMenu::VERTICAL);
@@ -289,8 +304,6 @@ class Page extends ContentType
         }
         
         SecureMenu::Instance()->addEntry("home", "Home", "location.assign('/');", '<i class="fas fa-home"></i>', SecureMenu::HORIZONTAL);
-
-        return new Response($page->getContent($request), false);
     }
 
     public static function hookNewPage(Request $request)

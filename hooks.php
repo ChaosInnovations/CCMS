@@ -45,6 +45,7 @@ $hooks = [
     ['/(?!.*\.[a-z]*$)^web:.*$/i',                "\Mod\Page::hook"],                             // Capture all remaining hooks that don't have an extension
 
                                                                                                   // SecureMenu hooks
+    ['/(?!.*\.[a-z]*$)^web:.*$/i',                "\Mod\Page::hookMenu"],                         // Page module menu entries
     ['/(?!.*\.[a-z]*$)^web:.*$/i',                "\Mod\Collaboration::hookMenu"],                // Collaboration menu, and last-visited page update
     ['/(?!.*\.[a-z]*$)^web:.*$/i',                "\Mod\User::hookMenu"],
     ['/(?!.*\.[a-z]*$)^web:.*$/i',                "\Mod\ModuleMenu::hookAddToSecureMenu"],
