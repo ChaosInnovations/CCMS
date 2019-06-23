@@ -233,7 +233,7 @@ class Page extends ContentType
             $pages = $stmt->fetchAll();
             foreach ($pages as $pageData) {
                 $tools = "";
-                if (!in_array($pageData["pageid"], ["", "secureaccess"]) && substr($pageData["pageid"], 0, 9) !== "_default/") {
+                if (!in_array($pageData["pageid"], ["", "admin"]) && substr($pageData["pageid"], 0, 9) !== "_default/") {
                     $toolsTempateVars = [
                         'pageid' => $pageData["pageid"],
                         'checked' => ($pageData["secure"] ? ' checked' : ''),
@@ -310,7 +310,7 @@ class Page extends ContentType
         }
 
         $pid = $_POST["pid"];
-        if (in_array($pid, ["", "secureaccess"]) || substr($pid, 0, 9) === "_default/") {
+        if (in_array($pid, ["", "admin"]) || substr($pid, 0, 9) === "_default/") {
             return new Response("SPECIAL");
         }
 
@@ -334,7 +334,7 @@ class Page extends ContentType
         }
 
         $pid = $_POST["pid"];
-        if (in_array($pid, ["", "secureaccess"]) || substr($pid, 0, 9) === "_default/") {
+        if (in_array($pid, ["", "admin"]) || substr($pid, 0, 9) === "_default/") {
             return new Response("SPECIAL");
         }
 
@@ -363,7 +363,7 @@ class Page extends ContentType
             return new Response("FALSE");
         }
         if ($_POST["check"] != $_POST["pageid"] &&
-            in_array($_POST["pageid"], ["", "secureaccess"]) || substr($_POST["pageid"], 0, 9) === "_default/") {
+            in_array($_POST["pageid"], ["", "admin"]) || substr($_POST["pageid"], 0, 9) === "_default/") {
             return new Response("FALSE");
         }
 
@@ -398,7 +398,7 @@ class Page extends ContentType
 
         $newpageid = $_POST["newpageid"];
 
-        if (!($newpageid == $page->pageid || !(in_array($page->pageid, ["", "secureaccess"]) || substr($page->pageid, 0, 9) === "_default/"))) {
+        if (!($newpageid == $page->pageid || !(in_array($page->pageid, ["", "admin"]) || substr($page->pageid, 0, 9) === "_default/"))) {
             return new Response("FALSE");
         }
 

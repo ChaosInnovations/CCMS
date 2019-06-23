@@ -22,7 +22,7 @@
             <script>
 var pageid = "{pageid}";
 $("#dialog_edit_pageid").val(pageid);
-if (["", "secureaccess"].includes(pageid) || pageid.startsWith("_default/")) {
+if (["", "admin"].includes(pageid) || pageid.startsWith("_default/")) {
     $("#dialog_edit_pageid").attr("disabled", "disabled");
 }
 
