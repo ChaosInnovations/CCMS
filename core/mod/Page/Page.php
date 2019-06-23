@@ -255,7 +255,8 @@ class Page extends ContentType
                 'pagelist' => $compiledPageList,
             ];
             $pageListBody = Utilities::fillTemplate(file_get_contents(dirname(__FILE__) . "/templates/PagesModalBody.template.html"), $template_vars);
-            SecureMenu::Instance()->addModal("dialog_pages", "Manage Pages", $pageListBody, "");
+            $pageListFooter = file_get_contents(dirname(__FILE__) . "/templates/PagesModalFooter.template.html");
+            SecureMenu::Instance()->addModal("dialog_pages", "Manage Pages", $pageListBody, $pageListFooter);
             ModuleMenu::Instance()->addEntry("showDialog('pages');", "Manage Pages");
         }
         
