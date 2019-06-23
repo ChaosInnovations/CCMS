@@ -17,7 +17,7 @@ function createPage() {
 		if (data == "FALSE") {
 			window.alert("Couldn't create page.");
 		} else {
-			window.location = "./"+data;
+			window.location.href = "/"+data;
 		}
 	});
 }
@@ -27,7 +27,7 @@ function createSecurePage() {
 		if (data == "FALSE") {
 			window.alert("Couldn't create page.");
 		} else {
-			window.location = "./"+data;
+			window.location.href = "/"+data;
 		}
 	});
 }
