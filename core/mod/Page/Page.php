@@ -10,6 +10,7 @@ use \Mod\Database;
 use \Mod\ModuleMenu;
 use \Mod\SecureMenu;
 use \Mod\SecureMenu\Panel;
+use \Mod\SiteConfiguration;
 use \Mod\User;
 use \PDO;
 
@@ -117,7 +118,7 @@ class Page extends ContentType
         if ($this->usehead) {
             $pre = (new Page("_default/head"))->head;
         }
-        $sitetitle = Utilities::getconfig("websitetitle");
+        $sitetitle = SiteConfiguration::getconfig("websitetitle");
         return "{$pre}<title>{$this->title} | {$sitetitle}</title>{$this->head}";
     }
 

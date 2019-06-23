@@ -2,8 +2,8 @@
 
 namespace Mod;
 
-use \Lib\CCMS\Utilities;
 use \Lib\PHPMailer\PHPMailer;
+use \Mod\SiteConfiguration;
 
 class Mailer {
 	
@@ -14,10 +14,10 @@ class Mailer {
     {
         if (!self::$instance instanceof Mailer) {
             self::$instance = new static();
-            self::$instance->host     = Utilities::getconfig("email_primary_host");
-            self::$instance->username = Utilities::getconfig("email_primary_user");
-            self::$instance->password = Utilities::getconfig("email_primary_pass");
-            self::$instance->from     = Utilities::getconfig("email_primary_from");
+            self::$instance->host     = SiteConfiguration::getconfig("email_primary_host");
+            self::$instance->username = SiteConfiguration::getconfig("email_primary_user");
+            self::$instance->password = SiteConfiguration::getconfig("email_primary_pass");
+            self::$instance->from     = SiteConfiguration::getconfig("email_primary_from");
         }
         
         return self::$instance;
@@ -30,10 +30,10 @@ class Mailer {
     {
         if (!self::$notifInstance instanceof Mailer) {
             self::$notifInstance = new static();
-            self::$notifInstance->host     = Utilities::getconfig("email_notifs_host");
-            self::$notifInstance->username = Utilities::getconfig("email_notifs_user");
-            self::$notifInstance->password = Utilities::getconfig("email_notifs_pass");
-            self::$notifInstance->from     = Utilities::getconfig("email_notifs_from");
+            self::$notifInstance->host     = SiteConfiguration::getconfig("email_notifs_host");
+            self::$notifInstance->username = SiteConfiguration::getconfig("email_notifs_user");
+            self::$notifInstance->password = SiteConfiguration::getconfig("email_notifs_pass");
+            self::$notifInstance->from     = SiteConfiguration::getconfig("email_notifs_from");
         }
         
         return self::$notifInstance;

@@ -7,6 +7,7 @@ use \Lib\CCMS\Response;
 use \Lib\CCMS\Utilities;
 use \Mod\Page;
 use \Mod\SecureMenu\Panel;
+use \Mod\SiteConfiguration;
 use \Mod\User;
 use \PDO;
 
@@ -86,7 +87,7 @@ class SecureMenu
             'authoremail' => $ccms_info["a_email"],
             'authorname' => $ccms_info["author"],
             'ccmswebsite' => $ccms_info["website"],
-            'creationdate' => date("l, F j, Y", strtotime(Utilities::getconfig("creationdate"))),
+            'creationdate' => date("l, F j, Y", strtotime(SiteConfiguration::getconfig("creationdate"))),
         ];
         $aboutModalBody = Utilities::fillTemplate(file_get_contents(dirname(__FILE__) . "/templates/AboutModal.template.html"), $template_vars);
         SecureMenu::Instance()->addModal("dialog_about", "About", $aboutModalBody, "");
