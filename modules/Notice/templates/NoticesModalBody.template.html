@@ -1,0 +1,159 @@
+<h4>Create Notice</h4>
+    <form role="edit" onsubmit="dialog_module_notice_new();return false;">
+        <div class="form-group row">
+            <label class="col-form-label col-sm-3 col-md-2" for="dialog_module_notice_newid">Notice ID</label>
+            <div class="input-group col-sm-9 col-md-10">
+                <input type="text" id="dialog_module_notice_newid" class="form-control border-right-0 border-secondary" title="Notice ID" placeholder="Notice ID" oninput="dialog_module_notice_check_id();">
+                <div class="input-group-append">
+                    <div class="input-group-text bg-transparent border-left-0 border-secondary">
+                        <i class="fas fa-times" style="display:none;"></i>
+                        <i class="fas fa-check" style="display:none;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="form-group row">
+            <label class="col-form-label col-sm-3 col-md-2" for="dialog_module_notice_target">Target Page ID</label>
+            <div class="input-group col-sm-9 col-md-10">
+                <input type="text" id="dialog_module_notice_target" class="form-control border-right-0 border-secondary" title="Target Page ID" placeholder="Page ID" oninput="dialog_module_notice_check_target();">
+                <div class="input-group-append">
+                    <div class="input-group-text bg-transparent border-left-0 border-secondary">
+                        <i class="fas fa-times" style="display:none;"></i>
+                        <i class="fas fa-check" style="display:none;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="form-group row">
+            <label class="col-form-label col-sm-3 col-md-2" for="dialog_module_notice_level">Notice Level</label>
+            <div class="col-sm-9 col-md-10">
+                <select id="dialog_module_notice_level" class="form-control border-secondary" title="Notice Level">
+                    <option value="urgent" selected>Urgent</option>
+                    <option value="warning">Warning</option>
+                    <option value="success">Success</option>
+                    <option value="info">Info</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-group row">
+            <label class="col-form-label col-sm-3 col-md-2" for="dialog_module_notice_dismiss">Dismissable?</label>
+            <div class="col-sm-9 col-md-10">
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" id="dialog_module_notice_dismiss">
+                </div>
+            </div>
+        </div>
+        <div class="form-group row">
+            <label class="col-form-label col-sm-3 col-md-2" for="dialog_module_notice_persist">Number of times to show</label>
+            <div class="col-sm-9 col-md-10">
+                <input type="number" id="dialog_module_notice_persist" class="form-control border-secondary" title="Persistence" value="0" min="0">
+                <small class="form-text text-muted">A value of 0 allows the notice to show every time.</small>
+            </div>
+        </div>
+        <div class="form-group row">
+            <label class="col-form-label col-sm-3 col-md-2" for="dialog_module_notice_publish">Publish On</label>
+            <div class="col-sm-9 col-md-10">
+                <input type="date" id="dialog_module_notice_publish" class="form-control border-secondary" title="Publish" value="{publishdate}">
+            </div>
+        </div>
+        <div class="form-group row">
+            <label class="col-form-label col-sm-3 col-md-2" for="dialog_module_notice_expire">Expires On</label>
+            <div class="col-sm-9 col-md-10">
+                <input type="date" id="dialog_module_notice_expire" class="form-control border-secondary" title="Expire" value="{expiredate}">
+            </div>
+        </div>
+        <div class="form-group row">
+            <label class="col-form-label col-sm-3 col-md-2" for="dialog_module_notice_content">Content</label>
+            <div class="col-sm-9 col-md-10">
+                <textarea id="dialog_module_notice_content" class="form-control border-secondary" rows="6">This is a notice!</textarea>
+                <small class="form-text text-muted">This field supports HTML. This content will be placed inside a Bootstrap 4.1 Alert.</small>
+            </div>
+        </div>
+        <div class="form-group row">
+            <div class="offset-sm-3 offset-md-2 col-md-10 col-sm-9">
+                <input type="submit" class="btn btn-primary" title="Create" value="Create">
+                <span class="dialog_module_notices_formfeedback_added" style="display:none;">Notice Created!</span>
+                <span class="dialog_module_notices_formfeedback_notadded" style="display:none;">There was an error. Check your connection.</span>
+            </div>
+        </div>
+    </form>
+    <script>
+function dialog_module_notice_new() {
+    module_ajax("notice/new", {nid:$("#dialog_module_notice_newid").val(),
+                                target:$("#dialog_module_notice_target").val(),
+                                level:$("#dialog_module_notice_level").val(),
+                                dismiss:$("#dialog_module_notice_dismiss").is(":checked"),
+                                persist:$("#dialog_module_notice_persist").val(),
+                                pub:$("#dialog_module_notice_publish").val(),
+                                exp:$("#dialog_module_notice_expire").val(),
+                                content:encodeURIComponent($("#dialog_module_notice_content").val())}, function(data) {
+        if (data == "TRUE") {
+            alert("Notice created.");
+            window.location.reload();
+        } else {
+            alert("Failed to create notice.");
+        }
+    });
+    return false;
+}
+
+function dialog_module_notice_check_id() {
+    var nid = $("#dialog_module_notice_newid").val();
+    module_ajax("notice/checknid", {nid:nid}, function(data){
+        var fieldparent = $("#dialog_module_notice_newid").parent();
+        if (data == "TRUE") {
+            fieldparent.removeClass("has-error");
+            fieldparent.addClass("has-success");
+            fieldparent.find(".fa-times").hide();
+            fieldparent.find(".fa-check").show();
+        } else {
+            fieldparent.removeClass("has-success");
+            fieldparent.addClass("has-error");
+            fieldparent.find(".fa-check").hide();
+            fieldparent.find(".fa-times").show();
+        }
+    });
+}
+
+function dialog_module_notice_check_target() {
+    var target = $("#dialog_module_notice_target").val();
+    module_ajax("page/checkpid", {pageid: "_",
+                                    check: target}, function(data){
+        var fieldparent = $("#dialog_module_notice_target").parent();
+        if (data == "FALSE" || target == "*") {
+            fieldparent.removeClass("has-error");
+            fieldparent.addClass("has-success");
+            fieldparent.find(".fa-times").hide();
+            fieldparent.find(".fa-check").show();
+        } else {
+            fieldparent.removeClass("has-success");
+            fieldparent.addClass("has-error");
+            fieldparent.find(".fa-check").hide();
+            fieldparent.find(".fa-times").show();
+        }
+    });
+}
+
+function dialog_module_notice_delete(nid) {
+    module_ajax("notice/delete", {nid:nid}, function(data) {
+        if (data == "TRUE") {
+            alert("Notice deleted.");
+            window.location.reload();
+        } else {
+            alert("Failed to delete notice.");
+        }
+    });
+}
+
+    </script>
+    <hr width="90%" />
+    <h4>Existing Notices</h4>
+    <table class="table table-striped">
+        <thead>
+            <tr><th>ID</th><th>Target</th><th>Content</th><th>Level</th><th>Dismiss?</th><th>Shown</th><th>Publish</th><th>Expire</th><th>Delete</th></tr>
+        </thead>
+        <tbody>
+        {noticelist}
+        </tbody>
+    </table>
+</div>

@@ -42,18 +42,24 @@ $hooks = [
     
     ['/^web:\/?api\/contactform\/response\/?$/i', "\Mod\ContactForm::hookFormResponse"],
 
+    ['/^web:\/?api\/notice\/checknid\/?$/i',      "\Mod\Notice::hookCheckNid"],
+    ['/^web:\/?api\/notice\/new\/?$/i',           "\Mod\Notice::hookNew"],
+    ['/^web:\/?api\/notice\/delete\/?$/i',        "\Mod\Notice::hookDelete"],
+
     ['/(?!.*\.[a-z]*$)^web:.*$/i',                "\Mod\Page::hookMain"],                         // Open and write page for remaining hooks (without extensions)
 
                                                                                                   // SecureMenu hooks
     ['/(?!.*\.[a-z]*$)^web:.*$/i',                "\Mod\Page::hookMenu"],                         // Page module menu entries
     ['/(?!.*\.[a-z]*$)^web:.*$/i',                "\Mod\Collaboration::hookMenu"],                // Collaboration menu, and last-visited page update
     ['/(?!.*\.[a-z]*$)^web:.*$/i',                "\Mod\User::hookMenu"],
+
+    ['/(?!.*\.[a-z]*$)^web:.*$/i',                "\Mod\Notice::hookMenu"],                       // Notice module menu hook
+
     ['/(?!.*\.[a-z]*$)^web:.*$/i',                "\Mod\ModuleMenu::hookAddToSecureMenu"],
     ['/(?!.*\.[a-z]*$)^web:.*$/i',                "\Mod\SecureMenu::hookAboutMenu"],
 
     ['/(?!.*\.[a-z]*$)^web:.*$/i',                "\Mod\SecureMenu::hook"],                        // Display secure menu
 
     ['/(?!.*\.[a-z]*$)^web:.*$/i',                "\Mod\Page::hookClose"],                         // Close page
-
-    ['/(?!.*\.[a-z]*$)^web:.*$/i',                "\Mod\Placeholders::hookEvaluatePlaceholders"],  // Evaluate placeholders
+    ['/(?!.*\.[a-z]*$)^web:.*$/i',                "\Mod\Placeholders::hookEvaluatePlaceholders"],  // Evaluate placeholders on page
 ];

@@ -12,6 +12,8 @@ $placeholder_hooks = [
     ['/^sitemap$/i',      "\Mod\Page::placeholderSitemap"],
     
     ['/^contactform$/i',  "\Mod\ContactForm::placeholderForm"],
+
+    ['/^notice>show$/i',  "\Mod\Notice::placeholderShowNotices"],
     
     ['/.*/',              "\Mod\Placeholders::placeholderFallback"],
 ];
