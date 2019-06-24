@@ -1,0 +1,9 @@
+{
+    "routes": [
+        {"hook":"/^cli:\\/?firesock\\/?$/",                      "target":"\\Mod\\FireSock::hookStartServer",     "description":"Start WS Server"},
+        {"hook":"/.*/",                                          "target":"\\Mod\\FireSock::hookVerifyServer",    "description":"Check that WS Server is running"},
+        {"hook":"/^web:\\/?api\\/firesock\\/newlongpoll\\/?$/i", "target":"\\Mod\\FireSock::hookLongPollToken",   "description":"FireSock long-polling fallback request token"},
+        {"hook":"/^web:\\/?api\\/firesock\\/longpoll\\/?$/i",    "target":"\\Mod\\FireSock::hookLongPoll",        "description":"FireSock long-polling fallback for outbound data (pushes)"},
+        {"hook":"/^web:\\/?api\\/firesock\\/longpoll-in\\/?$/i", "target":"\\Mod\\FireSock::hookLongPollInbound", "description":"FireSock long-polling fallback for inbound data"}
+    ]
+}

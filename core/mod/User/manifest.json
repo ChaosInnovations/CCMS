@@ -1,4 +1,18 @@
 {
+    "routes": [
+        {"hook":"/.*/",                                           "target":"\\Mod\\User::hookVerifyConfiguration",      "description":"Verify database configuration"},
+        {"hook":"/^web:.*/",                                      "target":"\\Mod\\User::hookAuthenticateFromRequest",  "description":"Authenticate user (or anonymous)"},
+        {"hook":"/^web:\\/?api\\/checkuser\\/?$/i",               "target":"\\Mod\\User::hookCheckUser",                "description":"Check that username is correct"},
+        {"hook":"/^web:\\/?api\\/checkpass\\/?$/i",               "target":"\\Mod\\User::hookCheckPassword",            "description":"Check that password is correct"},
+        {"hook":"/^web:\\/?api\\/newtoken\\/?$/i",                "target":"\\Mod\\User\\AccountManager::hookNewToken", "description":"Create a new token if authenticated"},
+        {"hook":"/^web:\\/?api\\/user\\/new\\/?$/i",              "target":"\\Mod\\User::hookNewUser",                  "description":"Create a new user"},
+        {"hook":"/^web:\\/?api\\/user\\/edit\\/?$/i",             "target":"\\Mod\\User::hookEditUser",                 "description":"Edit a user"},
+        {"hook":"/^web:\\/?api\\/user\\/remove\\/?$/i",           "target":"\\Mod\\User::hookRemoveUser",               "description":"Remove a user"},
+        {"hook":"/^web:\\/?api\\/user\\/password\\/reset\\/?$/i", "target":"\\Mod\\User::hookPasswordReset",            "description":"Reset password to default"},
+        {"hook":"/^web:\\/?api\\/user\\/password\\/edit\\/?$/i",  "target":"\\Mod\\User::hookPasswordChange",           "description":"Change password"},
+        {"hook":"/(?!.*\\.[a-z]*$)^web:.*$/i",                    "target":"\\Mod\\User::hookMenu",                     "description":"Add menus to admin menu"}
+    ],
+
     "module_firesock": {
         "subscriptions": [
             {"hook":"user", "target":"\\Mod\\User\\UserSubscription"}

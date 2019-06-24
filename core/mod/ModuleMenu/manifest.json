@@ -1,0 +1,5 @@
+{
+    "routes": [
+        {"hook":"/(?!.*\\.[a-z]*$)^web:.*$/i", "target":"\\Mod\\ModuleMenu::hookAddToSecureMenu", "description":"Add module menu panel to admin menu"}
+    ]
+}

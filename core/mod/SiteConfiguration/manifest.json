@@ -1,0 +1,5 @@
+{
+    "routes": [
+        {"hook":"/^web:\\/?api\\/siteconfiguration\\/set\\/?$/i", "target":"\\Mod\\SiteConfiguration::hookSetConfig", "description":"Set configuration"}
+    ]
+}

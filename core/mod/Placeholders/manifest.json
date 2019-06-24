@@ -1,0 +1,5 @@
+{
+    "routes": [
+        {"hook":"/(?!.*\\.[a-z]*$)^web:.*$/i", "target":"\\Mod\\Placeholders::hookEvaluatePlaceholders", "description":"Evaluate placeholders on page"}
+    ]
+}

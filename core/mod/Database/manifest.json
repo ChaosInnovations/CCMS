@@ -1,0 +1,5 @@
+{
+    "routes": [
+        {"hook":"/.*/", "target":"\\Mod\\Database::hookOpenConnection", "description":"Connect to Database"}
+    ]
+}

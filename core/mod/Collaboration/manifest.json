@@ -1,4 +1,10 @@
 {
+    "routes": [
+        {"hook":"/.*/",                                 "target":"\\Mod\\Collaboration::hookVerifyConfiguration", "description":"Verify database configuration"},
+        {"hook":"/^web:\\/?api\\/collab_update\\/?$/i", "target":"\\Mod\\Collaboration::hookUpdate",              "description":"Collaboration status update"},
+        {"hook":"/(?!.*\\.[a-z]*$)^web:.*$/i",          "target":"\\Mod\\Collaboration::hookMenu",                "description":"Collaboration menu, and last-visited page update"}
+    ],
+
     "module_firesock": {
         "subscriptions": [
             {"hook":"collabUpdate", "target":"\\Mod\\Collaboration\\CollaborationSubscription"}
