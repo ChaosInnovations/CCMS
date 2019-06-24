@@ -17,8 +17,26 @@ class WebSocketServer
 
     public function __construct($address, $port, $bufferLength=2048)
     {
-        include_once dirname(__FILE__) . "/subscription_hooks.php";
+        $subscription_hooks = [];
+
+        foreach (Utilities::getModuleManifest() as $module_name => $module_manifest) {
+            if (!isset($module_manifest["module_firesock"])) {
+                continue;
+            }
+        
+            if (!isset($module_manifest["module_firesock"]["subscriptions"])) {
+                continue;
+            }
+        
+            $subscriptions = $module_manifest["module_firesock"]["subscriptions"];
+        
+            foreach ($subscriptions as $subscription) {
+                array_push($subscription_hooks, [$subscription["hook"], $subscription["target"]]);
+            }
+        }
+
         $this->subscription_hooks = $subscription_hooks;
+
         $this->logger = new Logger(dirname(__FILE__) . "/socketserver.log");
         
         $this->logger->log("Starting server", "Initialize");

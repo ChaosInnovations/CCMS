@@ -1,0 +1,7 @@
+{
+    "module_firesock": {
+        "subscriptions": [
+            {"hook":"collabUpdate", "target":"\\Mod\\Collaboration\\CollaborationSubscription"}
+        ]
+    }
+}
