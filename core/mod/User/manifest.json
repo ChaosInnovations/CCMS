@@ -1,0 +1,7 @@
+{
+    "module_placeholders": {
+        "placeholders": [
+            {"hook":"/^loginform$/i", "target":"\\Mod\\User::placeholderLoginForm"}
+        ]
+    }
+}

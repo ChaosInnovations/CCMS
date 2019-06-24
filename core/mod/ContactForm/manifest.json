@@ -1,0 +1,7 @@
+{
+    "module_placeholders": {
+        "placeholders": [
+            {"hook":"/^contactform$/i", "target":"\\Mod\\ContactForm::placeholderForm"}
+        ]
+    }
+}

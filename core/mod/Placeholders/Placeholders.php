@@ -13,8 +13,26 @@ class Placeholders
         global $availablemodules, $modules;
 
         $content = $response->getContent();
+
+        $placeholder_hooks = [];
+
+        foreach (Utilities::getModuleManifest() as $module_name => $module_manifest) {
+            if (!isset($module_manifest["module_placeholders"])) {
+                continue;
+            }
         
-        include_once $_SERVER["DOCUMENT_ROOT"]."/core/mod/Placeholders/placeholder_hooks.php";
+            if (!isset($module_manifest["module_placeholders"]["placeholders"])) {
+                continue;
+            }
+        
+            $placeholders = $module_manifest["module_placeholders"]["placeholders"];
+        
+            foreach ($placeholders as $placeholder) {
+                array_push($placeholder_hooks, [$placeholder["hook"], $placeholder["target"]]);
+            }
+        }
+
+        array_push($placeholder_hooks, ['/.*/', "\Mod\Placeholders::placeholderFallback"]);
 
         $placeholders = [[]];
         $iterations = 0;
@@ -33,7 +51,7 @@ class Placeholders
                 foreach ($placeholder_hooks as $hook) {
                     $hookRegex = $hook[0];
                     $hookFunctionName = $hook[1];
-                    
+
                     if (!preg_match($hookRegex, $func)) {
                         continue;
                     }
@@ -57,7 +75,7 @@ class Placeholders
 
             $placeholders = [[]];
             preg_match_all("/\{{2}[^\}]+\}{2}/", $content, $placeholders);
-        } while ($iterations++ < $maxIterations && count($placeholders[0]));
+        } while ($iterations++ <= $maxIterations && count($placeholders[0]));
 
         $response->setContent($content);
     }

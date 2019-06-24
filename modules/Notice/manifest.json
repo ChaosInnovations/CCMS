@@ -1,0 +1,7 @@
+{
+    "module_placeholders": {
+        "placeholders": [
+            {"hook":"/^notice>show$/i", "target":"\\Mod\\Notice::placeholderShowNotices"}
+        ]
+    }
+}

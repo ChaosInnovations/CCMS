@@ -1,0 +1,9 @@
+{
+    "module_placeholders": {
+        "placeholders": [
+            {"hook":"/^pageid$/i", "target":"\\Mod\\Page::placeholderPageId"},
+            {"hook":"/^pagerevision$/i", "target":"\\Mod\\Page::placeholderPageRevision"},
+            {"hook":"/^sitemap$/i", "target":"\\Mod\\Page::placeholderSitemap"}
+        ]
+    }
+}
