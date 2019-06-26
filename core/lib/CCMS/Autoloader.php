@@ -2,8 +2,10 @@
 
 namespace Lib\CCMS;
 
-require_once $_SERVER["DOCUMENT_ROOT"]."/core/lib/CCMS/Utilities.php";
 use \Lib\CCMS\Utilities;
+
+// Manually require Utilities.php because we don't have a working autoloader yet
+require_once $_SERVER["DOCUMENT_ROOT"]."/core/lib/CCMS/Utilities.php";
 
 class Autoloader
 {

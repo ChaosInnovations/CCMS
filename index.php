@@ -1,9 +1,22 @@
 <?php
 
+use \Lib\CCMS\Autoloader;
 use \Lib\CCMS\CCMSCore;
 
-require_once "core/autoload.php";
+// Set DOCUMENT_ROOT to the correct root document
+$_SERVER["DOCUMENT_ROOT"] = dirname(__FILE__);
 
+// Manually require Autoloader.php, because we don't have a working autoloader yet
+require_once $_SERVER["DOCUMENT_ROOT"]."/core/lib/CCMS/Autoloader.php";
+
+// Add namespaces to Autoloader
+$loader = new Autoloader;
+$loader->register();
+$loader->addNamespace("Lib", $_SERVER["DOCUMENT_ROOT"]."/core/lib");
+$loader->addNamespace("Mod", $_SERVER["DOCUMENT_ROOT"]."/core/mod");
+$loader->addNamespace("Mod", $_SERVER["DOCUMENT_ROOT"]."/modules");
+
+// Process incoming request
 $core = new CCMSCore();
 $request = $core->buildRequest();
 $response = $core->processRequest($request);
