@@ -69,7 +69,7 @@ class Utilities
                         $cmp = 1 * ($depVer[3] <=> $minVer[3]);
 
                         $minVerStr = implode(".", $minVer);
-                        $depVerStr = implode(".", $minVer);
+                        $depVerStr = implode(".", $depVer);
 
                         if ($cmp < 0) {
                             echo "Module \"{$module_name}\" requires dependency \"{$dependency["name"]}\" to be at least version {$minVerStr}, ";

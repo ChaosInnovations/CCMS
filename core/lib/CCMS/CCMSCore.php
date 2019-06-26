@@ -5,6 +5,7 @@ namespace Lib\CCMS;
 use \Exception;
 use \Lib\CCMS\Request;
 use \Lib\CCMS\Response;
+use \Lib\CCMS\Utilities;
 
 class CCMSCore
 {

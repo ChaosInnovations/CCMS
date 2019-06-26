@@ -1,6 +1,9 @@
 <?php
 
-namespace Lib;
+namespace Lib\CCMS;
+
+require_once $_SERVER["DOCUMENT_ROOT"]."/core/lib/CCMS/Utilities.php";
+use \Lib\CCMS\Utilities;
 
 class Autoloader
 {
@@ -65,15 +68,20 @@ class Autoloader
 
     protected function loadMappedFile($prefix, $relative_class)
     {
-		
         // are there any base directories for this namespace prefix?
         if (isset($this->prefixes[$prefix]) === false) {
             return false;
         }
 
+        $module_name = explode("\\", $relative_class)[0];
+
+        if (!isset(Utilities::getModuleManifest()[$module_name])) {
+            echo "Couldn't load class \"{$prefix}{$relative_class}\" because module \"{$module_name}\" is either missing or has missing dependencies.<br />\n";
+            return false;
+        }
+
         // look through base directories for this namespace prefix
         foreach ($this->prefixes[$prefix] as $base_dir) {
-			
             // replace the namespace prefix with the base directory,
             // replace namespace separators with directory separators
             // in the relative class name, append with .php
