@@ -1,0 +1,26 @@
+{
+    "module_data": {
+        "name":"FontAwesome",
+        "description":"Iconography fonts",
+        "type":"Module",
+        "version":[5, 0, 13, 0],
+        "release_date":"2019-06-23",
+        "author": {
+            "name":"@fontawesome",
+            "email":"",
+            "website":"https://fontawesome.com"
+        }
+    },
+
+    "dependencies": {
+        "libraries": [
+            {"name":"CCMS", "min_version":[1, 9, 1, 0]}
+        ],
+        "modules": [
+        ]
+    },
+
+    "routes": [
+        {"rank":310, "hook":"/(?!.*\\.[a-z]*$)^web:.*$/i", "target":"\\Mod\\FontAwesome::hookLinkCss", "description":"Add Font Awesome CSS link to page"}
+    ]
+}

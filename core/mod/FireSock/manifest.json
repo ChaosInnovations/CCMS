@@ -18,6 +18,7 @@
             {"name":"Logger", "min_version":[1, 0, 0, 0]}
         ],
         "modules": [
+            {"name":"JQuery", "min_version":[3, 3, 1, 0]}
         ]
     },
 

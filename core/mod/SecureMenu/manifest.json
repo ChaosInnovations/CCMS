@@ -18,6 +18,7 @@
         ],
         "modules": [
             {"name":"FontAwesome", "min_version":[5, 0, 13, 0]},
+            {"name":"JQuery", "min_version":[3, 3, 1, 0]},
             {"name":"Page", "min_version":[1, 0, 0, 0]},
             {"name":"SiteConfiguration", "min_version":[1, 0, 0, 0]},
             {"name":"User", "min_version":[1, 0, 0, 0]}
