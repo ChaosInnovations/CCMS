@@ -19,6 +19,7 @@
         ],
         "modules": [
             {"name":"Database", "min_version":[1, 0, 0, 0]},
+            {"name":"FontAwesome", "min_version":[5, 0, 13, 0]},
             {"name":"ModuleMenu", "min_version":[1, 0, 0, 0]},
             {"name":"SecureMenu", "min_version":[1, 0, 0, 0]},
             {"name":"User", "min_version":[1, 0, 0, 0]}

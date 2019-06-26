@@ -138,6 +138,13 @@ class Page extends ContentType
         return base64_decode($pages[0]["title"]);
     }
 
+    public static function hookHeadOpen(Request $request)
+    {
+        $content = file_get_contents(dirname(__FILE__) . "/templates/PageHeadOpen.template.html");
+
+        return new Response($content, false);
+    }
+
     public static function hookMain(Request $request)
     {
         $pageid = $request->getEndpoint();
@@ -160,9 +167,9 @@ class Page extends ContentType
         return new Response($content, false);
     }
 
-    public static function hookClose(Request $request)
+    public static function hookBodyClose(Request $request)
     {
-        $content = file_get_contents(dirname(__FILE__) . "/templates/PageClose.template.html");
+        $content = file_get_contents(dirname(__FILE__) . "/templates/PageBodyClose.template.html");
 
         return new Response($content, false);
     }

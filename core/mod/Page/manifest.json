@@ -32,9 +32,10 @@
         {"rank":200, "hook":"/^web:\\/?api\\/page\\/edit\\/?$/i",     "target":"\\Mod\\Page::hookEditPage",   "description":"Edits a page"},
         {"rank":200, "hook":"/^web:\\/?api\\/page\\/secure\\/?$/i",   "target":"\\Mod\\Page::hookSecurePage", "description":"Sets whether a page is secure"},
         {"rank":200, "hook":"/^web:\\/?api\\/page\\/checkpid\\/?$/i", "target":"\\Mod\\Page::hookCheckPid",   "description":"Checks if supplied Page ID is valid"},
-        {"rank":300, "hook":"/(?!.*\\.[a-z]*$)^web:.*$/i",            "target":"\\Mod\\Page::hookMain",       "description":"Open and write page for remaining hooks (without extensions)"},
+        {"rank":300, "hook":"/(?!.*\\.[a-z]*$)^web:.*$/i",            "target":"\\Mod\\Page::hookHeadOpen",   "description":"Open head and page for remaining hooks (without extensions)"},
+        {"rank":320, "hook":"/(?!.*\\.[a-z]*$)^web:.*$/i",            "target":"\\Mod\\Page::hookMain",       "description":"Close head and open body"},
         {"rank":390, "hook":"/(?!.*\\.[a-z]*$)^web:.*$/i",            "target":"\\Mod\\Page::hookMenu",       "description":"Page module menu entries"},
-        {"rank":498, "hook":"/(?!.*\\.[a-z]*$)^web:.*$/i",            "target":"\\Mod\\Page::hookClose",      "description":"Close page"}
+        {"rank":498, "hook":"/(?!.*\\.[a-z]*$)^web:.*$/i",            "target":"\\Mod\\Page::hookBodyClose",  "description":"Close body and page"}
     ],
     
     "module_placeholders": {
