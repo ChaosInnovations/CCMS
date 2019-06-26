@@ -12,9 +12,12 @@ require_once $_SERVER["DOCUMENT_ROOT"]."/core/lib/CCMS/Autoloader.php";
 // Add namespaces to Autoloader
 $loader = new Autoloader;
 $loader->register();
-$loader->addNamespace("Lib", $_SERVER["DOCUMENT_ROOT"]."/core/lib");
-$loader->addNamespace("Mod", $_SERVER["DOCUMENT_ROOT"]."/core/mod");
-$loader->addNamespace("Mod", $_SERVER["DOCUMENT_ROOT"]."/modules");
+$loader->addNamespace("Lib", $_SERVER["DOCUMENT_ROOT"]."/core/lib"); // Core/builtin libraries
+$loader->addNamespace("Mod", $_SERVER["DOCUMENT_ROOT"]."/core/mod"); // Core/builtin modules
+$loader->addNamespace("Lib", $_SERVER["DOCUMENT_ROOT"]."/libraries"); // User-installed libraries
+$loader->addNamespace("Mod", $_SERVER["DOCUMENT_ROOT"]."/modules"); // User-installed modules
+// *** Is there really a difference between core packages and user packages?
+// *** Do they really need separate directories?
 
 // Process incoming request
 $core = new CCMSCore();
