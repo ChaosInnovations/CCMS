@@ -38,7 +38,7 @@
         {"rank":200, "hook":"/^web:\\/?api\\/page\\/checkpid\\/?$/i", "target":"\\Mod\\Page::hookCheckPid",   "description":"Checks if supplied Page ID is valid"},
         {"rank":300, "hook":"/(?!.*\\.[a-z]*$)^web:.*$/i",            "target":"\\Mod\\Page::hookHeadOpen",   "description":"Open head and page for remaining hooks (without extensions)"},
         {"rank":320, "hook":"/(?!.*\\.[a-z]*$)^web:.*$/i",            "target":"\\Mod\\Page::hookMain",       "description":"Close head and open body"},
-        {"rank":390, "hook":"/(?!.*\\.[a-z]*$)^web:.*$/i",            "target":"\\Mod\\Page::hookMenu",       "description":"Page module menu entries"},
+        {"rank":391, "hook":"/(?!.*\\.[a-z]*$)^web:.*$/i",            "target":"\\Mod\\Page::hookMenu",       "description":"Page module menu entries"},
         {"rank":498, "hook":"/(?!.*\\.[a-z]*$)^web:.*$/i",            "target":"\\Mod\\Page::hookBodyClose",  "description":"Close body and page"}
     ],
     

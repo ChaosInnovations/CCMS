@@ -22,6 +22,7 @@
             {"name":"Database", "min_version":[1, 0, 0, 0]},
             {"name":"FontAwesome", "min_version":[5, 0, 13, 0]},
             {"name":"JQuery", "min_version":[3, 3, 1, 0]},
+            {"name":"ModuleMenu", "min_version":[1, 0, 0, 0]},
             {"name":"SecureMenu", "min_version":[1, 0, 0, 0]},
             {"name":"Page", "min_version":[1, 0, 0, 0]},
             {"name":"FireSock", "min_version":[1, 0, 0, 0]}
@@ -39,7 +40,7 @@
         {"rank":200, "hook":"/^web:\\/?api\\/user\\/remove\\/?$/i",           "target":"\\Mod\\User::hookRemoveUser",               "description":"Remove a user"},
         {"rank":200, "hook":"/^web:\\/?api\\/user\\/password\\/reset\\/?$/i", "target":"\\Mod\\User::hookPasswordReset",            "description":"Reset password to default"},
         {"rank":200, "hook":"/^web:\\/?api\\/user\\/password\\/edit\\/?$/i",  "target":"\\Mod\\User::hookPasswordChange",           "description":"Change password"},
-        {"rank":392, "hook":"/(?!.*\\.[a-z]*$)^web:.*$/i",                    "target":"\\Mod\\User::hookMenu",                     "description":"Add menus to admin menu"}
+        {"rank":393, "hook":"/(?!.*\\.[a-z]*$)^web:.*$/i",                    "target":"\\Mod\\User::hookMenu",                     "description":"Add menus to admin menu"}
     ],
 
     "module_firesock": {

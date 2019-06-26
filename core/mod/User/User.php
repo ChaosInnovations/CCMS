@@ -7,6 +7,7 @@ use \Lib\CCMS\Request;
 use \Lib\CCMS\Utilities;
 use \Lib\Mailer;
 use \Mod\Database;
+use \Mod\ModuleMenu;
 use \Mod\Page;
 use \Mod\SecureMenu;
 use \Mod\User\AccountManager;

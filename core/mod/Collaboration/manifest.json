@@ -31,7 +31,7 @@
     "routes": [
         {"rank":102, "hook":"/.*/",                                 "target":"\\Mod\\Collaboration::hookVerifyConfiguration", "description":"Verify database configuration"},
         {"rank":200, "hook":"/^web:\\/?api\\/collab_update\\/?$/i", "target":"\\Mod\\Collaboration::hookUpdate",              "description":"Collaboration status update"},
-        {"rank":391, "hook":"/(?!.*\\.[a-z]*$)^web:.*$/i",          "target":"\\Mod\\Collaboration::hookMenu",                "description":"Collaboration menu, and last-visited page update"}
+        {"rank":392, "hook":"/(?!.*\\.[a-z]*$)^web:.*$/i",          "target":"\\Mod\\Collaboration::hookMenu",                "description":"Collaboration menu, and last-visited page update"}
     ],
 
     "module_firesock": {
