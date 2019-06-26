@@ -1,5 +1,5 @@
 {
     "routes": [
-        {"hook":"/.*/", "target":"\\Mod\\Database::hookOpenConnection", "description":"Connect to Database"}
+        {"rank":100, "hook":"/.*/", "target":"\\Mod\\Database::hookOpenConnection", "description":"Connect to Database"}
     ]
 }

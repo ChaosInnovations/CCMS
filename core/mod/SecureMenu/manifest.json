@@ -1,6 +1,6 @@
 {
     "routes": [
-        {"hook":"/(?!.*\\.[a-z]*$)^web:.*$/i", "target":"\\Mod\\SecureMenu::hookAboutMenu", "description":"Add \"about\" modal to admin menu"},
-        {"hook":"/(?!.*\\.[a-z]*$)^web:.*$/i", "target":"\\Mod\\SecureMenu::hook",          "description":"Display secure menu"}
+        {"rank":489, "hook":"/(?!.*\\.[a-z]*$)^web:.*$/i", "target":"\\Mod\\SecureMenu::hookAboutMenu", "description":"Add \"about\" modal to admin menu"},
+        {"rank":490, "hook":"/(?!.*\\.[a-z]*$)^web:.*$/i", "target":"\\Mod\\SecureMenu::hook",          "description":"Display secure menu"}
     ]
 }

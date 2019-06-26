@@ -1,6 +1,6 @@
 {
     "routes": [
-        {"hook":"/^web:\\/?api\\/contactform\\/response\\/?$/i", "target":"\\Mod\\ContactForm::hookFormResponse", "description":"Email contact form response"}
+        {"rank":200, "hook":"/^web:\\/?api\\/contactform\\/response\\/?$/i", "target":"\\Mod\\ContactForm::hookFormResponse", "description":"Email contact form response"}
     ],
 
     "module_placeholders": {

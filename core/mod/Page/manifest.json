@@ -1,13 +1,13 @@
 {
     "routes": [
-        {"hook":"/^web:\\/?api\\/page\\/new\\/?$/i",      "target":"\\Mod\\Page::hookNewPage",    "description":"Creates a new page"},
-        {"hook":"/^web:\\/?api\\/page\\/remove\\/?$/i",   "target":"\\Mod\\Page::hookRemovePage", "description":"Removes a page"},
-        {"hook":"/^web:\\/?api\\/page\\/edit\\/?$/i",     "target":"\\Mod\\Page::hookEditPage",   "description":"Edits a page"},
-        {"hook":"/^web:\\/?api\\/page\\/secure\\/?$/i",   "target":"\\Mod\\Page::hookSecurePage", "description":"Sets whether a page is secure"},
-        {"hook":"/^web:\\/?api\\/page\\/checkpid\\/?$/i", "target":"\\Mod\\Page::hookCheckPid",   "description":"Checks if supplied Page ID is valid"},
-        {"hook":"/(?!.*\\.[a-z]*$)^web:.*$/i",            "target":"\\Mod\\Page::hookMain",       "description":"Open and write page for remaining hooks (without extensions)"},
-        {"hook":"/(?!.*\\.[a-z]*$)^web:.*$/i",            "target":"\\Mod\\Page::hookMenu",       "description":"Page module menu entries"},
-        {"hook":"/(?!.*\\.[a-z]*$)^web:.*$/i",            "target":"\\Mod\\Page::Close",          "description":"Close page"}
+        {"rank":200, "hook":"/^web:\\/?api\\/page\\/new\\/?$/i",      "target":"\\Mod\\Page::hookNewPage",    "description":"Creates a new page"},
+        {"rank":200, "hook":"/^web:\\/?api\\/page\\/remove\\/?$/i",   "target":"\\Mod\\Page::hookRemovePage", "description":"Removes a page"},
+        {"rank":200, "hook":"/^web:\\/?api\\/page\\/edit\\/?$/i",     "target":"\\Mod\\Page::hookEditPage",   "description":"Edits a page"},
+        {"rank":200, "hook":"/^web:\\/?api\\/page\\/secure\\/?$/i",   "target":"\\Mod\\Page::hookSecurePage", "description":"Sets whether a page is secure"},
+        {"rank":200, "hook":"/^web:\\/?api\\/page\\/checkpid\\/?$/i", "target":"\\Mod\\Page::hookCheckPid",   "description":"Checks if supplied Page ID is valid"},
+        {"rank":300, "hook":"/(?!.*\\.[a-z]*$)^web:.*$/i",            "target":"\\Mod\\Page::hookMain",       "description":"Open and write page for remaining hooks (without extensions)"},
+        {"rank":390, "hook":"/(?!.*\\.[a-z]*$)^web:.*$/i",            "target":"\\Mod\\Page::hookMenu",       "description":"Page module menu entries"},
+        {"rank":498, "hook":"/(?!.*\\.[a-z]*$)^web:.*$/i",            "target":"\\Mod\\Page::Close",          "description":"Close page"}
     ],
     
     "module_placeholders": {

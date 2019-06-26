@@ -1,9 +1,9 @@
 {
     "routes": [
-        {"hook":"/^web:\\/?api\\/notice\\/checknid\\/?$/i", "target":"\\Mod\\Notice::hookCheckNid", "description":"Check that supplied Notice ID is valid"},
-        {"hook":"/^web:\\/?api\\/notice\\/new\\/?$/i",      "target":"\\Mod\\Notice::hookNew",      "description":"Create a new notice"},
-        {"hook":"/^web:\\/?api\\/notice\\/delete\\/?$/i",   "target":"\\Mod\\Notice::hookDelete",   "description":"Remove a notice"},
-        {"hook":"/(?!.*\\.[a-z]*$)^web:.*$/i",              "target":"\\Mod\\Notice::hookMenu",     "description":"Notice module menu hook"}
+        {"rank":200, "hook":"/^web:\\/?api\\/notice\\/checknid\\/?$/i", "target":"\\Mod\\Notice::hookCheckNid", "description":"Check that supplied Notice ID is valid"},
+        {"rank":200, "hook":"/^web:\\/?api\\/notice\\/new\\/?$/i",      "target":"\\Mod\\Notice::hookNew",      "description":"Create a new notice"},
+        {"rank":200, "hook":"/^web:\\/?api\\/notice\\/delete\\/?$/i",   "target":"\\Mod\\Notice::hookDelete",   "description":"Remove a notice"},
+        {"rank":400, "hook":"/(?!.*\\.[a-z]*$)^web:.*$/i",              "target":"\\Mod\\Notice::hookMenu",     "description":"Notice module menu hook"}
     ],
 
     "module_placeholders": {
