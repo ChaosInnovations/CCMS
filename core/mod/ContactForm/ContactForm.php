@@ -5,7 +5,7 @@ namespace Mod;
 use \Lib\CCMS\Request;
 use \Lib\CCMS\Response;
 use \Lib\CCMS\Utilities;
-use \Mod\Mailer;
+use \Lib\Mailer;
 
 class ContactForm
 {

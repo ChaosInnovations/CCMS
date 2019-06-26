@@ -1,6 +1,6 @@
 <?php
 
-namespace Mod;
+namespace Lib;
 
 use \Lib\PHPMailer\PHPMailer;
 use \Mod\SiteConfiguration;
