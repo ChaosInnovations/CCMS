@@ -32,8 +32,23 @@ class CCMSCore
     {
         $response = new Response();
         $response->setFinal(false);
+
+        $hooks = [];
+
+        foreach (Utilities::getModuleManifest() as $module_name => $module_manifest) {
+            if (!isset($module_manifest["routes"])) {
+                continue;
+            }
         
-        include_once $_SERVER["DOCUMENT_ROOT"]."/hooks.php";
+            $routes = $module_manifest["routes"];
+        
+            foreach ($routes as $route) {
+                array_push($hooks, [$route["hook"], $route["target"], $route["rank"]]);
+            }
+        }
+
+        usort($hooks, function($a, $b) { return ($a[2] <=> $b[2]); });
+
         // Enumerate hooks
         foreach ($hooks as $hook) {
             $hookRegex = $hook[0];
