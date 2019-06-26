@@ -1,4 +1,30 @@
 {
+    "module_data": {
+        "name":"User",
+        "description":"Manage user accounts",
+        "type":"Module",
+        "version":[1, 0, 0, 0],
+        "release_date":"2019-06-23",
+        "author": {
+            "name":"Thomas Boland",
+            "email":"hello@thomasboland.me",
+            "website":"http://ccms.thomasboland.me"
+        }
+    },
+
+    "dependencies": {
+        "libraries": [
+            {"name":"CCMS", "min_version":[1, 9, 1, 0]},
+            {"name":"Mailer", "min_version":[1, 0, 0, 0]}
+        ],
+        "modules": [
+            {"name":"Database", "min_version":[1, 0, 0, 0]},
+            {"name":"SecureMenu", "min_version":[1, 0, 0, 0]},
+            {"name":"Page", "min_version":[1, 0, 0, 0]},
+            {"name":"FireSock", "min_version":[1, 0, 0, 0]}
+        ]
+    },
+
     "routes": [
         {"rank":101, "hook":"/.*/",                                           "target":"\\Mod\\User::hookVerifyConfiguration",      "description":"Verify database configuration"},
         {"rank":104, "hook":"/^web:.*/",                                      "target":"\\Mod\\User::hookAuthenticateFromRequest",  "description":"Authenticate user (or anonymous)"},

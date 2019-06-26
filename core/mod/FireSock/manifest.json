@@ -1,4 +1,26 @@
 {
+    "module_data": {
+        "name":"FireSock",
+        "description":"Manages frontend-backend communication",
+        "type":"Module",
+        "version":[1, 0, 0, 0],
+        "release_date":"2019-06-23",
+        "author": {
+            "name":"Thomas Boland",
+            "email":"hello@thomasboland.me",
+            "website":"http://ccms.thomasboland.me"
+        }
+    },
+
+    "dependencies": {
+        "libraries": [
+            {"name":"CCMS", "min_version":[1, 9, 1, 0]},
+            {"name":"Logger", "min_version":[1, 0, 0, 0]}
+        ],
+        "modules": [
+        ]
+    },
+
     "routes": [
         {"rank":200, "hook":"/^cli:\\/?firesock\\/?$/",                      "target":"\\Mod\\FireSock::hookStartServer",     "description":"Start WS Server"},
         {"rank":103, "hook":"/.*/",                                          "target":"\\Mod\\FireSock::hookVerifyServer",    "description":"Check that WS Server is running"},

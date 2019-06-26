@@ -1,4 +1,30 @@
 {
+    "module_data": {
+        "name":"Notice",
+        "description":"Display per-page or site-wide notices",
+        "type":"Module",
+        "version":[1, 0, 0, 0],
+        "release_date":"2019-06-23",
+        "author": {
+            "name":"Thomas Boland",
+            "email":"hello@thomasboland.me",
+            "website":"http://ccms.thomasboland.me"
+        }
+    },
+
+    "dependencies": {
+        "libraries": [
+            {"name":"CCMS", "min_version":[1, 9, 1, 0]},
+            {"name":"ContentType", "min_version":[1, 0, 0, 0]}
+        ],
+        "modules": [
+            {"name":"Database", "min_version":[1, 0, 0, 0]},
+            {"name":"ModuleMenu", "min_version":[1, 0, 0, 0]},
+            {"name":"SecureMenu", "min_version":[1, 0, 0, 0]},
+            {"name":"User", "min_version":[1, 0, 0, 0]}
+        ]
+    },
+
     "routes": [
         {"rank":200, "hook":"/^web:\\/?api\\/notice\\/checknid\\/?$/i", "target":"\\Mod\\Notice::hookCheckNid", "description":"Check that supplied Notice ID is valid"},
         {"rank":200, "hook":"/^web:\\/?api\\/notice\\/new\\/?$/i",      "target":"\\Mod\\Notice::hookNew",      "description":"Create a new notice"},

@@ -1,8 +1,8 @@
 {
     "module_data": {
-        "name":"Database",
-        "description":"Manage connections to the database",
-        "type":"Module",
+        "name":"Mailer",
+        "description":"Manages email sending",
+        "type":"Library",
         "version":[1, 0, 0, 0],
         "release_date":"2019-06-23",
         "author": {
@@ -14,13 +14,10 @@
 
     "dependencies": {
         "libraries": [
-            {"name":"CCMS", "min_version":[1, 9, 1, 0]}
+            {"name":"PHPMailer", "min_version":[5, 2, 16, 0]}
         ],
         "modules": [
+            {"name":"SiteConfiguration", "min_version":[1, 0, 0, 0]}
         ]
-    },
-
-    "routes": [
-        {"rank":100, "hook":"/.*/", "target":"\\Mod\\Database::hookOpenConnection", "description":"Connect to Database"}
-    ]
+    }
 }

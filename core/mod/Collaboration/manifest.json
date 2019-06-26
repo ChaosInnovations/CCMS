@@ -1,4 +1,30 @@
 {
+    "module_data": {
+        "name":"Collaboration",
+        "description":"Adds caht room and collaborative functionality",
+        "type":"Module",
+        "version":[1, 0, 0, 0],
+        "release_date":"2019-06-23",
+        "author": {
+            "name":"Thomas Boland",
+            "email":"hello@thomasboland.me",
+            "website":"http://ccms.thomasboland.me"
+        }
+    },
+
+    "dependencies": {
+        "libraries": [
+            {"name":"CCMS", "min_version":[1, 9, 1, 0]}
+        ],
+        "modules": [
+            {"name":"Database", "min_version":[1, 0, 0, 0]},
+            {"name":"FireSock", "min_version":[1, 0, 0, 0]},
+            {"name":"Page", "min_version":[1, 0, 0, 0]},
+            {"name":"SecureMenu", "min_version":[1, 0, 0, 0]},
+            {"name":"User", "min_version":[1, 0, 0, 0]}
+        ]
+    },
+
     "routes": [
         {"rank":102, "hook":"/.*/",                                 "target":"\\Mod\\Collaboration::hookVerifyConfiguration", "description":"Verify database configuration"},
         {"rank":200, "hook":"/^web:\\/?api\\/collab_update\\/?$/i", "target":"\\Mod\\Collaboration::hookUpdate",              "description":"Collaboration status update"},

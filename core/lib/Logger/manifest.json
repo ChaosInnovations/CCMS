@@ -1,8 +1,8 @@
 {
     "module_data": {
-        "name":"Database",
-        "description":"Manage connections to the database",
-        "type":"Module",
+        "name":"Logger",
+        "description":"Logging framework",
+        "type":"Library",
         "version":[1, 0, 0, 0],
         "release_date":"2019-06-23",
         "author": {
@@ -14,13 +14,8 @@
 
     "dependencies": {
         "libraries": [
-            {"name":"CCMS", "min_version":[1, 9, 1, 0]}
         ],
         "modules": [
         ]
-    },
-
-    "routes": [
-        {"rank":100, "hook":"/.*/", "target":"\\Mod\\Database::hookOpenConnection", "description":"Connect to Database"}
-    ]
+    }
 }
