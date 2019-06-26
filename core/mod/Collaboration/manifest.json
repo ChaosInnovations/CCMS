@@ -17,6 +17,7 @@
             {"name":"CCMS", "min_version":[1, 9, 1, 0]}
         ],
         "modules": [
+            {"name":"Bootstrap", "min_version":[4, 1, 1, 0]},
             {"name":"Database", "min_version":[1, 0, 0, 0]},
             {"name":"FireSock", "min_version":[1, 0, 0, 0]},
             {"name":"FontAwesome", "min_version":[5, 0, 13, 0]},
