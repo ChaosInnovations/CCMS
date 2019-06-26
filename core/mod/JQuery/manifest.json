@@ -21,6 +21,6 @@
     },
 
     "routes": [
-        {"rank":310, "hook":"/(?!.*\\.[a-z]*$)^web:.*$/i", "target":"\\Mod\\JQuery::hookScript", "description":"Add jQuery script to page"}
+        {"rank":311, "hook":"/(?!.*\\.[a-z]*$)^web:.*$/i", "target":"\\Mod\\JQuery::hookScript", "description":"Add jQuery script to page"}
     ]
 }
