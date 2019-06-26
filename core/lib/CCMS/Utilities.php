@@ -42,6 +42,52 @@ class Utilities
                     self::$module_manifest[$fileinfo->getFilename()] = $manifest;
                 }
             }
+
+            // Check dependencies
+            $missing_dependencies = false;
+            do {
+                foreach (self::$module_manifest as $module_name => $module_info) {
+                    $dependencies = array_merge($module_info["dependencies"]["libraries"], $module_info["dependencies"]["modules"]);
+                    if (count($dependencies) === 0) {
+                        $missing_dependencies = false;
+                        continue;
+                    }
+
+                    foreach ($dependencies as $index => $dependency) {
+                        if (!isset(self::$module_manifest[$dependency["name"]])) {
+                            echo "Module \"{$module_name}\" missing dependency \"{$dependency["name"]}\"<br />\n";
+                            $missing_dependencies = true;
+                            break;
+                        }
+
+                        $minVer = $dependency["min_version"];
+                        $depVer =self::$module_manifest[$dependency["name"]]["module_data"]["version"];
+
+                        $cmp = 8 * ($depVer[0] <=> $minVer[0]);
+                        $cmp = 4 * ($depVer[1] <=> $minVer[1]);
+                        $cmp = 2 * ($depVer[2] <=> $minVer[2]);
+                        $cmp = 1 * ($depVer[3] <=> $minVer[3]);
+
+                        $minVerStr = implode(".", $minVer);
+                        $depVerStr = implode(".", $minVer);
+
+                        if ($cmp < 0) {
+                            echo "Module \"{$module_name}\" requires dependency \"{$dependency["name"]}\" to be at least version {$minVerStr}, ";
+                            echo "and \"{$dependency["name"]}\" is only version {$depVerStr}<br />\n";
+                            $missing_dependencies = true;
+                            break;
+                        }
+                        
+                        $missing_dependencies = false;
+                    }
+
+                    if ($missing_dependencies) {
+                        unset(self::$module_manifest[$module_name]);
+                        break;
+                    }
+                }
+            } while ($missing_dependencies);
+
         }
 
         return self::$module_manifest;
