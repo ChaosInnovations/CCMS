@@ -40,6 +40,7 @@ class Utilities
                     $manifest = json_decode(file_get_contents($searchDir . "/" . $fileinfo->getFilename() . "/manifest.json"), true);
 
                     self::$module_manifest[$fileinfo->getFilename()] = $manifest;
+                    self::$module_manifest[$fileinfo->getFilename()]["dependencies"]["has_dependent"] = false;
                 }
             }
 
@@ -60,8 +61,10 @@ class Utilities
                             break;
                         }
 
+                        self::$module_manifest[$dependency["name"]]["dependencies"]["has_dependent"] = true;
+
                         $minVer = $dependency["min_version"];
-                        $depVer =self::$module_manifest[$dependency["name"]]["module_data"]["version"];
+                        $depVer = self::$module_manifest[$dependency["name"]]["module_data"]["version"];
 
                         $cmp = 8 * ($depVer[0] <=> $minVer[0]);
                         $cmp = 4 * ($depVer[1] <=> $minVer[1]);

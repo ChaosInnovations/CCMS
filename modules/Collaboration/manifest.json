@@ -1,7 +1,7 @@
 {
     "module_data": {
         "name":"Collaboration",
-        "description":"Adds caht room and collaborative functionality",
+        "description":"Adds chat room and collaborative functionality",
         "type":"Module",
         "version":[1, 0, 0, 0],
         "release_date":"2019-06-23",
