@@ -28,7 +28,7 @@ class ModuleManager {
 
             $uninstall_button = '<button class="btn btn-outline-danger" title="Uninstall Module"><i class="fas fa-trash"></i></button>';
             if ($module["dependencies"]["has_dependent"]) {
-                $uninstall_button = "";
+                $uninstall_button = '<button class="btn btn-outline-secondary" title="Other modules depend on this" disabled="disabled"><i class="fas fa-trash"></i></button>';
             }
 
             $template_vars = [
