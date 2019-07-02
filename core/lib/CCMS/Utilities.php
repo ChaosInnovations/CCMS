@@ -67,9 +67,9 @@ class Utilities
                         $depVer = self::$module_manifest[$dependency["name"]]["module_data"]["version"];
 
                         $cmp = 8 * ($depVer[0] <=> $minVer[0]);
-                        $cmp = 4 * ($depVer[1] <=> $minVer[1]);
-                        $cmp = 2 * ($depVer[2] <=> $minVer[2]);
-                        $cmp = 1 * ($depVer[3] <=> $minVer[3]);
+                        $cmp += 4 * ($depVer[1] <=> $minVer[1]);
+                        $cmp += 2 * ($depVer[2] <=> $minVer[2]);
+                        $cmp += 1 * ($depVer[3] <=> $minVer[3]);
 
                         $minVerStr = implode(".", $minVer);
                         $depVerStr = implode(".", $depVer);
