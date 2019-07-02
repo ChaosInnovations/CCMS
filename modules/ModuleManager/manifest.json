@@ -26,6 +26,9 @@
     },
 
     "routes": [
+        {"rank":200, "hook":"/^web:\\/?api\\/modulemanager\\/uninstall\\/?$/i", "target":"\\Mod\\ModuleManager::hookUninstall", "description":"Uninstall a module"},
+        {"rank":200, "hook":"/^web:\\/?api\\/modulemanager\\/install\\/?$/i", "target":"\\Mod\\ModuleManager::hookInstall", "description":"Install a module"},
+        {"rank":200, "hook":"/^web:\\/?api\\/modulemanager\\/checkmodules\\/?$/i", "target":"\\Mod\\ModuleManager::hookCheckModules", "description":"Download list of available modules"},
         {"rank":390, "hook":"/(?!.*\\.[a-z]*$)^web:.*$/i", "target":"\\Mod\\ModuleManager::hookMenu", "description":"Add menu to admin menu"}
     ]
 }
