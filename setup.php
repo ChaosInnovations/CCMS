@@ -32,8 +32,7 @@ $VERSION = "1.2";
 $RELEASE = "June 20, 2019";
 
 
-//$SRV_URL = "http://ccms.thomasboland.me";
-$SRV_URL = "http://localhost/ccms";
+$SRV_URL = "http://ccms.thomasboland.me";
 function PKG_URL($ver) {global $SRV_URL;return "{$SRV_URL}/pkg/{$ver}/{$ver}.zip";}
 $VER_URL = $SRV_URL . "/latest.php";
 function CHK_URL($ver) {global $VER_URL;return "{$VER_URL}?valid={$ver}";}
