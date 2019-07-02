@@ -1,2 +1,3 @@
 core/mod/Database/config.ini
 core/mod/FireSock/socketserver.log
+modules/ModuleManager/packageInfoCache.json
