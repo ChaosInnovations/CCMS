@@ -14,14 +14,50 @@ class ModuleManager {
         $availablePackageCache = self::getPackageInfoCache();
         $packageCacheUpdated = strtotime($availablePackageCache["checked"]);
         $packageCacheData = $availablePackageCache["packages"];
-
-        $moduleModalEntryTemplate = file_get_contents(dirname(__FILE__) . "/templates/ModuleModalEntry.template.html");
-
-        $moduleList = "";
-
+        
         $sortedModuleManifest = Utilities::getModuleManifest();
         ksort($sortedModuleManifest, SORT_NATURAL);
 
+        $moduleModalEntryTemplate = file_get_contents(dirname(__FILE__) . "/templates/ModuleModalEntry.template.html");
+        $moduleModalUpdateEntryTemplate = file_get_contents(dirname(__FILE__) . "/templates/ModuleModalUpdateEntry.template.html");
+        $moduleModalNoUpdatesTemplate = file_get_contents(dirname(__FILE__) . "/templates/ModuleModalUpdateEntryNone.template.html");
+        $moduleModalNewEntryTemplate = file_get_contents(dirname(__FILE__) . "/templates/ModuleModalNewEntry.template.html");
+        $moduleModalNoNewTemplate = file_get_contents(dirname(__FILE__) . "/templates/ModuleModalNewEntryNone.template.html");
+        $installButtonTemplate = file_get_contents(dirname(__FILE__) . "/templates/InstallButton.template.html");
+        $installButtonOptionTemplate = file_get_contents(dirname(__FILE__) . "/templates/InstallButtonOption.template.html");
+
+        $updateList = "";
+        foreach ($availablePackageCache["updates"] as $pkg_name => $pkg_versions) {
+            $ref_pkg_version = end($pkg_versions);
+
+            $version_options = "";
+            foreach ($pkg_versions as $version_id => $pkg_data) {
+                $template_vars = [
+                    'version_id' => $version_id,
+                    'version_text' => "v" . implode(".", $pkg_data["module_data"]["version"]),
+                ];
+                $version_options .= Utilities::fillTemplate($installButtonOptionTemplate, $template_vars);
+            }
+
+            $template_vars = [
+                'pkg_id' => $pkg_name,
+                'options' => $version_options,
+            ];
+            $install_button = Utilities::fillTemplate($installButtonTemplate, $template_vars);
+
+            $template_vars = [
+                'name' => $ref_pkg_version["module_data"]["name"],
+                'description' => $ref_pkg_version["module_data"]["description"],
+                'current_version' => implode(".", $sortedModuleManifest[$pkg_name]["module_data"]["version"]),
+                'install_button' => $install_button,
+            ];
+            $updateList .= Utilities::fillTemplate($moduleModalUpdateEntryTemplate, $template_vars);
+        }
+        if ($updateList == "") {
+            $updateList = $moduleModalNoUpdatesTemplate;
+        }
+
+        $moduleList = "";
         foreach ($sortedModuleManifest as $module_name => $module) {
             $dependencyList = "";
             foreach (array_merge($module["dependencies"]["libraries"], $module["dependencies"]["modules"]) as $dependency) {
@@ -54,7 +90,9 @@ class ModuleManager {
         }
 
         $template_vars = [
+            'updatelist' => $updateList,
             'modulelist' => $moduleList,
+            'newlist' => $moduleModalNoNewTemplate,
         ];
         $moduleManagerBody = Utilities::fillTemplate(file_get_contents(dirname(__FILE__) . "/templates/ModuleModalBody.template.html"), $template_vars);
         SecureMenu::Instance()->addModal("dialog_modules", "Manage Modules", $moduleManagerBody, "");

@@ -1,11 +1,11 @@
 <h5>Updates Available</h5>
 <p>Last checked never&nbsp;<button class="btn btn-sm btn-primary" style="border-radius: 0;padding-top:2px;padding-bottom:2px;">Check now</button></p>
 <div class="table-responsive" style="max-height:30rem;">
-    <table class="table table-hover">
+    <table id="modulemanager_updates_table" class="table table-hover">
         <thead>
-            <tr><th>Module Name</th><th>Description</th><th>Installed Version</th><th>New Version</th><th></th></tr>
+            <tr><th>Module Name</th><th>Description</th><th>Installed Version</th><th></th></tr>
         </thead>
-        <tbody><tr><th colspan="5" class="text-center">No updates available</th></th></tr></tbody>
+        <tbody>{updatelist}</tbody>
     </table>
 </div>
 <hr />
@@ -22,10 +22,10 @@
 <h5>Available Modules</h5>
 <p>Last checked never&nbsp;<button class="btn btn-sm btn-primary" style="border-radius: 0;padding-top:2px;padding-bottom:2px;">Check now</button></p>
 <div class="table-responsive" style="max-height:30rem;">
-    <table class="table table-hover">
+    <table id="modulemanager_available_table" class="table table-hover">
         <thead>
             <tr><th>Module Name</th><th>Description</th><th>Latest Release</th><th>Authors</th><th>Dependencies</th><th></th></tr>
         </thead>
-        <tbody><tr><th colspan="7" class="text-center">No modules available</th></th></tr></tbody>
+        <tbody>{newlist}</tbody>
     </table>
 </div>
