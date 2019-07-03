@@ -13,11 +13,11 @@ class CodeMirror
 
     public static function hookScript()
     {
-        return new Response('<script type="text/javascript" src="/assets/site/js/codemirror/lib/codemirror.js"></script>
-        <script type="text/javascript" src="/assets/site/js/codemirror/mode/xml/xml.js"></script>
-		<script type="text/javascript" src="/assets/site/js/codemirror/mode/html/html.js"></script>
-		<script type="text/javascript" src="/assets/site/js/codemirror/mode/css/css.js"></script>
-		<script type="text/javascript" src="/assets/site/js/codemirror/mode/javascript/javascript.js"></script>
-        <script type="text/javascript" src="/assets/site/js/codemirror/mode/htmlmixed/htmlmixed.js"></script>', false);
+        return new Response('<script type="text/javascript" src="/core/mod/CodeMirror/codemirror/lib/codemirror.js"></script>
+        <script type="text/javascript" src="/core/mod/CodeMirror/codemirror/mode/xml/xml.js"></script>
+		<script type="text/javascript" src="/core/mod/CodeMirror/codemirror/mode/html/html.js"></script>
+		<script type="text/javascript" src="/core/mod/CodeMirror/codemirror/mode/css/css.js"></script>
+		<script type="text/javascript" src="/core/mod/CodeMirror/codemirror/mode/javascript/javascript.js"></script>
+        <script type="text/javascript" src="/core/mod/CodeMirror/codemirror/mode/htmlmixed/htmlmixed.js"></script>', false);
     }
 }
