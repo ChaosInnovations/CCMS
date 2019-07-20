@@ -181,7 +181,7 @@ class ModuleManager {
                 $cmp += 2 * ($a["module_data"][2] <=> $b["module_data"][2]);
                 $cmp += 1 * ($a["module_data"][3] <=> $b["module_data"][3]);
                 return $cmp <=> 0;
-            }, );
+            });
         }
 
         $data["new"] = $newPackages;
