@@ -103,4 +103,15 @@ class Utilities
         }
         return $template;
     }
+
+    public static function setMaintenanceMode(bool $enable)
+    {
+        if ($enable) {
+            unlink($_SERVER["DOCUMENT_ROOT"] . "/.htaccess");
+            copy($_SERVER["DOCUMENT_ROOT"] . "/.htaccess.maintenance", $_SERVER["DOCUMENT_ROOT"] . "/.htaccess");
+        } else {
+            unlink($_SERVER["DOCUMENT_ROOT"] . "/.htaccess");
+            copy(dirname(__FILE__) . "/templates/template.htaccess", $_SERVER["DOCUMENT_ROOT"] . "/.htaccess");
+        }
+    }
 }
