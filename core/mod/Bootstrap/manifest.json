@@ -3,7 +3,7 @@
         "name":"Bootstrap",
         "description":"Bootstrap CSS & JS library",
         "type":"Module",
-        "version":[4, 1, 1, 0],
+        "version":[4, 3, 1, 0],
         "release_date":"2019-06-23",
         "author": {
             "name":"The Bootstrap Authors",
@@ -17,7 +17,7 @@
             {"name":"CCMS", "min_version":[1, 9, 1, 0]}
         ],
         "modules": [
-            {"name":"JQuery", "min_version":[3, 3, 1, 0]},
+            {"name":"JQuery", "min_version":[1, 9, 1, 0]},
             {"name":"PopperJS", "min_version":[1, 0, 0, 0]}
         ]
     },
