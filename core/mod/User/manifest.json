@@ -26,8 +26,7 @@
             {"name":"ModuleMenu", "min_version":[1, 0, 0, 0]},
             {"name":"Page", "min_version":[1, 0, 0, 0]},
             {"name":"Placeholders", "min_version":[1, 0, 0, 0]},
-            {"name":"SecureMenu", "min_version":[1, 0, 0, 0]},
-            {"name":"FireSock", "min_version":[1, 0, 0, 0]}
+            {"name":"SecureMenu", "min_version":[1, 0, 0, 0]}
         ]
     },
 

@@ -1,5 +1,5 @@
 <h5>Updates Available</h5>
-<p>Last checked never&nbsp;<button class="btn btn-sm btn-primary" style="border-radius: 0;padding-top:2px;padding-bottom:2px;">Check now</button></p>
+<p>Last checked <span class="pkgmgr_repo_last_checked">{lastchecked}</span>&nbsp;<button class="btn btn-sm btn-primary" style="border-radius: 0;padding-top:2px;padding-bottom:2px;" onclick="pkgmgr_check();">Check now</button></p>
 <div class="table-responsive" style="max-height:30rem;">
     <table id="modulemanager_updates_table" class="table table-hover">
         <thead>
@@ -20,12 +20,106 @@
 </div>
 <hr />
 <h5>Available Modules</h5>
-<p>Last checked never&nbsp;<button class="btn btn-sm btn-primary" style="border-radius: 0;padding-top:2px;padding-bottom:2px;">Check now</button></p>
+<p>Last checked <span class="pkgmgr_repo_last_checked">{lastchecked}</span>&nbsp;<button class="btn btn-sm btn-primary" style="border-radius: 0;padding-top:2px;padding-bottom:2px;" onclick="pkgmgr_check();"><span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>Check now</button></p>
 <div class="table-responsive" style="max-height:30rem;">
     <table id="modulemanager_available_table" class="table table-hover">
         <thead>
-            <tr><th>Module Name</th><th>Description</th><th>Latest Release</th><th>Authors</th><th>Dependencies</th><th></th></tr>
+            <tr><th>Module Name</th><th>Description</th><th>Authors</th><th>Dependencies</th><th></th></tr>
         </thead>
         <tbody>{newlist}</tbody>
     </table>
 </div>
+<script>
+function pkgmgr_do_update(pkg_id) {
+    pkg_ver_id = $("#update-" + pkg_id + "-version").val();
+    alert("Would be updating version '" + pkg_ver_id + "' of package '" + pkg_id + "'.");
+}
+
+function pkgmgr_check() {
+    module_ajax("modulemanager/checkModules", {}, pkgmgr_update_lists);
+}
+
+function pkgmgr_update_lists(data) {
+    try {
+        pkg_repo = JSON.parse(data);
+        var b = pkg_repo["checked"].split(/\D+/);
+        last_checked =  new Date(Date.UTC(b[0], --b[1], b[2], b[3], b[4], b[5], b[6]));
+        last_checked_str = last_checked.toLocaleDateString('default', {month: 'long', day: 'numeric', year: 'numeric'}) + " at ";
+        h = last_checked.getHours();
+        m = last_checked.getMinutes();
+        s = last_checked.getSeconds();
+        ap = h < 12 ? "am" : "pm";
+        h = h % 12;
+        h = h==0?"12":""+h;
+        m = m<10?"0"+m:""+m;
+        s = s<10?"0"+s:""+s;
+        last_checked_str += h + ":" + m + ":" + s + ap;
+
+        updateList = "";
+        for (pkg_name in pkg_repo["updates"]) {
+            pkg_versions = pkg_repo["updates"][pkg_name];
+            pkg_version_keys = Object.keys(pkg_versions);
+            ref_pkg_version = pkg_versions[pkg_version_keys[pkg_version_keys.length-1]];
+
+            version_options = "";
+            for (version_id of pkg_version_keys) {
+                version_options += "<option value=\"" + version_id + "\">v" + pkg_versions[version_id]["module_data"]["version"].join(".") + "</option>";
+            }
+
+            install_button = "<div class=\"input-group input-group-sm\"><select id=\"update-" + pkg_name + "-version\">" + version_options + "</select>";
+            install_button += "<div class=\"input-group-append\"><button class=\"btn btn-success\" style=\"border-radius: 0;\" onclick=\"pkgmgr_do_update('" + pkg_name + "');\">";
+            install_button += "<i class=\"fas fa-download\"></i>&nbsp;Install</button></div></div>";
+
+            updateList += "<tr><td>" + ref_pkg_version["module_data"]["name"] + "</td>";
+            updateList += "<td>" + ref_pkg_version["module_data"]["description"] + "</td>";
+            updateList += "<td>" + pkg_repo["installed"][pkg_name]["module_data"]["version"].join(".") + "</td>";
+            updateList += "<td>" + install_button + "</td></tr>";
+        }
+        if (updateList == "") {
+            updateList = "<tr><th colspan=\"4\" class=\"text-center\">No updates available</th></th></tr>";
+        }
+
+        newList = "";
+        for (pkg_name in pkg_repo["new"]) {
+            pkg_versions = pkg_repo["new"][pkg_name];
+            pkg_version_keys = Object.keys(pkg_versions);
+            ref_pkg_version = pkg_versions[pkg_version_keys[pkg_version_keys.length-1]];
+
+            dependencyList = "";
+            for (dependency of ref_pkg_version["dependencies"]["libraries"].concat(ref_pkg_version["dependencies"]["modules"])) {
+                dependencyList += dependency["name"] + "&nbsp;v" + dependency["min_version"].join(".") + "<br />";
+            }
+
+            if (dependencyList === "") {
+                dependencyList = "None";
+            }
+
+            version_options = "";
+            for (version_id of pkg_version_keys) {
+                version_options += "<option value=\"" + version_id + "\">v" + pkg_versions[version_id]["module_data"]["version"].join(".") + "</option>";
+            }
+
+            install_button = "<div class=\"input-group input-group-sm\"><select id=\"update-" + pkg_name + "-version\">" + version_options + "</select>";
+            install_button += "<div class=\"input-group-append\"><button class=\"btn btn-success\" style=\"border-radius: 0;\" onclick=\"pkgmgr_do_update('" + pkg_name + "');\">";
+            install_button += "<i class=\"fas fa-download\"></i>&nbsp;Install</button></div></div>";
+
+            authors = "<b>Name:</b>&nbsp;" + ref_pkg_version["module_data"]["author"]["name"] + "<br />";
+            authors += "<b>Email:</b>&nbsp;" + ref_pkg_version["module_data"]["author"]["email"] + "<br />";
+            authors += "<b>Website:</b>&nbsp;" + ref_pkg_version["module_data"]["author"]["website"] + "<br />";
+
+            newList += "<tr><td>" + ref_pkg_version["module_data"]["name"] + "</td>";
+            newList += "<td>" + ref_pkg_version["module_data"]["description"] + "</td>";
+            newList += "<td>" + authors + "</td><td>" + dependencyList + "</td><td>" + install_button + "</td></tr>";
+        }
+        if (newList == "") {
+            newList = "<tr><th colspan=\"5\" class=\"text-center\">No updates available</th></th></tr>";
+        }
+
+        $(".pkgmgr_repo_last_checked").text(last_checked_str);
+        $("#modulemanager_updates_table > tbody").html(updateList);
+        $("#modulemanager_available_table > tbody").html(newList);
+    } catch (err) {
+        alert(err + "\n\nReceived bad repository data:\n\n" + data.substring(0, 80) + "...");
+    }
+}
+</script>

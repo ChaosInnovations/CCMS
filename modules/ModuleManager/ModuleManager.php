@@ -89,10 +89,56 @@ class ModuleManager {
             $moduleList .= Utilities::fillTemplate($moduleModalEntryTemplate, $template_vars);
         }
 
+        $newList = "";
+        foreach ($availablePackageCache["new"] as $pkg_name => $pkg_versions) {
+            $ref_pkg_version = end($pkg_versions);
+
+            $dependencyList = "";
+            foreach (array_merge($ref_pkg_version["dependencies"]["libraries"], $ref_pkg_version["dependencies"]["modules"]) as $dependency) {
+                $dependencyList .= "{$dependency["name"]}&nbsp;v" . implode(".", $dependency["min_version"]) . "<br />";
+            }
+
+            if ($dependencyList === "") {
+                $dependencyList = "None";
+            }
+
+            $version_options = "";
+            foreach ($pkg_versions as $version_id => $pkg_data) {
+                $template_vars = [
+                    'version_id' => $version_id,
+                    'version_text' => "v" . implode(".", $pkg_data["module_data"]["version"]),
+                ];
+                $version_options .= Utilities::fillTemplate($installButtonOptionTemplate, $template_vars);
+            }
+
+            $template_vars = [
+                'pkg_id' => $pkg_name,
+                'options' => $version_options,
+            ];
+            $install_button = Utilities::fillTemplate($installButtonTemplate, $template_vars);
+
+            $template_vars = [
+                'name' => $ref_pkg_version["module_data"]["name"],
+                'description' => $ref_pkg_version["module_data"]["description"],
+                'authors' => "<b>Name:</b>&nbsp;{$ref_pkg_version["module_data"]["author"]["name"]}<br /><b>Email:</b>&nbsp;{$ref_pkg_version["module_data"]["author"]["email"]}<br /><b>Website:</b>&nbsp;{$ref_pkg_version["module_data"]["author"]["website"]}<br />",
+                'dependencies' => $dependencyList,
+                'install_button' => $install_button,
+            ];
+            $newList .= Utilities::fillTemplate($moduleModalNewEntryTemplate, $template_vars);
+        }
+        if ($newList == "") {
+            $newList = $moduleModalNoNewTemplate;
+        }
+
+        if ($availablePackageCache["checked"] != "never") {
+            $availablePackageCache["checked"] = date('F j, Y \a\t g:i:sa', strtotime($availablePackageCache["checked"])-7*3600);
+        }
+
         $template_vars = [
+            'lastchecked' => $availablePackageCache["checked"],
             'updatelist' => $updateList,
             'modulelist' => $moduleList,
-            'newlist' => $moduleModalNoNewTemplate,
+            'newlist' => $newList,
         ];
         $moduleManagerBody = Utilities::fillTemplate(file_get_contents(dirname(__FILE__) . "/templates/ModuleModalBody.template.html"), $template_vars);
         SecureMenu::Instance()->addModal("dialog_modules", "Manage Modules", $moduleManagerBody, "");
@@ -128,7 +174,7 @@ class ModuleManager {
         curl_close($ch);
 
         $data = [
-            "checked" => date("Y-m-d H:i:s"),
+            "checked" => date(DATE_ATOM),
             "packages" => json_decode($out, true),
         ];
 
@@ -166,26 +212,28 @@ class ModuleManager {
             }
 
             uasort($availableUpdates[$pkg_name], function ($a, $b) {
-                $cmp = 8 * ($a["module_data"][0] <=> $b["module_data"][0]);
-                $cmp += 4 * ($a["module_data"][1] <=> $b["module_data"][1]);
-                $cmp += 2 * ($a["module_data"][2] <=> $b["module_data"][2]);
-                $cmp += 1 * ($a["module_data"][3] <=> $b["module_data"][3]);
+                $cmp = 8 * ($a["module_data"]["version"][0] <=> $b["module_data"]["version"][0]);
+                $cmp += 4 * ($a["module_data"]["version"][1] <=> $b["module_data"]["version"][1]);
+                $cmp += 2 * ($a["module_data"]["version"][2] <=> $b["module_data"]["version"][2]);
+                $cmp += 1 * ($a["module_data"]["version"][3] <=> $b["module_data"]["version"][3]);
                 return $cmp <=> 0;
             });
         }
 
         foreach ($newPackages as $pkg_name => $pkg_versions) {
             uasort($newPackages[$pkg_name], function ($a, $b) {
-                $cmp = 8 * ($a["module_data"][0] <=> $b["module_data"][0]);
-                $cmp += 4 * ($a["module_data"][1] <=> $b["module_data"][1]);
-                $cmp += 2 * ($a["module_data"][2] <=> $b["module_data"][2]);
-                $cmp += 1 * ($a["module_data"][3] <=> $b["module_data"][3]);
+                $cmp = 8 * ($a["module_data"]["version"][0] <=> $b["module_data"]["version"][0]);
+                $cmp += 4 * ($a["module_data"]["version"][1] <=> $b["module_data"]["version"][1]);
+                $cmp += 2 * ($a["module_data"]["version"][2] <=> $b["module_data"]["version"][2]);
+                $cmp += 1 * ($a["module_data"]["version"][3] <=> $b["module_data"]["version"][3]);
                 return $cmp <=> 0;
             });
         }
 
         $data["new"] = $newPackages;
         $data["updates"] = $availableUpdates;
+        ksort($moduleManifest, SORT_NATURAL);
+        $data["installed"] = $moduleManifest;
 
         file_put_contents(dirname(__FILE__) . "/packageInfoCache.json", json_encode($data));
 
