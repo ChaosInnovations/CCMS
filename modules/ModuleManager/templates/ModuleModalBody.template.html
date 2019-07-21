@@ -32,7 +32,11 @@
 <script>
 function pkgmgr_do_update(pkg_id) {
     pkg_ver_id = $("#update-" + pkg_id + "-version").val();
-    alert("Would be updating version '" + pkg_ver_id + "' of package '" + pkg_id + "'.");
+    module_ajax("modulemanager/install", {pkg_id:pkg_id,ver_id:pkg_ver_id}, function(d){alert(d);});
+}
+
+function pkgmgr_do_uninstall(pkg_id) {
+    alert("Would be removing package '" + pkg_id + "'.");
 }
 
 function pkgmgr_check() {

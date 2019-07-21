@@ -71,7 +71,7 @@ class ModuleManager {
             $hasUpdate = isset($availablePackageCache["updates"][$module_name]);
             $uA_text = ($hasUpdate ? "&nbsp;<button class=\"btn btn-link\" title=\"Update Available\" style=\"padding: 0;\"><i class=\"fas fa-chevron-circle-up\"></i></button>" : "");
 
-            $uninstall_button = '<button class="btn btn-outline-danger" title="Uninstall Module"><i class="fas fa-trash"></i></button>';
+            $uninstall_button = '<button class="btn btn-outline-danger" title="Uninstall Module"><i class="fas fa-trash" onclick="pkgmgr_do_uninstall(\'{$module_name}\');"></i></button>';
             if ($module["dependencies"]["has_dependent"]) {
                 $uninstall_button = '<button class="btn btn-outline-secondary" title="Other modules depend on this" disabled="disabled"><i class="fas fa-trash"></i></button>';
             }
@@ -152,7 +152,178 @@ class ModuleManager {
 
     public static function hookInstall(Request $request)
     {
+        // SPECIAL FUNCTION THAT FLUSHES EARLY, RUNS IN BACKGROUND, THEN ENDS EXECUTION
 
+        if (!isset($_POST["pkg_id"]) || !isset($_POST["ver_id"])) {
+            // fail
+            return new Response("Failed: missing arguments.");
+        }
+
+        $pkg_id = $_POST["pkg_id"];
+        $ver_id = $_POST["ver_id"];
+
+        $availablePackageCache = self::getPackageInfoCache();
+
+        if (!isset($availablePackageCache["packages"][$pkg_id])) {
+            // fail
+            return new Response("Failed: package {$pkg_id} is not available.");
+        }
+
+        if (!isset($availablePackageCache["packages"][$pkg_id][$ver_id])) {
+            // fail
+            return new Response("Failed: version {$ver_id} of package {$pkg_id} is not available.");
+        }
+
+        $packageInstallList = [$_POST["pkg_id"] => ["ver_id" => $_POST["ver_id"], "version" => $availablePackageCache["packages"][$pkg_id][$ver_id]["module_data"]["version"]]];
+        $newPackageAdded = true;
+        while ($newPackageAdded) {
+            $newPackageAdded = false;
+            foreach ($packageInstallList as $new_pkg_id => $listEntry) {
+                if (isset($availablePackageCache["installed"][$new_pkg_id]) &&
+                    isset($availablePackageCache["installed"][$new_pkg_id]) &&
+                    self::compareVersion($availablePackageCache["installed"][$new_pkg_id]["module_data"]["version"], $listEntry["version"]) >= 0) {
+                    // package already installed so skip.
+                    continue;
+                }
+
+                if (!isset($availablePackageCache["packages"][$new_pkg_id])) {
+                    // fail
+                    return new Response("Failed: package {$new_pkg_id} is not available.");
+                }
+        
+                if (!isset($availablePackageCache["packages"][$new_pkg_id][$listEntry["ver_id"]])) {
+                    // fail
+                    return new Response("Failed: version {$listEntry["ver_id"]} of package {$new_pkg_id} is not available.");
+                }
+
+                $new_pkg_data = $availablePackageCache["packages"][$new_pkg_id][$listEntry["ver_id"]];
+
+                foreach (array_merge($new_pkg_data["dependencies"]["libraries"], $new_pkg_data["dependencies"]["modules"]) as $dependency) {
+                    $dependency_pkg_id = $dependency["name"];
+                    $dependency_min_ver = $dependency["min_version"];
+                    if (isset($packageInstallList[$dependency_pkg_id])) {
+                        $cur_min_ver = $packageInstallList[$dependency_pkg_id]["version"];
+                        $cmp = 8 * ($dependency_min_ver[0] <=> $cur_min_ver[0]);
+                        $cmp += 4 * ($dependency_min_ver[1] <=> $cur_min_ver[1]);
+                        $cmp += 2 * ($dependency_min_ver[2] <=> $cur_min_ver[2]);
+                        $cmp += 1 * ($dependency_min_ver[3] <=> $cur_min_ver[3]);
+                        if ($cmp > 0) {
+                            // TODO: Better way to get version id?
+                            $packageInstallList[$dependency_pkg_id]["ver_id"] = implode(".", $dependency["min_version"]);
+                            $packageInstallList[$dependency_pkg_id]["version"] = $dependency["min_version"];
+                            echo "a";
+                            $newPackageAdded = true;
+                        }
+                        continue;
+                    }
+                    $packageInstallList[$dependency_pkg_id] = ["ver_id" => implode(".", $dependency["min_version"]), "version" => $dependency["min_version"]];
+                    $newPackageAdded = true;
+                }
+            }
+        }
+
+        foreach ($packageInstallList as $new_pkg_id => $listEntry) {
+            if (isset($availablePackageCache["installed"][$new_pkg_id]) &&
+                isset($availablePackageCache["installed"][$new_pkg_id]) &&
+                self::compareVersion($availablePackageCache["installed"][$new_pkg_id]["module_data"]["version"], $listEntry["version"]) >= 0) {
+                // package already installed so remove from list.
+                unset($packageInstallList[$new_pkg_id]);
+            }
+        }
+
+        $n = count($packageInstallList) - 1;
+        $pl = $n == 1 ? "y" : "ies";
+        (new Response("Installing version '{$ver_id}' of package '{$pkg_id}' and {$n} dependenc{$pl}..."))->send();
+
+        // Download dependency packages
+        if (!file_exists(dirname(__FILE__)."/pkg_staging")) {
+            mkdir(dirname(__FILE__)."/pkg_staging");
+        }
+
+        $SRV_URL = "http://ccms.thomasboland.me";
+
+        foreach ($packageInstallList as $new_pkg_id => $listEntry) {
+            $pkg_url = $SRV_URL . "/mod_pkg/{$new_pkg_id}/{$listEntry["ver_id"]}/package.ccmspkg";
+            $dest_dir = dirname(__FILE__)."/pkg_staging/{$new_pkg_id}_{$listEntry["ver_id"]}";
+            $dest_path = $dest_dir . ".ccmspkg";
+
+            $pkg_data = $availablePackageCache["packages"][$new_pkg_id][$listEntry["ver_id"]];
+            self::downloadFile($pkg_url, $dest_path, $pkg_data["pkg_size"]);
+        }
+
+        // Unpack dependency packages
+
+        foreach ($packageInstallList as $new_pkg_id => $listEntry) {
+            $pkg_url = $SRV_URL . "/mod_pkg/{$new_pkg_id}/{$listEntry["ver_id"]}/package.ccmspkg";
+            $dest_dir = dirname(__FILE__)."/pkg_staging/{$new_pkg_id}_{$listEntry["ver_id"]}";
+            $dest_path = $dest_dir . ".ccmspkg";
+
+            file_put_contents(dirname(__FILE__)."/STATE", "3:90");
+            $zip = new \ZipArchive;
+            $zip->open($dest_path);
+            $zip->extractTo($dest_dir . "/");
+            $zip->close();
+            unlink($dest_path);
+        }
+
+        // Prevent timeout
+        set_time_limit(0);
+
+        // Enter maintenance mode
+        Utilities::setMaintenanceMode(true);
+
+        // Install packages (delay placeholder)
+        sleep(30);
+
+        // Exit maintenance mode
+        Utilities::setMaintenanceMode(false);
+
+        /*
+
+        if (file_exists($DEST_DIR."install.php")) {
+            // Use install script
+        } else {
+            // just copy files
+        }
+
+        */
+
+        global $core;
+        $core->dispose();
+        die();
+    }
+
+    public static function compareVersion($versionA, $versionB) {
+        $cmp = 8 * ($versionA[0] <=> $versionB[0]);
+        $cmp += 4 * ($versionA[1] <=> $versionB[1]);
+        $cmp += 2 * ($versionA[2] <=> $versionB[2]);
+        $cmp += 1 * ($versionA[3] <=> $versionB[3]);
+        return ($cmp <=> 0);
+    }
+
+    public static function downloadFile($url, $path, $size) {
+        $newfname = $path;
+        $file = fopen($url, 'rb');
+        $done = 0;
+        $per = 0;
+        if ($file) {
+            $newf = fopen ($newfname, 'wb');
+            if ($newf) {
+                while(!feof($file)) {
+                    fwrite($newf, fread($file, 1024 * 8), 1024 * 8);
+                    $done += 1024*8;
+                    if($done > $size) {$done = $size;};
+                    $per = round($done*90/$size, 1);
+                    file_put_contents(dirname(__FILE__)."/STATE", "2:{$per}");
+                }
+                fclose($newf);
+            } else {
+                file_put_contents(dirname(__FILE__)."/STATE", "-1:2");
+            }
+            fclose($file);
+        } else {
+            file_put_contents(dirname(__FILE__)."/STATE", "-1:2");
+        }
     }
 
     public static function getPackageInfoCache() {
