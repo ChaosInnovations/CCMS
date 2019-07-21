@@ -111,7 +111,7 @@ class Utilities
             copy($_SERVER["DOCUMENT_ROOT"] . "/.htaccess.maintenance", $_SERVER["DOCUMENT_ROOT"] . "/.htaccess");
         } else {
             unlink($_SERVER["DOCUMENT_ROOT"] . "/.htaccess");
-            copy(dirname(__FILE__) . "/templates/template.htaccess", $_SERVER["DOCUMENT_ROOT"] . "/.htaccess");
+            copy($_SERVER["DOCUMENT_ROOT"] . "/.htaccess.production", $_SERVER["DOCUMENT_ROOT"] . "/.htaccess");
         }
     }
 }

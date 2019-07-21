@@ -69,7 +69,7 @@ class ModuleManager {
             }
 
             $hasUpdate = isset($availablePackageCache["updates"][$module_name]);
-            $uA_text = ($hasUpdate ? "&nbsp;<button class=\"btn btn-link\" title=\"Update Available\" style=\"padding: 0;\"><i class=\"fas fa-chevron-circle-up\"></i></button>" : "");
+            $uA_text = ($hasUpdate ? "&nbsp;<button class=\"btn btn-link\" title=\"Update Available\" style=\"padding: 0;\" onclick=\"$('#pkgmgr_tab_updates').tab('show');\"><i class=\"fas fa-chevron-circle-up\"></i></button>" : "");
 
             $uninstall_button = '<button class="btn btn-outline-danger" title="Uninstall Module"><i class="fas fa-trash" onclick="pkgmgr_do_uninstall(\'{$module_name}\');"></i></button>';
             if ($module["dependencies"]["has_dependent"]) {
@@ -174,6 +174,21 @@ class ModuleManager {
             return new Response("Failed: version {$ver_id} of package {$pkg_id} is not available.");
         }
 
+        $state = [
+            'global_state' => "start",
+            'package_states' => [],
+        ];
+        $state_path = dirname(__FILE__)."/install_state.json";
+        file_put_contents($state_path, json_encode($state));
+
+        (new Response("Installing version '{$ver_id}' of package '{$pkg_id}'..."))->send();
+        
+        // Prevent timeout
+        set_time_limit(0);
+
+        // Also add dependencies to list
+        $state['global_state'] = "check-dependencies";
+        file_put_contents($state_path, json_encode($state));
         $packageInstallList = [$_POST["pkg_id"] => ["ver_id" => $_POST["ver_id"], "version" => $availablePackageCache["packages"][$pkg_id][$ver_id]["module_data"]["version"]]];
         $newPackageAdded = true;
         while ($newPackageAdded) {
@@ -222,23 +237,35 @@ class ModuleManager {
             }
         }
 
+        // Remove dependencies that are already installed from the list
         foreach ($packageInstallList as $new_pkg_id => $listEntry) {
             if (isset($availablePackageCache["installed"][$new_pkg_id]) &&
                 isset($availablePackageCache["installed"][$new_pkg_id]) &&
                 self::compareVersion($availablePackageCache["installed"][$new_pkg_id]["module_data"]["version"], $listEntry["version"]) >= 0) {
                 // package already installed so remove from list.
                 unset($packageInstallList[$new_pkg_id]);
+                continue;
             }
+            // add entry to state
+            $state['package_states'][$new_pkg_id] = [
+                'state' => 'download-pending',
+                'ver_id' => $listEntry['ver_id'],
+                'pkg_size' => $availablePackageCache["packages"][$new_pkg_id][$listEntry["ver_id"]]['pkg_size'], // Package size in Bytes
+                'done_size' => 0, // Downloaded size in Bytes
+                'down_speed' => 0, // Download speed in Bytes/second
+            ];
         }
 
         $n = count($packageInstallList) - 1;
         $pl = $n == 1 ? "y" : "ies";
-        (new Response("Installing version '{$ver_id}' of package '{$pkg_id}' and {$n} dependenc{$pl}..."))->send();
 
         // Download dependency packages
         if (!file_exists(dirname(__FILE__)."/pkg_staging")) {
             mkdir(dirname(__FILE__)."/pkg_staging");
         }
+
+        $state['global_state'] = "download";
+        file_put_contents($state_path, json_encode($state));
 
         $SRV_URL = "http://ccms.thomasboland.me";
 
@@ -248,49 +275,109 @@ class ModuleManager {
             $dest_path = $dest_dir . ".ccmspkg";
 
             $pkg_data = $availablePackageCache["packages"][$new_pkg_id][$listEntry["ver_id"]];
-            self::downloadFile($pkg_url, $dest_path, $pkg_data["pkg_size"]);
+            self::downloadFile($pkg_url, $dest_path, $pkg_data["pkg_size"], $new_pkg_id, $state_path, $state);
+            $state['package_states'][$new_pkg_id]['state'] = "unpack-pending";
+            file_put_contents($state_path, json_encode($state));
         }
 
-        // Unpack dependency packages
+        $state['global_state'] = "unpack";
+        file_put_contents($state_path, json_encode($state));
 
+        // Unpack dependency packages
         foreach ($packageInstallList as $new_pkg_id => $listEntry) {
             $pkg_url = $SRV_URL . "/mod_pkg/{$new_pkg_id}/{$listEntry["ver_id"]}/package.ccmspkg";
             $dest_dir = dirname(__FILE__)."/pkg_staging/{$new_pkg_id}_{$listEntry["ver_id"]}";
             $dest_path = $dest_dir . ".ccmspkg";
 
-            file_put_contents(dirname(__FILE__)."/STATE", "3:90");
+            $state['package_states'][$new_pkg_id]['state'] = "unpack";
+            file_put_contents($state_path, json_encode($state));
+
             $zip = new \ZipArchive;
             $zip->open($dest_path);
             $zip->extractTo($dest_dir . "/");
             $zip->close();
+
             unlink($dest_path);
+
+            $state['package_states'][$new_pkg_id]['state'] = "install-pending";
+            file_put_contents($state_path, json_encode($state));
         }
 
-        // Prevent timeout
-        set_time_limit(0);
+        $state['global_state'] = "install";
+        file_put_contents($state_path, json_encode($state));
 
         // Enter maintenance mode
         Utilities::setMaintenanceMode(true);
 
         // Install packages (delay placeholder)
-        sleep(30);
+        foreach ($packageInstallList as $new_pkg_id => $listEntry) {
+            $pkg_url = $SRV_URL . "/mod_pkg/{$new_pkg_id}/{$listEntry["ver_id"]}/package.ccmspkg";
+            $dest_dir = dirname(__FILE__)."/pkg_staging/{$new_pkg_id}_{$listEntry["ver_id"]}";
+            $dest_path = $dest_dir . ".ccmspkg";
+
+            $state['package_states'][$new_pkg_id]['state'] = "install";
+            file_put_contents($state_path, json_encode($state));
+
+            if (file_exists($dest_dir . "/install.php")) {
+                // Use install script
+            } else {
+                // just copy $dest_dir/*.* to DOCUMENT_ROOT/
+                self::rcopy($dest_dir, $_SERVER["DOCUMENT_ROOT"]);
+            }
+            
+            $state['package_states'][$new_pkg_id]['state'] = "finish";
+        }
 
         // Exit maintenance mode
         Utilities::setMaintenanceMode(false);
 
-        /*
+        $state['global_state'] = "clean";
+        file_put_contents($state_path, json_encode($state));
 
-        if (file_exists($DEST_DIR."install.php")) {
-            // Use install script
-        } else {
-            // just copy files
-        }
+        self::rrmdir(dirname(__FILE__)."/pkg_staging");
 
-        */
+        $state['global_state'] = "finish";
+        file_put_contents($state_path, json_encode($state));
 
         global $core;
         $core->dispose();
         die();
+    }
+
+    public static function rcopy($src,$dst)
+    {
+        $dir = opendir($src);
+        if (!is_dir($dst)) {
+            mkdir($dst);
+        }
+        while(false !== ($file = readdir($dir))) {
+            if (($file != '.') && ($file != '..') && ($file != 'install.php')) {
+                if (is_dir($src . '/' . $file)) {
+                    self::rcopy($src . '/' . $file, $dst . '/' . $file);
+                }
+                else {
+                    copy($src . '/' . $file, $dst . '/' . $file);
+                }
+            }
+        }
+        closedir($dir);
+    }
+
+    function rrmdir($dir)
+    { 
+        if (is_dir($dir)) { 
+            $objects = scandir($dir); 
+            foreach ($objects as $object) { 
+                if ($object != "." && $object != "..") { 
+                    if (is_dir($dir."/".$object)) {
+                        self::rrmdir($dir."/".$object);
+                    } else {
+                        unlink($dir."/".$object); 
+                    }
+                } 
+            }
+            rmdir($dir); 
+        } 
     }
 
     public static function compareVersion($versionA, $versionB) {
@@ -301,28 +388,35 @@ class ModuleManager {
         return ($cmp <=> 0);
     }
 
-    public static function downloadFile($url, $path, $size) {
+    public static function downloadFile($url, $path, $size, $pkg_id, $state_path, &$state) {
+        $state['package_states'][$pkg_id]['state'] = "download";
+        file_put_contents($state_path, json_encode($state));
         $newfname = $path;
         $file = fopen($url, 'rb');
         $done = 0;
         $per = 0;
+        $start_time = microtime(true);
         if ($file) {
             $newf = fopen ($newfname, 'wb');
             if ($newf) {
                 while(!feof($file)) {
                     fwrite($newf, fread($file, 1024 * 8), 1024 * 8);
                     $done += 1024*8;
-                    if($done > $size) {$done = $size;};
-                    $per = round($done*90/$size, 1);
-                    file_put_contents(dirname(__FILE__)."/STATE", "2:{$per}");
+                    if ($done > $size) {$done = $size;}
+                    $speed = $done / (microtime(true) - $start_time);
+                    $state['package_states'][$pkg_id]['done_size'] = $done;
+                    $state['package_states'][$pkg_id]['down_speed'] = $speed;
+                    file_put_contents($state_path, json_encode($state));
                 }
                 fclose($newf);
             } else {
-                file_put_contents(dirname(__FILE__)."/STATE", "-1:2");
+                $state['package_states'][$pkg_id]['state'] = "fail";
+                file_put_contents($state_path, json_encode($state));
             }
             fclose($file);
         } else {
-            file_put_contents(dirname(__FILE__)."/STATE", "-1:2");
+            $state['package_states'][$pkg_id]['state'] = "fail";
+            file_put_contents($state_path, json_encode($state));
         }
     }
 
