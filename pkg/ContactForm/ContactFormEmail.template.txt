@@ -1,8 +1,0 @@
-Message from {name}
-Reply: {reply}
-================================
-
-Message:
-{message}
-
-This message was send using the online Contact form.
