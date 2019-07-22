@@ -2,8 +2,9 @@ pkg/Database/config.ini
 pkg/FireSock/socketserver.log
 pkg/ModuleManager/packageInfoCache.json
 
-pkg/Collaboration/
-pkg/Notice/
-pkg/ContactForm/
 pkg/Bootstrap/
+pkg/Collaboration/
+pkg/ContactForm/
+pkg/FontAwesome/
 pkg/JQuery/
+pkg/Notice/
