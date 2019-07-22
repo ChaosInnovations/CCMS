@@ -1,3 +1,6 @@
+<p>Last checked repository <span id="pkgmgr_repo_last_checked">{lastchecked}</span>&nbsp;
+    <button id="pkgmgr_repo_check_button" class="btn btn-sm btn-primary" style="border-radius: 0;padding-top:2px;padding-bottom:2px;" onclick="pkgmgr_check();">Check now</button>
+</p>
 <ul class="nav nav-tabs" id="pkgmgr_tabs" role="tablist">
     <li class="nav-item">
         <a class="nav-link active" id="pkgmgr_tab_installed" data-toggle="tab" href="#pkgmgr_tabpanel_installed" role="tab" aria-controls="pkgmgr_tabpanel_installed" aria-selected="true">Installed Packages</a>
@@ -15,7 +18,7 @@
 <div class="tab-content" id="myTabContent">
     <div class="tab-pane fade show active" id="pkgmgr_tabpanel_installed" role="tabpanel" aria-labelledby="pkgmgr_tab_installed">
         <div class="table-responsive" style="max-height:30rem;">
-            <table class="table table-hover table-sm">
+            <table id="modulemanager_installed_table" class="table table-hover table-sm">
                 <thead>
                     <tr><th></th></th><th>Module Name</th><th>Description</th><th>Version</th><th>Release</th><th>Authors</th><th>Dependencies</th><th></th></tr>
                 </thead>
@@ -24,7 +27,6 @@
         </div>
     </div>
     <div class="tab-pane fade" id="pkgmgr_tabpanel_updates" role="tabpanel" aria-labelledby="pkgmgr_tab_updates">
-        <p>Last checked <span class="pkgmgr_repo_last_checked">{lastchecked}</span>&nbsp;<button class="btn btn-sm btn-primary" style="border-radius: 0;padding-top:2px;padding-bottom:2px;" onclick="pkgmgr_check();">Check now</button></p>
         <div class="table-responsive" style="max-height:30rem;">
             <table id="modulemanager_updates_table" class="table table-hover">
                 <thead>
@@ -35,7 +37,6 @@
         </div>
     </div>
     <div class="tab-pane fade" id="pkgmgr_tabpanel_new" role="tabpanel" aria-labelledby="pkgmgr_tab_new">
-        <p>Last checked <span class="pkgmgr_repo_last_checked">{lastchecked}</span>&nbsp;<button class="btn btn-sm btn-primary" style="border-radius: 0;padding-top:2px;padding-bottom:2px;" onclick="pkgmgr_check();"><span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>Check now</button></p>
         <div class="table-responsive" style="max-height:30rem;">
             <table id="modulemanager_available_table" class="table table-hover">
                 <thead>
@@ -48,24 +49,28 @@
     <div class="tab-pane fade" id="pkgmgr_tabpanel_status" role="tabpanel" aria-labelledby="pkgmgr_tab_status">
         <span id="pkgmgr_progress_state"></span>
         <div class="table-responsive" style="max-height:30rem;">
-            <table id="modulemanager_updates_table" class="table table-hover">
+            <table id="modulemanager_progress_table" class="table table-hover">
                 <thead>
                     <tr><th>Module</th><th style="width:300px;max-width:300px">Status</th><th style="width:200px;max-width:200px;min-width:100px;"></th></tr>
                 </thead>
-                <tbody id="pkgmgr_progress_table"><tr colspan="3"><td>Nothing installing right now</td></tr></tbody>
+                <tbody id="pkgmgr_progress_tablebody"><tr colspan="3"><td>Nothing installing right now</td></tr></tbody>
             </table>
         </div>
     </div>
 </div>
 <script>
 var pkgmgr_state_interval_id = null;
+var pkgmgr_installing = false;
 
 function pkgmgr_do_update(pkg_id) {
+    if (pkgmgr_installing) {
+        alert("There's already a package being (un)installed.");
+        return;
+    }
+    pkgmgr_installing = true;
     pkg_ver_id = $("#update-" + pkg_id + "-version").val();
-    $('#pkgmgr_tab_status').tab('show')
+    $('#pkgmgr_tab_status').tab('show');
     module_ajax("modulemanager/install", {pkg_id:pkg_id,ver_id:pkg_ver_id}, function(d){
-        console.log("started");
-        
         pkgmgr_state_interval_id = setInterval(function(){
             $.getJSON(BASE_URL + "/modules/ModuleManager/install_state.json", function(state) {
                 var pretty_state = "";
@@ -133,18 +138,19 @@ function pkgmgr_do_update(pkg_id) {
                     }
                     table += "<tr><td>" + pkg_id + " " + pkg_state['ver_id'] + "</td>";
                     table += "<td>" + pretty_pkg_state + "</td>";
-                    table += "<td><div class=\"progress\"><div class=\"progress-bar" + (pkg_state['state'] == "download" ? "" : " progress-bar-striped") + "\" role=\"progressbar\" style=\"width: " + (100*pkg_state["done_size"]/pkg_state["pkg_size"]) + "%\" aria-valuenow=\"25\" aria-valuemin=\"0\" aria-valuemax=\"100\"></div></div></td></tr>";
+                    table += "<td><div class=\"progress\"><div class=\"progress-bar" + (pkg_state['state'] == "download" ? "" : " progress-bar-striped") + "\" role=\"progressbar\" style=\"width: " + (100*pkg_state["done_size"]/pkg_state["pkg_size"]) + "%\" aria-valuenow=\"" + (100*pkg_state["done_size"]/pkg_state["pkg_size"]) + "\" aria-valuemin=\"0\" aria-valuemax=\"100\"></div></div></td></tr>";
                 }
 
-                $("#pkgmgr_progress_table").html(table);
+                $("#pkgmgr_progress_tablebody").html(table);
                 $("#pkgmgr_progress_state").text(pretty_state);
 
                 if (state['global_state'] == "finish") {
                     clearInterval(pkgmgr_state_interval_id);
+                    pkgmgr_check();
+                    pkgmgr_installing = false;
                 }
             });
         }, 100);
-        
     });
 }
 
@@ -161,10 +167,54 @@ function pkgmgr_pretty_filesize(bytes, decimals=1) {
 }
 
 function pkgmgr_do_uninstall(pkg_id) {
-    alert("Would be removing package '" + pkg_id + "'.");
+    if (!confirm("Are you sure you want to uninstall package "+pkg_id+"?")) {
+        return;
+    }
+    if (pkgmgr_installing) {
+        alert("There's already a package being (un)installed.");
+        return;
+    }
+    pkgmgr_installing = true;
+    $('#pkgmgr_tab_status').tab('show');
+    module_ajax("modulemanager/uninstall", {pkg_id:pkg_id}, function(d){
+        pkgmgr_state_interval_id = setInterval(function(){
+            $.getJSON(BASE_URL + "/modules/ModuleManager/install_state.json", function(state) {
+                var pretty_state = "";
+                switch (state['global_state']) {
+                    case "start":
+                        pretty_state = "Starting";
+                        break;
+                    case "uninstall":
+                        pretty_state = "Uninstalling Package";
+                        break;
+                    case "finish":
+                        pretty_state = "Finished";
+                        break;
+                    default:
+                        pretty_state = "Something went wrong";
+                }
+
+                var table = "";
+                table += "<tr><td>" + pkg_id + "</td>";
+                table += "<td>" + pretty_state + "</td>";
+                table += "<td><div class=\"progress\"><div class=\"progress-bar progress-bar-striped\" role=\"progressbar\" style=\"width: 100%\" aria-valuenow=\"100\" aria-valuemin=\"0\" aria-valuemax=\"100\"></div></div></td></tr>";
+
+                $("#pkgmgr_progress_tablebody").html(table);
+                $("#pkgmgr_progress_state").text(pretty_state);
+
+                if (state['global_state'] == "finish") {
+                    clearInterval(pkgmgr_state_interval_id);
+                    pkgmgr_check();
+                    pkgmgr_installing = false;
+                }
+            });
+        }, 100);
+    });
 }
 
 function pkgmgr_check() {
+    $("#pkgmgr_repo_check_button").html("<span class=\"spinner-border spinner-border-sm\" role=\"status\" aria-hidden=\"true\"></span>&nbsp;Checking...");
+    $("#pkgmgr_repo_check_button").prop("disabled", true);
     module_ajax("modulemanager/checkModules", {}, pkgmgr_update_lists);
 }
 
@@ -241,14 +291,56 @@ function pkgmgr_update_lists(data) {
             newList += "<td>" + authors + "</td><td>" + dependencyList + "</td><td>" + install_button + "</td></tr>";
         }
         if (newList == "") {
-            newList = "<tr><th colspan=\"5\" class=\"text-center\">No updates available</th></th></tr>";
+            newList = "<tr><th colspan=\"5\" class=\"text-center\">No packages available</th></th></tr>";
         }
 
-        $(".pkgmgr_repo_last_checked").text(last_checked_str);
+        installedList = "";
+        for (pkg_id in pkg_repo["installed"]) {
+            pkg_data = pkg_repo["installed"][pkg_id];
+
+            dependencyList = "";
+            for (dependency of pkg_data["dependencies"]["libraries"].concat(pkg_data["dependencies"]["modules"])) {
+                dependencyList += dependency["name"] + "&nbsp;v" + dependency["min_version"].join(".") + "<br />";
+            }
+
+            if (dependencyList === "") {
+                dependencyList = "None";
+            }
+
+            uA_text = (pkg_id in pkg_repo["updates"] ? "&nbsp;<button class=\"btn btn-link\" title=\"Update Available\" style=\"padding: 0;\" onclick=\"$('#pkgmgr_tab_updates').tab('show');\"><i class=\"fas fa-chevron-circle-up\"></i></button>" : "");
+
+            uninstall_button = "<button class=\"btn btn-outline-danger\" title=\"Uninstall Package\" onclick=\"pkgmgr_do_uninstall('" + pkg_id + "');\"><i class=\"fas fa-trash\"></i></button>";
+            if (pkg_data["dependencies"]["has_dependent"]) {
+                uninstall_button = '<button class="btn btn-outline-secondary" title="Other packages depend on this" disabled="disabled"><i class="fas fa-trash"></i></button>';
+            }
+
+            authors = "<b>Name:</b>&nbsp;" + pkg_data["module_data"]["author"]["name"] + "<br />";
+            authors += "<b>Email:</b>&nbsp;" + pkg_data["module_data"]["author"]["email"] + "<br />";
+            authors += "<b>Website:</b>&nbsp;" + pkg_data["module_data"]["author"]["website"] + "<br />";
+
+            var b = pkg_data["module_data"]["release_date"].split(/\D+/);
+            rd =  new Date(b[0], --b[1], b[2]);
+            release_date = rd.toLocaleDateString('default', {month: 'long', day: 'numeric', year: 'numeric'});
+
+            installedList += "<tr><td>" + uA_text + "</td>";
+            installedList += "<td>" + pkg_data["module_data"]["name"] + "</td>";
+            installedList += "<td>" + pkg_data["module_data"]["description"] + "</td>";
+            installedList += "<td>" + pkg_data["module_data"]["version"].join(".") + "</td>";
+            installedList += "<td>" + release_date + "</td>";
+            installedList += "<td>" + authors + "</td><td>" + dependencyList + "</td><td>" + uninstall_button + "</td></tr>";
+        }
+        if (installedList == "") {
+            installedList = "<tr><th colspan=\"8\" class=\"text-center\">No packages installed</th></th></tr>";
+        }
+
+        $("#pkgmgr_repo_last_checked").text(last_checked_str);
         $("#modulemanager_updates_table > tbody").html(updateList);
         $("#modulemanager_available_table > tbody").html(newList);
+        $("#modulemanager_installed_table > tbody").html(installedList);
     } catch (err) {
         alert(err + "\n\nReceived bad repository data:\n\n" + data.substring(0, 80) + "...");
     }
+    $("#pkgmgr_repo_check_button").html("Check now");
+    $("#pkgmgr_repo_check_button").prop("disabled", false);
 }
 </script>

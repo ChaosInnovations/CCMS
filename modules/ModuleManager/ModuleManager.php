@@ -71,7 +71,7 @@ class ModuleManager {
             $hasUpdate = isset($availablePackageCache["updates"][$module_name]);
             $uA_text = ($hasUpdate ? "&nbsp;<button class=\"btn btn-link\" title=\"Update Available\" style=\"padding: 0;\" onclick=\"$('#pkgmgr_tab_updates').tab('show');\"><i class=\"fas fa-chevron-circle-up\"></i></button>" : "");
 
-            $uninstall_button = '<button class="btn btn-outline-danger" title="Uninstall Module"><i class="fas fa-trash" onclick="pkgmgr_do_uninstall(\'{$module_name}\');"></i></button>';
+            $uninstall_button = "<button class=\"btn btn-outline-danger\" title=\"Uninstall Module\" onclick=\"pkgmgr_do_uninstall('{$module_name}');\"><i class=\"fas fa-trash\"></i></button>";
             if ($module["dependencies"]["has_dependent"]) {
                 $uninstall_button = '<button class="btn btn-outline-secondary" title="Other modules depend on this" disabled="disabled"><i class="fas fa-trash"></i></button>';
             }
@@ -147,12 +147,104 @@ class ModuleManager {
 
     public static function hookUninstall(Request $request)
     {
+        // SPECIAL FUNCTION THAT FLUSHES EARLY, RUNS IN BACKGROUND, THEN ENDS EXECUTION
 
+        if (!User::$currentUser->permissions->owner) {
+            return new Response("Failed: not permitted.");
+        }
+
+        if (!isset($_POST["pkg_id"])) {
+            // fail
+            return new Response("Failed: missing arguments.");
+        }
+
+        $pkg_id = $_POST["pkg_id"];
+
+        $availablePackageCache = self::getPackageInfoCache();
+
+        if (!isset($availablePackageCache["installed"][$pkg_id])) {
+            return new Response("Failed: package {$pkg_id} is not installed.");
+        }
+
+        if ($availablePackageCache["installed"][$pkg_id]["dependencies"]["has_dependent"]) {
+            return new Response("Failed: package {$pkg_id} has dependant packages.");
+        }
+
+        $state = [
+            'global_state' => "start",
+        ];
+        $state_path = dirname(__FILE__)."/install_state.json";
+        if (is_file($state_path)) {
+            return new Response("Failed: package (un)installation already in progress.");
+        }
+        file_put_contents($state_path, json_encode($state));
+
+        (new Response("Uninstalling package '{$pkg_id}'..."))->send();
+        
+        // Prevent timeout
+        set_time_limit(0);
+
+        $state['global_state'] = "uninstall";
+        file_put_contents($state_path, json_encode($state));
+
+        // Enter maintenance mode
+        Utilities::setMaintenanceMode(true);
+
+        // Uninstall packages (delay placeholder)
+        if (is_dir($_SERVER["DOCUMENT_ROOT"] . "/core/lib/" . $pkg_id)) {
+            if (file_exists($_SERVER["DOCUMENT_ROOT"] . "/core/lib/" . $pkg_id . "/uninstall.php")) {
+                // Use uninstall script
+            } else {
+                self::rrmdir($_SERVER["DOCUMENT_ROOT"] . "/core/lib/" . $pkg_id);
+            }
+        }
+        if (is_dir($_SERVER["DOCUMENT_ROOT"] . "/core/mod/" . $pkg_id)) {
+            if (file_exists($_SERVER["DOCUMENT_ROOT"] . "/core/mod/" . $pkg_id . "/uninstall.php")) {
+                // Use uninstall script
+            } else {
+                self::rrmdir($_SERVER["DOCUMENT_ROOT"] . "/core/mod/" . $pkg_id);
+            }
+        }
+        if (is_dir($_SERVER["DOCUMENT_ROOT"] . "\/libraries\/" . $pkg_id)) {
+            if (file_exists($_SERVER["DOCUMENT_ROOT"] . "\/libraries\/" . $pkg_id . "/uninstall.php")) {
+                // Use uninstall script
+            } else {
+                self::rrmdir($_SERVER["DOCUMENT_ROOT"] . "\/libraries\/" . $pkg_id);
+            }
+        }
+        if (is_dir($_SERVER["DOCUMENT_ROOT"] . "\/modules\/" . $pkg_id)) {
+            if (file_exists($_SERVER["DOCUMENT_ROOT"] . "\/modules\/" . $pkg_id . "/uninstall.php")) {
+                // Use uninstall script
+            } else {
+                self::rrmdir($_SERVER["DOCUMENT_ROOT"] . "\/modules\/" . $pkg_id);
+            }
+        }
+
+        // Exit maintenance mode
+        Utilities::setMaintenanceMode(false);
+
+        self::hookCheckModules();
+
+        $state['global_state'] = "finish";
+        file_put_contents($state_path, json_encode($state));
+
+        // Wait a second so that client sees the 'finish' state
+        sleep(1);
+
+        unlink($state_path);
+
+        global $core;
+        $core->dispose();
+        die();
     }
 
     public static function hookInstall(Request $request)
     {
         // SPECIAL FUNCTION THAT FLUSHES EARLY, RUNS IN BACKGROUND, THEN ENDS EXECUTION
+
+        if (!User::$currentUser->permissions->owner) {
+            return new Response("Failed: not permitted.");
+        }
 
         if (!isset($_POST["pkg_id"]) || !isset($_POST["ver_id"])) {
             // fail
@@ -179,6 +271,9 @@ class ModuleManager {
             'package_states' => [],
         ];
         $state_path = dirname(__FILE__)."/install_state.json";
+        if (is_file($state_path)) {
+            return new Response("Failed: package (un)installation already in progress.");
+        }
         file_put_contents($state_path, json_encode($state));
 
         (new Response("Installing version '{$ver_id}' of package '{$pkg_id}'..."))->send();
@@ -321,7 +416,19 @@ class ModuleManager {
             if (file_exists($dest_dir . "/install.php")) {
                 // Use install script
             } else {
-                // just copy $dest_dir/*.* to DOCUMENT_ROOT/
+                // Just remove any matching directories then copy $dest_dir/*.* to DOCUMENT_ROOT/
+                if (is_dir($_SERVER["DOCUMENT_ROOT"] . "/core/lib/" . $new_pkg_id)) {
+                    self::rrmdir($_SERVER["DOCUMENT_ROOT"] . "/core/lib/" . $new_pkg_id);
+                }
+                if (is_dir($_SERVER["DOCUMENT_ROOT"] . "/core/mod/" . $new_pkg_id)) {
+                    self::rrmdir($_SERVER["DOCUMENT_ROOT"] . "/core/mod/" . $new_pkg_id);
+                }
+                if (is_dir($_SERVER["DOCUMENT_ROOT"] . "\/libraries\/" . $new_pkg_id)) {
+                    self::rrmdir($_SERVER["DOCUMENT_ROOT"] . "\/libraries\/" . $new_pkg_id);
+                }
+                if (is_dir($_SERVER["DOCUMENT_ROOT"] . "\/modules\/" . $new_pkg_id)) {
+                    self::rrmdir($_SERVER["DOCUMENT_ROOT"] . "\/modules\/" . $new_pkg_id);
+                }
                 self::rcopy($dest_dir, $_SERVER["DOCUMENT_ROOT"]);
             }
             
@@ -335,9 +442,15 @@ class ModuleManager {
         file_put_contents($state_path, json_encode($state));
 
         self::rrmdir(dirname(__FILE__)."/pkg_staging");
+        self::hookCheckModules();
 
         $state['global_state'] = "finish";
         file_put_contents($state_path, json_encode($state));
+
+        // Wait a second so that client sees the 'finish' state
+        sleep(1);
+
+        unlink($state_path);
 
         global $core;
         $core->dispose();
@@ -428,7 +541,11 @@ class ModuleManager {
         return json_decode(file_get_contents(dirname(__FILE__) . "/packageInfoCache.json"), true);
     }
 
-    public static function hookCheckModules(Request $request) {
+    public static function hookCheckModules(Request $request=null) {
+        if (!User::$currentUser->permissions->owner) {
+            return new Response("Failed: not permitted.");
+        }
+
         $SRV_URL = "http://ccms.thomasboland.me";
         $VER_URL = $SRV_URL . "/latest.php?mod";
 
@@ -481,7 +598,7 @@ class ModuleManager {
                 $cmp += 4 * ($a["module_data"]["version"][1] <=> $b["module_data"]["version"][1]);
                 $cmp += 2 * ($a["module_data"]["version"][2] <=> $b["module_data"]["version"][2]);
                 $cmp += 1 * ($a["module_data"]["version"][3] <=> $b["module_data"]["version"][3]);
-                return $cmp <=> 0;
+                return -($cmp <=> 0);
             });
         }
 
@@ -491,7 +608,7 @@ class ModuleManager {
                 $cmp += 4 * ($a["module_data"]["version"][1] <=> $b["module_data"]["version"][1]);
                 $cmp += 2 * ($a["module_data"]["version"][2] <=> $b["module_data"]["version"][2]);
                 $cmp += 1 * ($a["module_data"]["version"][3] <=> $b["module_data"]["version"][3]);
-                return $cmp <=> 0;
+                return -($cmp <=> 0);
             });
         }
 
