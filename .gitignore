@@ -3,6 +3,7 @@ pkg/FireSock/socketserver.log
 pkg/ModuleManager/packageInfoCache.json
 
 pkg/Bootstrap/
+pkg/CodeMirror/
 pkg/Collaboration/
 pkg/ContactForm/
 pkg/FontAwesome/
