@@ -1,23 +1,18 @@
 <?php
 
-use \Lib\CCMS\Autoloader;
-use \Lib\CCMS\CCMSCore;
+use \Package\CCMS\Autoloader;
+use \Package\CCMS\CCMSCore;
 
 // Set DOCUMENT_ROOT to the correct root document
 $_SERVER["DOCUMENT_ROOT"] = dirname(__FILE__);
 
 // Manually require Autoloader.php, because we don't have a working autoloader yet
-require_once $_SERVER["DOCUMENT_ROOT"]."/core/lib/CCMS/Autoloader.php";
+require_once $_SERVER["DOCUMENT_ROOT"]."/pkg/CCMS/Autoloader.php";
 
 // Add namespaces to Autoloader
 $loader = new Autoloader;
 $loader->register();
-$loader->addNamespace("Lib", $_SERVER["DOCUMENT_ROOT"]."/core/lib"); // Core/builtin libraries
-$loader->addNamespace("Mod", $_SERVER["DOCUMENT_ROOT"]."/core/mod"); // Core/builtin modules
-$loader->addNamespace("Lib", $_SERVER["DOCUMENT_ROOT"]."/libraries"); // User-installed libraries
-$loader->addNamespace("Mod", $_SERVER["DOCUMENT_ROOT"]."/modules"); // User-installed modules
-// *** Is there really a difference between core packages and user packages?
-// *** Do they really need separate directories?
+$loader->addNamespace("Package", $_SERVER["DOCUMENT_ROOT"]."/pkg");
 
 // Process incoming request
 $core = new CCMSCore();

@@ -1,0 +1,27 @@
+{
+    "module_data": {
+        "name":"CodeMirror",
+        "description":"CodeMirror js code editor",
+        "type":"Module",
+        "version":[5, 0, 0, 0],
+        "release_date":"2019-06-23",
+        "author": {
+            "name":"Marijn Haverbeke and others",
+            "email":"",
+            "website":"http://codemirror.net/"
+        }
+    },
+
+    "dependencies": {
+        "libraries": [
+            {"name":"CCMS", "min_version":[1, 9, 1, 0]}
+        ],
+        "modules": [
+        ]
+    },
+
+    "routes": [
+        {"rank":312, "hook":"/(?!.*\\.[a-z]*$)^web:.*$/i", "target":"\\Package\\CodeMirror::hookLinkCss", "description":"Add CodeMirror css to page"},
+        {"rank":493, "hook":"/(?!.*\\.[a-z]*$)^web:.*$/i", "target":"\\Package\\CodeMirror::hookScript", "description":"Add CodeMirror script to page"}
+    ]
+}

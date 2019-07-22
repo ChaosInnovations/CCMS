@@ -1,0 +1,44 @@
+Timestamp,Level,Category,Message
+2019-06-20T18:51:05.736667+00:00,2,,Log Started
+2019-06-20T18:51:05.739076+00:00,0,Initialize,Starting server
+2019-06-20T18:52:51.634494+00:00,2,,Log Started
+2019-06-20T18:52:51.635430+00:00,0,Initialize,Starting server
+2019-06-20T18:58:57.625225+00:00,2,,Log Started
+2019-06-20T18:58:57.626204+00:00,0,Initialize,Starting server
+2019-06-20T18:58:57.627160+00:00,0,Initialize,Server running
+2019-06-20T18:58:57.627978+00:00,0,Initialize,Listening on 0.0.0.0:9000
+2019-06-20T18:59:27.322966+00:00,0,Connection,Client connected: Resource id #25
+2019-06-20T19:02:00.560216+00:00,0,Connection,Client disconnected. Resource id #25
+2019-06-20T19:02:01.022707+00:00,0,Connection,Client connected: Resource id #38
+2019-06-20T19:02:05.371579+00:00,0,Connection,Client disconnected. Resource id #38
+2019-06-20T19:02:05.816141+00:00,0,Connection,Client connected: Resource id #41
+2019-06-20T19:02:41.072747+00:00,2,,Log Started
+2019-06-20T19:02:41.073777+00:00,0,Initialize,Starting server
+2019-06-20T19:02:41.075015+00:00,0,Initialize,Server running
+2019-06-20T19:02:41.075885+00:00,0,Initialize,Listening on 0.0.0.0:9000
+2019-06-20T19:02:47.396981+00:00,0,Connection,Client connected: Resource id #25
+2019-06-20T19:03:13.797510+00:00,2,,Log Started
+2019-06-20T19:03:13.798542+00:00,0,Initialize,Starting server
+2019-06-20T19:03:13.799813+00:00,0,Initialize,Server running
+2019-06-20T19:03:13.800789+00:00,0,Initialize,Listening on 0.0.0.0:9000
+2019-06-20T19:03:15.919158+00:00,0,Connection,Client connected: Resource id #25
+2019-06-20T19:06:04.369410+00:00,2,,Log Started
+2019-06-20T19:06:04.370372+00:00,0,Initialize,Starting server
+2019-06-20T19:06:04.371429+00:00,0,Initialize,Server running
+2019-06-20T19:06:04.372233+00:00,0,Initialize,Listening on 0.0.0.0:9000
+2019-06-20T19:06:06.549118+00:00,0,Connection,Client connected: Resource id #25
+2019-06-20T19:09:20.431323+00:00,2,,Log Started
+2019-06-20T19:09:20.432364+00:00,0,Initialize,Starting server
+2019-06-20T19:09:20.433441+00:00,0,Initialize,Server running
+2019-06-20T19:09:20.434192+00:00,0,Initialize,Listening on 0.0.0.0:9000
+2019-06-20T19:09:23.152820+00:00,0,Connection,Client connected: Resource id #25
+2019-06-20T19:10:55.011973+00:00,2,,Log Started
+2019-06-20T19:10:55.012990+00:00,0,Initialize,Starting server
+2019-06-20T19:10:55.013975+00:00,0,Initialize,Server running
+2019-06-20T19:10:55.014875+00:00,0,Initialize,Listening on 0.0.0.0:9000
+2019-06-20T19:10:58.460506+00:00,0,Connection,Client connected: Resource id #25
+2019-06-20T19:13:13.425367+00:00,2,,Log Started
+2019-06-20T19:13:13.426395+00:00,0,Initialize,Starting server
+2019-06-20T19:13:13.427340+00:00,0,Initialize,Server running
+2019-06-20T19:13:13.428066+00:00,0,Initialize,Listening on 0.0.0.0:9000
+2019-06-20T19:13:17.148873+00:00,0,Connection,Client connected: Resource id #25

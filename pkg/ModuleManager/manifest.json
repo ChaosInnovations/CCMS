@@ -1,0 +1,34 @@
+{
+    "module_data": {
+        "name":"Module Manager",
+        "description":"Manages module installation, updating, and removal",
+        "type":"Module",
+        "version":[1, 0, 0, 0],
+        "release_date":"2019-06-26",
+        "author": {
+            "name":"Thomas Boland",
+            "email":"hello@thomasboland.me",
+            "website":"http://ccms.thomasboland.me"
+        }
+    },
+
+    "dependencies": {
+        "libraries": [
+            {"name":"CCMS", "min_version":[1, 9, 1, 0]}
+        ],
+        "modules": [
+            {"name":"Bootstrap", "min_version":[4, 3, 1, 0]},
+            {"name":"FontAwesome", "min_version":[5, 0, 13, 0]},
+            {"name":"JQuery", "min_version":[3, 3, 1, 0]},
+            {"name":"ModuleMenu", "min_version":[1, 0, 0, 0]},
+            {"name":"SecureMenu", "min_version":[1, 0, 0, 0]}
+        ]
+    },
+
+    "routes": [
+        {"rank":200, "hook":"/^web:\\/?api\\/modulemanager\\/uninstall\\/?$/i",    "target":"\\Package\\ModuleManager::hookUninstall",    "description":"Uninstall a module"},
+        {"rank":200, "hook":"/^web:\\/?api\\/modulemanager\\/install\\/?$/i",      "target":"\\Package\\ModuleManager::hookInstall",      "description":"Install a module"},
+        {"rank":200, "hook":"/^web:\\/?api\\/modulemanager\\/checkmodules\\/?$/i", "target":"\\Package\\ModuleManager::hookCheckModules", "description":"Download list of available modules"},
+        {"rank":390, "hook":"/(?!.*\\.[a-z]*$)^web:.*$/i",                         "target":"\\Package\\ModuleManager::hookMenu",         "description":"Add menu to admin menu"}
+    ]
+}

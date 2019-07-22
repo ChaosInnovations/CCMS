@@ -1,0 +1,27 @@
+{
+    "module_data": {
+        "name":"PopperJS",
+        "description":"Popper.JS library",
+        "type":"Module",
+        "version":[1, 0, 0, 0],
+        "release_date":"2019-06-23",
+        "author": {
+            "name":"Federico Zivolo and contributors",
+            "email":"",
+            "website":"https://popper.js.org"
+        }
+    },
+
+    "dependencies": {
+        "libraries": [
+            {"name":"CCMS", "min_version":[1, 9, 1, 0]}
+        ],
+        "modules": [
+            {"name":"JQuery", "min_version":[3, 3, 1, 0]}
+        ]
+    },
+
+    "routes": [
+        {"rank":491, "hook":"/(?!.*\\.[a-z]*$)^web:.*$/i", "target":"\\Package\\PopperJS::hookScript", "description":"Add Popper.JS script to page"}
+    ]
+}
