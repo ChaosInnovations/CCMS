@@ -330,8 +330,8 @@ class ModuleManager {
             ];
         }
 
-        $n = count($packageInstallList) - 1;
-        $pl = $n == 1 ? "y" : "ies";
+        // Wait a second so that client sees this state
+        sleep(1);
 
         // Download dependency packages
         if (!file_exists(dirname(__FILE__)."/pkg_staging")) {

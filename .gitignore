@@ -8,6 +8,7 @@ pkg/Collaboration/
 pkg/ContactForm/
 pkg/FontAwesome/
 pkg/JQuery/
+pkg/Mailer/
 pkg/Notice/
 pkg/PHPMailer/
 pkg/PopperJS/
