@@ -77,7 +77,7 @@ function pkgmgr_do_update(pkg_id) {
         }
         $('#pkgmgr_tab_status').tab('show');
         pkgmgr_state_interval_id = setInterval(function(){
-            $.getJSON(BASE_URL + "/pkg/ModuleManager/install_state.json", function(state) {
+            $.getJSON(BASE_URL + "/install_state.json", function(state) {
                 var pretty_state = "";
                 switch (state['global_state']) {
                     case "start":
@@ -188,7 +188,7 @@ function pkgmgr_do_uninstall(pkg_id) {
         }
         $('#pkgmgr_tab_status').tab('show');
         pkgmgr_state_interval_id = setInterval(function(){
-            $.getJSON(BASE_URL + "/pkg/ModuleManager/install_state.json", function(state) {
+            $.getJSON(BASE_URL + "/install_state.json", function(state) {
                 var pretty_state = "";
                 switch (state['global_state']) {
                     case "start":
