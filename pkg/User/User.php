@@ -10,6 +10,7 @@ use \Package\Database;
 use \Package\ModuleMenu;
 use \Package\Page;
 use \Package\SecureMenu;
+use \Package\SiteConfiguration;
 use \Package\User\AccountManager;
 use \Package\User\UserPermissions;
 use \PDO;
@@ -313,10 +314,7 @@ class User
     
     public static function hookNewUser(Request $request)
     {
-        // api/user/new
-        global $TEMPLATES;
-        global $baseUrl;
-        
+        // api/user/new        
         if (!isset($_POST["email"]) or !isset($_POST["name"]) or !isset($_POST["permissions"])) {
             return new Response("FALSE");
         }
@@ -336,19 +334,15 @@ class User
         $template_vars = [
             "name" => $_POST["name"],
             "adminName" => User::$currentUser->name,
-            "url" => Utilities::getconfig("websitetitle"),
-            "organization" => $pagelist,
+            "url" => $request->baseUrl,
+            "organization" => SiteConfiguration::getconfig("websitetitle"),
             "password" => $defaultPassword,
-            "signinUrl" => $baseUrl . "/admin",
+            "signinUrl" => $request->baseUrl . "/admin",
         ];
         $htmlBody = Utilities::fillTemplate(file_get_contents(dirname(__FILE__) . "/templates/NewUserEmail.template.html"), $template_vars);
         $altBody = Utilities::fillTemplate(file_get_contents(dirname(__FILE__) . "/templates/NewUserEmail.template.txt"), $template_vars);
         
         $mail = Mailer::NotifInstance()->compose([[User::normalizeEmail($_POST["email"]), $_POST["name"]]], "Account Created", $htmlBody, $altBody);
-        
-        if (!$mail->send()) {
-            return new Response("FALSE");
-        }
         
         $email = User::normalizeEmail($_POST["email"]);
         $now = date("Y-m-d");
@@ -363,6 +357,10 @@ class User
         $stmt->bindParam(":perms", $_POST["permissions"]);
         $stmt->execute();
         
+        if (!$mail->send()) {
+            return new Response("Failed: the account was created successfully, but the notification email failed to send.");
+        }
+
         return new Response("TRUE");
     }
     

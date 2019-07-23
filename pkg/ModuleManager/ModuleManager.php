@@ -11,6 +11,10 @@ use \Package\SecureMenu;
 class ModuleManager {
     public static function hookMenu(Request $request)
     {
+        if (!User::$currentUser->permissions->owner) {
+            return;
+        }
+
         $availablePackageCache = self::getPackageInfoCache();
         $packageCacheUpdated = strtotime($availablePackageCache["checked"]);
         $packageCacheData = $availablePackageCache["packages"];

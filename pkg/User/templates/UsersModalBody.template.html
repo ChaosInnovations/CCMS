@@ -128,6 +128,10 @@ function dialog_admin_users_new() {
                             name: $("#dialog_admin_users_newname").val(),
                             permissions: permissions}, function (data) {
         if (data != "TRUE") {
+            if (data.startsWith("Failed: ")) {
+                alert("Server says:\n"+data);
+                return;
+            }
             window.alert("Couldn\'t create account. Is "+$("#dialog_admin_users_newemail").val()+" already in use?");
             return;
         }
