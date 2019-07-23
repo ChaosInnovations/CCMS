@@ -11,6 +11,7 @@ pkg/JQuery/
 pkg/Logger/
 pkg/Mailer/
 pkg/ModuleManager/
+pkg/ModuleMenu/
 pkg/Notice/
 pkg/PHPMailer/
 pkg/PopperJS/
