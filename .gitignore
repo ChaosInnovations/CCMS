@@ -9,6 +9,7 @@ pkg/Collaboration/
 pkg/ContactForm/
 pkg/ContentType/
 pkg/Database/
+pkg/FireSock/
 pkg/FontAwesome/
 pkg/JQuery/
 pkg/Mailer/
@@ -22,3 +23,5 @@ pkg/PopperJS/
 index.php
 maintenance.html
 robots.txt
+
+start_FireSock.bat
