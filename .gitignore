@@ -3,6 +3,7 @@ pkg/FireSock/socketserver.log
 pkg/ModuleManager/packageInfoCache.json
 
 pkg/Bootstrap/
+pkg/CCMS/
 pkg/CodeMirror/
 pkg/Collaboration/
 pkg/ContactForm/
@@ -12,3 +13,10 @@ pkg/Mailer/
 pkg/Notice/
 pkg/PHPMailer/
 pkg/PopperJS/
+
+.htaccess
+.htaccess.maintenance
+.htaccess.production
+index.php
+maintenance.html
+robots.txt
