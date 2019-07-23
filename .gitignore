@@ -13,6 +13,7 @@ pkg/Mailer/
 pkg/ModuleManager/
 pkg/ModuleMenu/
 pkg/Notice/
+pkg/Page/
 pkg/PHPMailer/
 pkg/PopperJS/
 
