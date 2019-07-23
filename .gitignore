@@ -19,6 +19,7 @@ pkg/Placeholders/
 pkg/PopperJS/
 pkg/SecureMenu/
 pkg/SiteConfiguration/
+pkg/User/
 
 .htaccess
 .htaccess.maintenance
