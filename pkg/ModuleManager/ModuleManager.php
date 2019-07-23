@@ -177,7 +177,7 @@ class ModuleManager {
         $state = [
             'global_state' => "start",
         ];
-        $state_path = dirname(__FILE__)."/install_state.json";
+        $state_path = $_SERVER["DOCUMENT_ROOT"]."/install_state.json";
         if (is_file($state_path)) {
             return new Response("Failed: package (un)installation already in progress.");
         }
@@ -253,7 +253,7 @@ class ModuleManager {
             'global_state' => "start",
             'package_states' => [],
         ];
-        $state_path = dirname(__FILE__)."/install_state.json";
+        $state_path = $_SERVER["DOCUMENT_ROOT"]."/install_state.json";
         if (is_file($state_path)) {
             return new Response("Failed: package (un)installation already in progress.");
         }
@@ -338,8 +338,8 @@ class ModuleManager {
         sleep(1);
 
         // Download dependency packages
-        if (!file_exists(dirname(__FILE__)."/pkg_staging")) {
-            mkdir(dirname(__FILE__)."/pkg_staging");
+        if (!file_exists($_SERVER["DOCUMENT_ROOT"]."/pkg_staging")) {
+            mkdir($_SERVER["DOCUMENT_ROOT"]."/pkg_staging");
         }
 
         $state['global_state'] = "download";
@@ -349,7 +349,7 @@ class ModuleManager {
 
         foreach ($packageInstallList as $new_pkg_id => $listEntry) {
             $pkg_url = $SRV_URL . "/mod_pkg/{$new_pkg_id}/{$listEntry["ver_id"]}/package.ccmspkg";
-            $dest_dir = dirname(__FILE__)."/pkg_staging/{$new_pkg_id}_{$listEntry["ver_id"]}";
+            $dest_dir = $_SERVER["DOCUMENT_ROOT"]."/pkg_staging/{$new_pkg_id}_{$listEntry["ver_id"]}";
             $dest_path = $dest_dir . ".ccmspkg";
 
             $pkg_data = $availablePackageCache["packages"][$new_pkg_id][$listEntry["ver_id"]];
@@ -364,7 +364,7 @@ class ModuleManager {
         // Unpack dependency packages
         foreach ($packageInstallList as $new_pkg_id => $listEntry) {
             $pkg_url = $SRV_URL . "/mod_pkg/{$new_pkg_id}/{$listEntry["ver_id"]}/package.ccmspkg";
-            $dest_dir = dirname(__FILE__)."/pkg_staging/{$new_pkg_id}_{$listEntry["ver_id"]}";
+            $dest_dir = $_SERVER["DOCUMENT_ROOT"]."/pkg_staging/{$new_pkg_id}_{$listEntry["ver_id"]}";
             $dest_path = $dest_dir . ".ccmspkg";
 
             $state['package_states'][$new_pkg_id]['state'] = "unpack";
@@ -390,7 +390,7 @@ class ModuleManager {
         // Install packages (delay placeholder)
         foreach ($packageInstallList as $new_pkg_id => $listEntry) {
             $pkg_url = $SRV_URL . "/mod_pkg/{$new_pkg_id}/{$listEntry["ver_id"]}/package.ccmspkg";
-            $dest_dir = dirname(__FILE__)."/pkg_staging/{$new_pkg_id}_{$listEntry["ver_id"]}";
+            $dest_dir = $_SERVER["DOCUMENT_ROOT"]."/pkg_staging/{$new_pkg_id}_{$listEntry["ver_id"]}";
             $dest_path = $dest_dir . ".ccmspkg";
 
             $state['package_states'][$new_pkg_id]['state'] = "install";
