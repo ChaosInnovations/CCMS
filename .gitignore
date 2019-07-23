@@ -15,6 +15,7 @@ pkg/ModuleMenu/
 pkg/Notice/
 pkg/Page/
 pkg/PHPMailer/
+pkg/Placeholders/
 pkg/PopperJS/
 
 .htaccess
