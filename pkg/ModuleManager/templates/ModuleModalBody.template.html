@@ -69,8 +69,13 @@ function pkgmgr_do_update(pkg_id) {
     }
     pkgmgr_installing = true;
     pkg_ver_id = $("#update-" + pkg_id + "-version").val();
-    $('#pkgmgr_tab_status').tab('show');
     module_ajax("modulemanager/install", {pkg_id:pkg_id,ver_id:pkg_ver_id}, function(d){
+        if (d.startsWith("Failed: ")) {
+            pkgmgr_installing = false;
+            alert("Server says:\n"+d);
+            return;
+        }
+        $('#pkgmgr_tab_status').tab('show');
         pkgmgr_state_interval_id = setInterval(function(){
             $.getJSON(BASE_URL + "/pkg/ModuleManager/install_state.json", function(state) {
                 var pretty_state = "";
@@ -175,8 +180,13 @@ function pkgmgr_do_uninstall(pkg_id) {
         return;
     }
     pkgmgr_installing = true;
-    $('#pkgmgr_tab_status').tab('show');
     module_ajax("modulemanager/uninstall", {pkg_id:pkg_id}, function(d){
+        if (d.startsWith("Failed: ")) {
+            pkgmgr_installing = false;
+            alert("Server says:\n"+d);
+            return;
+        }
+        $('#pkgmgr_tab_status').tab('show');
         pkgmgr_state_interval_id = setInterval(function(){
             $.getJSON(BASE_URL + "/pkg/ModuleManager/install_state.json", function(state) {
                 var pretty_state = "";
@@ -219,6 +229,12 @@ function pkgmgr_check() {
 }
 
 function pkgmgr_update_lists(data) {
+    if (data.startsWith("Failed: ")) {
+        $("#pkgmgr_repo_check_button").html("Check now");
+        $("#pkgmgr_repo_check_button").prop("disabled", false);
+        alert("Server says:\n"+data);
+        return;
+    }
     try {
         pkg_repo = JSON.parse(data);
         var b = pkg_repo["checked"].split(/\D+/);
