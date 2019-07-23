@@ -18,6 +18,7 @@ pkg/PHPMailer/
 pkg/Placeholders/
 pkg/PopperJS/
 pkg/SecureMenu/
+pkg/SiteConfiguration/
 
 .htaccess
 .htaccess.maintenance
