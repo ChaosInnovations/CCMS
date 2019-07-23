@@ -8,6 +8,7 @@ pkg/CodeMirror/
 pkg/Collaboration/
 pkg/ContactForm/
 pkg/ContentType/
+pkg/Database/
 pkg/FontAwesome/
 pkg/JQuery/
 pkg/Mailer/
