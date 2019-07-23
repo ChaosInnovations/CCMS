@@ -1,25 +1,4 @@
-pkg/Bootstrap/
-pkg/CCMS/
-pkg/CodeMirror/
-pkg/Collaboration/
-pkg/ContactForm/
-pkg/ContentType/
-pkg/Database/
-pkg/FireSock/
-pkg/FontAwesome/
-pkg/JQuery/
-pkg/Logger/
-pkg/Mailer/
-pkg/ModuleManager/
-pkg/ModuleMenu/
-pkg/Notice/
-pkg/Page/
-pkg/PHPMailer/
-pkg/Placeholders/
-pkg/PopperJS/
-pkg/SecureMenu/
-pkg/SiteConfiguration/
-pkg/User/
+pkg/
 
 .htaccess
 .htaccess.maintenance
