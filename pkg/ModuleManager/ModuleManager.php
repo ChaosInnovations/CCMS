@@ -416,7 +416,7 @@ class ModuleManager {
         $state['global_state'] = "clean";
         file_put_contents($state_path, json_encode($state));
 
-        self::rrmdir(dirname(__FILE__)."/pkg_staging");
+        self::rrmdir($_SERVER["DOCUMENT_ROOT"]."/pkg_staging");
         self::hookCheckModules();
 
         $state['global_state'] = "finish";
