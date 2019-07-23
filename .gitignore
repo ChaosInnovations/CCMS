@@ -7,6 +7,7 @@ pkg/CCMS/
 pkg/CodeMirror/
 pkg/Collaboration/
 pkg/ContactForm/
+pkg/ContentType/
 pkg/FontAwesome/
 pkg/JQuery/
 pkg/Mailer/
