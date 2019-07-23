@@ -197,7 +197,7 @@ class ModuleManager {
         // Uninstall packages (delay placeholder)
         if (is_dir($_SERVER["DOCUMENT_ROOT"] . "\/pkg\/" . $pkg_id)) {
             if (file_exists($_SERVER["DOCUMENT_ROOT"] . "\/pkg\/" . $pkg_id . "/uninstall.php")) {
-                // Use uninstall script
+                include($_SERVER["DOCUMENT_ROOT"] . "\/pkg\/" . $pkg_id . "/uninstall.php");
             } else {
                 self::rrmdir($_SERVER["DOCUMENT_ROOT"] . "\/pkg\/" . $pkg_id);
             }
@@ -398,6 +398,7 @@ class ModuleManager {
 
             if (file_exists($dest_dir . "/install.php")) {
                 // Use install script
+                include($dest_dir . "/install.php");
             } else {
                 // Just remove any matching directories then copy $dest_dir/*.* to DOCUMENT_ROOT/
                 if (is_dir($_SERVER["DOCUMENT_ROOT"] . "\/pkg\/" . $new_pkg_id)) {
