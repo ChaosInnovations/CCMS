@@ -12,6 +12,7 @@ pkg/Database/
 pkg/FireSock/
 pkg/FontAwesome/
 pkg/JQuery/
+pkg/Logger/
 pkg/Mailer/
 pkg/Notice/
 pkg/PHPMailer/
