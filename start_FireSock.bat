@@ -1,1 +1,0 @@
-start php index.php firesock

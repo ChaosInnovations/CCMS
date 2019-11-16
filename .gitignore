@@ -1,2 +1,12 @@
-core/mod/Database/config.ini
-core/mod/FireSock/socketserver.log
+pkg/
+
+.htaccess
+.htaccess.maintenance
+.htaccess.production
+index.php
+maintenance.html
+robots.txt
+
+start_FireSock.bat
+
+setup.bak.php
